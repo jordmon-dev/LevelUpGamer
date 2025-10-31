@@ -1,4 +1,4 @@
-package com.example.levelup_gamer.Screen
+package com.example.levelup_gamer.ui.theme.Screen
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -13,6 +13,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.levelup_gamer.model.UsuarioPerfil
@@ -182,7 +183,7 @@ fun Perfil(navController: NavController) {
 }
 
 @Composable
-fun InfoChip(icon: androidx.compose.ui.graphics.vector.ImageVector, text: String, color: Color) {
+fun InfoChip(icon: ImageVector, text: String, color: Color) {
     Surface(
         color = color.copy(alpha = 0.2f),
         shape = MaterialTheme.shapes.small

@@ -1,5 +1,6 @@
-package com.example.levelup_gamer.Screen
+package com.example.levelup_gamer.ui.theme.Screen
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -32,7 +33,7 @@ fun Login(navController: NavController) {
         modifier = Modifier
             .padding(16.dp)
             .fillMaxSize(),
-        verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center
+        verticalArrangement = Arrangement.Center
     ) {
         Text("Login")
         Spacer(modifier = Modifier.height(20.dp))
