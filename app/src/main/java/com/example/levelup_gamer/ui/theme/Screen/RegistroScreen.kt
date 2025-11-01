@@ -1,7 +1,9 @@
 package com.example.levelup_gamer.ui.theme.Screen
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -14,20 +16,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.levelup_gamer.viewmodel.UsuarioViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Registro(navController: NavController) {
-    var nombre by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var confirmPassword by remember { mutableStateOf("") }
-    var edad by remember { mutableStateOf("") }
-    var codigoReferido by remember { mutableStateOf("") }
-    var aceptaTerminos by remember { mutableStateOf(false) }
+fun RegistroScreen(
+    navController: NavController,
+    viewModel: UsuarioViewModel = viewModel()
+) {
+    // 1. Recoger el estado (UI State) del ViewModel
+    val uiState by viewModel.usuario.collectAsState()
+    val errores = uiState.errores
 
-    var errores by remember { mutableStateOf(mapOf<String, String>()) }
+    // NOTA: 'codigoReferido' se deja como estado local si no es esencial para la validación del VM.
+    var codigoReferido by remember { mutableStateOf("") }
+
 
     Scaffold(
         topBar = {
@@ -56,29 +61,14 @@ fun Registro(navController: NavController) {
 
             // Nombre
             OutlinedTextField(
-                value = nombre,
-                onValueChange = { nombre = it },
+                value = uiState.nombre,
+                onValueChange = viewModel::onChangeNombre,
                 label = { Text("Nombre completo") },
                 leadingIcon = { Icon(Icons.Default.Person, contentDescription = "Nombre") },
-                isError = errores.containsKey("nombre"),
-                supportingText = { errores["nombre"]?.let { Text(it, color = Color.Red) } },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Email
-            OutlinedTextField(
-                value = email,
-                onValueChange = { email = it },
-                label = { Text("Correo electrónico") },
-                leadingIcon = { Icon(Icons.Default.Email, contentDescription = "Email") },
-                isError = errores.containsKey("email"),
+                isError = errores.nombre != null,
                 supportingText = {
-                    if (errores.containsKey("email")) {
-                        Text(errores["email"]!!, color = Color.Red)
-                    } else if (email.endsWith("@duocuc.cl")) {
-                        Text("🎓 20% de descuento para estudiantes Duoc", color = Color(0xFF39FF14))
+                    AnimatedVisibility(visible = errores.nombre != null) {
+                        errores.nombre?.let { Text(it, color = Color.Red) }
                     }
                 },
                 modifier = Modifier.fillMaxWidth()
@@ -86,44 +76,75 @@ fun Registro(navController: NavController) {
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Edad
+            // Email
             OutlinedTextField(
-                value = edad,
-                onValueChange = { if (it.all { char -> char.isDigit() }) edad = it },
-                label = { Text("Edad") },
-                keyboardType = KeyboardType.Number,
-                isError = errores.containsKey("edad"),
-                supportingText = { errores["edad"]?.let { Text(it, color = Color.Red) } },
+                value = uiState.correo,
+                onValueChange = viewModel::onChangeCorreo,
+                label = { Text("Correo electrónico") },
+                leadingIcon = { Icon(Icons.Default.Email, contentDescription = "Email") },
+                isError = errores.correo != null,
+                supportingText = {
+                    AnimatedVisibility(visible = errores.correo != null || uiState.correo.endsWith("@duocuc.cl")) {
+                        if (errores.correo != null) {
+                            Text(errores.correo!!, color = Color.Red)
+                        } else if (uiState.correo.endsWith("@duocuc.cl")) {
+                            Text("🎓 20% de descuento para estudiantes Duoc", color = Color(0xFF39FF14))
+                        }
+                    }
+                },
                 modifier = Modifier.fillMaxWidth()
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Password
             OutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
+                value = uiState.edad,
+                onValueChange = viewModel::onChangeEdad,
+                label = {Text("Edad")},
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                isError = errores.edad != null,
+                supportingText = {
+                    AnimatedVisibility(visible = errores.edad != null) {
+
+                    }
+                }
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Contraseña
+            OutlinedTextField(
+                value = uiState.password,
+                onValueChange = viewModel::onChangePassword,
                 label = { Text("Contraseña") },
-                isError = errores.containsKey("password"),
-                supportingText = { errores["password"]?.let { Text(it, color = Color.Red) } },
+                isError = errores.password != null,
+                supportingText = {
+                    AnimatedVisibility(visible = errores.password != null) {
+                        errores.password?.let { Text(it, color = Color.Red) }
+                    }
+                },
                 modifier = Modifier.fillMaxWidth()
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Confirmar Password
+            // Confirmar Password (AHORA CONECTADO AL VM)
+
             OutlinedTextField(
-                value = confirmPassword,
-                onValueChange = { confirmPassword = it },
-                label = { Text("Confirmar contraseña") },
-                isError = errores.containsKey("confirmPassword"),
-                supportingText = { errores["confirmPassword"]?.let { Text(it, color = Color.Red) } },
-                modifier = Modifier.fillMaxWidth()
+                value= uiState.confirmPassword,
+                onValueChange = viewModel::onChangePassword,
+                label= {Text("Confirmar contraseña")},
+                isError = errores.confirmPassword != null,
+                supportingText = {
+                    AnimatedVisibility(visible = errores.confirmPassword != null) {
+                        errores.confirmPassword?.let { Text(it, color =Color.Red) }
+                    }
+                }
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Código de referido
+            // Código de referido (opcional)
             OutlinedTextField(
                 value = codigoReferido,
                 onValueChange = { codigoReferido = it },
@@ -139,8 +160,8 @@ fun Registro(navController: NavController) {
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Checkbox(
-                    checked = aceptaTerminos,
-                    onCheckedChange = { aceptaTerminos = it }
+                    checked = uiState.aceptarTerminos,
+                    onCheckedChange = viewModel::onChangeAceptarTerminos
                 )
                 Text(
                     "Acepto los términos y condiciones",
@@ -148,8 +169,9 @@ fun Registro(navController: NavController) {
                 )
             }
 
-            if (errores.containsKey("terminos")) {
-                Text(errores["terminos"]!!, color = Color.Red)
+            // Muestra error de términos desde el VM con animación
+            AnimatedVisibility(visible = errores.aceptaTerminos != null) {
+                errores.aceptaTerminos?.let { Text(it, color = Color.Red) }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -157,13 +179,12 @@ fun Registro(navController: NavController) {
             // Botón de registro
             Button(
                 onClick = {
-                    val nuevosErrores = validarRegistro(
-                        nombre, email, edad, password, confirmPassword, aceptaTerminos
-                    )
-                    errores = nuevosErrores
+                    // La lógica de validación ahora es 100% del VM
+                    val vmValido = viewModel.validar()
 
-                    if (nuevosErrores.isEmpty()) {
-                        navController.navigate("home_screen")
+                    // Si es válido, navega a la ruta string "home"
+                    if (vmValido) {
+                        navController.navigate("home")
                     }
                 },
                 modifier = Modifier
@@ -175,26 +196,3 @@ fun Registro(navController: NavController) {
         }
     }
 }
-
-private fun validarRegistro(
-    nombre: String,
-    email: String,
-    edad: String,
-    password: String,
-    confirmPassword: String,
-    aceptaTerminos: Boolean
-): Map<String, String> {
-    val errores = mutableMapOf<String, String>()
-
-    if (nombre.isEmpty()) errores["nombre"] = "El nombre es obligatorio"
-    if (email.isEmpty()) errores["email"] = "El email es obligatorio"
-    if (!email.contains("@")) errores["email"] = "Email no válido"
-    if (edad.isEmpty()) errores["edad"] = "La edad es obligatoria"
-    if (edad.toIntOrNull() ?: 0 < 18) errores["edad"] = "Debes ser mayor de 18 años"
-    if (password.length < 6) errores["password"] = "Mínimo 6 caracteres"
-    if (password != confirmPassword) errores["confirmPassword"] = "Las contraseñas no coinciden"
-    if (!aceptaTerminos) errores["terminos"] = "Debes aceptar los términos y condiciones"
-
-    return errores
-}
-

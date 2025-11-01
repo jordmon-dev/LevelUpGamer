@@ -1,83 +1,114 @@
 package com.example.levelup_gamer.ui.theme.Screen
+// ^^^ PAQUETE CORREGIDO
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import android.widget.Toast
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel // <-- Necesario para la inyección
 import androidx.navigation.NavController
-import com.example.levelup_gamer.viewmodel.AppScreens
+import com.example.levelup_gamer.viewmodel.UsuarioViewModel
 
 @Composable
-fun Login(navController: NavController) {
-    var username by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var errorMessage by remember { mutableStateOf("") }
+fun LoginScreen(
+    navController: NavController,
+    // ViewModel inyectado correctamente, con acceso al ciclo de vida
+    viewModel: UsuarioViewModel = viewModel()
+){
+    val usuario by viewModel.usuario.collectAsState()
+    val contexto = LocalContext.current
 
     Column(
         modifier = Modifier
-            .padding(16.dp)
-            .fillMaxSize(),
+            .fillMaxSize()
+            .padding(25.dp),
         verticalArrangement = Arrangement.Center
     ) {
-        Text("Login")
-        Spacer(modifier = Modifier.height(20.dp))
 
+        Text("Iniciar Sesión", style = MaterialTheme.typography.headlineLarge)
+        Spacer(modifier = Modifier.height(32.dp))
+
+        // ** CAMPO 1: NOMBRE (Usado como Usuario/Identificador) **
         OutlinedTextField(
-            value = username,
-            onValueChange = { username = it },
-            label = { Text("Usuario") },
+            value = usuario.nombre,
+            onValueChange = viewModel::onChangeNombre,
+            label = { Text("Usuario o Email") },
+            isError = usuario.errores.nombre != null,
+            supportingText = {
+                usuario.errores.nombre?.let {
+                    Text(it, color = MaterialTheme.colorScheme.error)
+                }
+            },
             modifier = Modifier.fillMaxWidth()
         )
+        Spacer(modifier = Modifier.height(18.dp))
 
-        Spacer(modifier = Modifier.height(10.dp))
-
+        // ** CAMPO 2: PASSWORD **
         OutlinedTextField(
-            value = password,
-            onValueChange = { password = it },
+            value = usuario.password,
+            onValueChange = viewModel::onChangePassword,
             label = { Text("Contraseña") },
+            isError = usuario.errores.password != null,
             visualTransformation = PasswordVisualTransformation(),
+            supportingText = {
+                usuario.errores.password?.let {
+                    Text(it, color = MaterialTheme.colorScheme.error)
+                }
+            },
             modifier = Modifier.fillMaxWidth()
         )
 
-        if (errorMessage.isNotEmpty()) {
-            Text(errorMessage, color = Color.Red)
+        // Checkbox de Términos (De tu código original)
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Checkbox(
+                checked = usuario.aceptarTerminos,
+                onCheckedChange = viewModel::onChangeAceptarTerminos
+            )
+            Text("Acepta los terminos del acceso al sitio")
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
+        // Botón Aceptar/Login
         Button(
             onClick = {
-                if (username.isNotEmpty() && password.isNotEmpty()) {
-                    navController.navigate(AppScreens.HomeScreen.route)
+                if (viewModel.validar()){
+                    // Navegación a "bienvenida" usando el string de ruta
+                    navController.navigate(route = "bienvenida")
                 } else {
-                    errorMessage = "Complete todos los campos"
+                    Toast.makeText(contexto, "Error: revise los campos.", Toast.LENGTH_LONG).show()
                 }
             },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Iniciar Sesión")
+            Text("Aceptar")
         }
 
-        TextButton(
-            onClick = { navController.navigate(AppScreens.RegistroScreen.route) }
+        // Enlace a Registro
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
         ) {
-            Text("¿No tienes cuenta? Regístrate")
+            TextButton(
+                onClick = {
+                    // Navegación a "registro" usando el string de ruta
+                    viewModel.limpiarUsuario() // Limpia el estado antes de ir al registro
+                    navController.navigate(route = "registro")
+                }
+            ) {
+                Text("¿No tienes cuenta? Regístrate")
+            }
         }
     }
+
 }
