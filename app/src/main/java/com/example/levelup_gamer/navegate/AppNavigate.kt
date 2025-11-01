@@ -41,9 +41,9 @@ fun AppNavigate(){
         composable(route = "perfil") {
             // ... Llama a PerfilScreen(navController)
         }
-        composable(route = "carrito") {
+        /*composable(route = "carrito") {
             // ... Llama a CarritoScreen(navController)
-        }
+        }*/
         composable(route = "about") {
             // ... Llama a AboutScreen(navController)
         }
