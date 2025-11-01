@@ -25,6 +25,19 @@ class UsuarioViewModel: ViewModel() {
             )
         }
     }
+
+    fun onChangeEdad(edad:String){
+        if(edad.all { char -> char.isDigit() }){
+            _usuario.update {
+                it.copy(
+                    edad=edad,
+                    errores = it.errores.copy(edad = null)
+                )
+            }
+        }
+    }
+
+
     fun onChangeCorreo(correo: String){
         _usuario.update {
             it.copy(
@@ -36,8 +49,8 @@ class UsuarioViewModel: ViewModel() {
     fun onChangePassword(pass: String){
         _usuario.update {
             it.copy(
-                password = pass,
-                errores = it.errores.copy(password = null)
+                confirmPassword = pass,
+                errores = it.errores.copy(confirmPassword = null)
             )
         }
     }
@@ -47,10 +60,16 @@ class UsuarioViewModel: ViewModel() {
 
     fun validar(): Boolean{
         val f = _usuario.value
+
+        //Aquí para validar la edad y que sea mayor de 18 años
+
+        val edadInt =f.edad.toIntOrNull() ?:0
+        val errorEdad = if (f.edad.isBlank() || edadInt < 18) "Debes ser mayor de 18 años" else null
         val errores = UsuarioErrores(
             nombre = if (f.nombre.isBlank()) "El nombre está vacío" else null,
             correo = if (f.correo.isBlank() || !f.correo.contains("@")) "Error en el ingreso de dirección del correo" else null,
             password = if (f.password.isBlank()) "pass vacia" else null,
+            edad = errorEdad,
             aceptaTerminos = if (f.aceptarTerminos == false) "debe aceptar" else null
 
         )
@@ -58,11 +77,18 @@ class UsuarioViewModel: ViewModel() {
             it.copy(errores = errores)
         }
         if (errores.nombre==null && errores.correo==null && errores.password==null
-            && errores.aceptaTerminos==null){
+            && errores.aceptaTerminos==null && errores.edad==null){
             return  true
         } else{
             return  false
         }
 
     }
+
+    fun limpiarUsuario(){
+        _usuario.update {
+            UsuarioPerfil()
+        }
+    }
 }
+
