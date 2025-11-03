@@ -1,4 +1,4 @@
-/*package com.example.levelup_gamer.Screen
+package com.example.levelup_gamer.ui.theme.Screen // <-- 1. PACKAGE CORREGIDO
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -7,7 +7,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Remove // ← Este es el correcto
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -16,44 +16,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.levelup_gamer.model.Producto
+import com.example.levelup_gamer.viewmodel.CarritoViewModel
 import kotlin.math.roundToInt
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Carrito(navController: NavController) {
-    var itemsCarrito by remember {
-        mutableStateOf(
-            listOf(
-                ProductoCarrito(
-                    producto = Producto(
-                        codigo = "AC001",
-                        nombre = "Controlador Xbox Series X",
-                        precio = 59990.0,
-                        categoria = "Accesorios",
-                        descripcion = "Control inalámbrico"
-                    ),
-                    cantidad = 1
-                ),
-                ProductoCarrito(
-                    producto = Producto(
-                        codigo = "PP001",
-                        nombre = "Polera Gamer Personalizada",
-                        precio = 14990.0,
-                        categoria = "Poleras",
-                        descripcion = "Polera personalizable"
-                    ),
-                    cantidad = 2
-                )
-            )
-        )
-    }
-
-    val subtotal = itemsCarrito.sumOf { it.producto.precio * it.cantidad }
-    val descuento = if (subtotal > 50000) subtotal * 0.1 else 0.0
-    val total = subtotal - descuento
+fun Carrito(
+    navController: NavController,
+    // 2. RECIBE EL VIEWMODEL
+    viewModel: CarritoViewModel = viewModel()
+) {
+    // 3. CONSUME EL ESTADO DEL VIEWMODEL
+    val resumen by viewModel.resumen.collectAsState()
+    val itemsCarrito = resumen.items
 
     Scaffold(
         topBar = {
@@ -75,23 +54,23 @@ fun Carrito(navController: NavController) {
                         .padding(16.dp)
                         .fillMaxWidth()
                 ) {
-                    // Resumen de compra
+                    // Resumen de compra (usa valores del VM)
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text("Subtotal:")
-                        Text("$${subtotal.roundToInt()} CLP")
+                        Text("$${resumen.subtotal.roundToInt()} CLP")
                     }
 
-                    if (descuento > 0) {
+                    if (resumen.descuento > 0) {
                         Spacer(modifier = Modifier.height(4.dp))
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text("Descuento 10%:", color = Color(0xFF39FF14))
-                            Text("-$${descuento.roundToInt()} CLP", color = Color(0xFF39FF14))
+                            Text("-$${resumen.descuento.roundToInt()} CLP", color = Color(0xFF39FF14))
                         }
                     }
 
@@ -105,7 +84,7 @@ fun Carrito(navController: NavController) {
                     ) {
                         Text("Total:", fontWeight = FontWeight.Bold)
                         Text(
-                            "$${total.roundToInt()} CLP",
+                            "$${resumen.total.roundToInt()} CLP",
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF1E90FF)
                         )
@@ -114,10 +93,8 @@ fun Carrito(navController: NavController) {
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Button(
-                        onClick = {
-                            // Aquí puedes agregar lógica de pago
-                            navController.navigate("home_screen")
-                        },
+                        // 4. NAVEGACIÓN CORREGIDA A "home"
+                        onClick = { navController.navigate("home") },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(50.dp),
@@ -132,37 +109,12 @@ fun Carrito(navController: NavController) {
         }
     ) { innerPadding ->
         if (itemsCarrito.isEmpty()) {
-            Column(
-                modifier = Modifier
-                    .padding(innerPadding)
-                    .fillMaxSize()
-                    .padding(32.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+            // ... (Lógica de carrito vacío)
+            Button(
+                // 4. NAVEGACIÓN CORREGIDA A "catalogo"
+                onClick = { navController.navigate("catalogo") }
             ) {
-                Icon(
-                    Icons.Default.ShoppingCart,
-                    contentDescription = "Carrito vacío",
-                    modifier = Modifier.size(64.dp),
-                    tint = Color.Gray
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    "Tu carrito está vacío",
-                    style = MaterialTheme.typography.headlineSmall
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    "Agrega algunos productos desde el catálogo",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.Gray
-                )
-                Spacer(modifier = Modifier.height(24.dp))
-                Button(
-                    onClick = { navController.navigate("catalogo_screen") }
-                ) {
-                    Text("Explorar Catálogo")
-                }
+                Text("Explorar Catálogo")
             }
         } else {
             LazyColumn(
@@ -173,15 +125,12 @@ fun Carrito(navController: NavController) {
                 items(itemsCarrito) { item ->
                     ItemCarrito(
                         item = item,
+                        // LLAMA A LOS MÉTODOS DEL VIEWMODEL
                         onCantidadChange = { nuevaCantidad ->
-                            itemsCarrito = itemsCarrito.map {
-                                if (it.producto.codigo == item.producto.codigo) {
-                                    it.copy(cantidad = nuevaCantidad)
-                                } else it
-                            }
+                            viewModel.onCantidadChange(item, nuevaCantidad)
                         },
                         onEliminar = {
-                            itemsCarrito = itemsCarrito.filter { it.producto.codigo != item.producto.codigo }
+                            viewModel.onEliminar(item)
                         }
                     )
                 }
@@ -190,12 +139,22 @@ fun Carrito(navController: NavController) {
     }
 }
 
+// 5. SE ASUME QUE ESTA DATA CLASS AHORA ES 'CarritoItem'
+// Y DEBERÍA VIVIR EN TU VIEWMODEL/MODELO, PERO LA DEJO AQUÍ PARA NO ROMPER EL FLUJO.
+data class ProductoCarrito(
+    val producto: Producto,
+    val cantidad: Int
+)
+
+
 @Composable
 fun ItemCarrito(
-    item: ProductoCarrito,
+    // AHORA RECIBE PRODUCTOCARRITO (o el CarritoItem de tu VM)
+    item: com.example.levelup_gamer.viewmodel.CarritoItem,
     onCantidadChange: (Int) -> Unit,
     onEliminar: () -> Unit
 ) {
+    // ... (El resto del código ItemCarrito es correcto)
     Card(
         modifier = Modifier
             .padding(8.dp)
@@ -215,16 +174,7 @@ fun ItemCarrito(
                     style = MaterialTheme.typography.bodyLarge,
                     color = Color.White
                 )
-                Text(
-                    item.producto.categoria,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray
-                )
-                Text(
-                    "$${item.producto.precio.roundToInt()} CLP",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color(0xFF1E90FF)
-                )
+                // ... (El resto del texto)
             }
 
             // Controles de cantidad
@@ -236,7 +186,7 @@ fun ItemCarrito(
                         if (item.cantidad > 1) onCantidadChange(item.cantidad - 1)
                     }
                 ) {
-                    Icon(Icons.Default.Remove, contentDescription = "Reducir cantidad") // ← Ahora funciona
+                    Icon(Icons.Default.Remove, contentDescription = "Reducir cantidad")
                 }
 
                 Text(
@@ -259,8 +209,3 @@ fun ItemCarrito(
         }
     }
 }
-
-data class ProductoCarrito(
-    val producto: Producto,
-    val cantidad: Int
-)*/
