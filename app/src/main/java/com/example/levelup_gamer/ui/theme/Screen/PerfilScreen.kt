@@ -17,10 +17,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.levelup_gamer.model.UsuarioPerfil
+import com.example.levelup_gamer.viewmodel.UsuarioViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Perfil(navController: NavController) {
+fun Perfil(navController: NavController, viewModel: UsuarioViewModel) {
     var usuario by remember {
         mutableStateOf(
             UsuarioPerfil(
