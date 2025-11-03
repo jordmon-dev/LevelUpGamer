@@ -1,7 +1,5 @@
 package com.example.levelup_gamer.model
 
-import android.provider.ContactsContract
-
 // clase con los atributos del usuario
 data class UsuarioPerfil(
     val nombre: String="",
