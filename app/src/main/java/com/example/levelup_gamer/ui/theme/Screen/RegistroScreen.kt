@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -27,6 +28,7 @@ fun RegistroScreen(
     viewModel: UsuarioViewModel = viewModel()
 ) {
     // 1. Recoger el estado (UI State) del ViewModel
+    val usuario by viewModel.usuario.collectAsState()
     val uiState by viewModel.usuario.collectAsState()
     val errores = uiState.errores
 
@@ -131,15 +133,18 @@ fun RegistroScreen(
             // Confirmar Password (AHORA CONECTADO AL VM)
 
             OutlinedTextField(
-                value= uiState.confirmPassword,
-                onValueChange = viewModel::onChangePassword,
-                label= {Text("Confirmar contraseña")},
+                value = usuario.confirmPassword,
+                onValueChange = viewModel::onChangeConfirmPassword,
+                label = { Text("Confirmar contraseña") },
                 isError = errores.confirmPassword != null,
                 supportingText = {
                     AnimatedVisibility(visible = errores.confirmPassword != null) {
-                        errores.confirmPassword?.let { Text(it, color =Color.Red) }
+                        errores.confirmPassword?.let { Text(it, color = Color.Red) }
                     }
-                }
+                },
+                visualTransformation = PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                modifier = Modifier.fillMaxWidth()
             )
 
             Spacer(modifier = Modifier.height(8.dp))
