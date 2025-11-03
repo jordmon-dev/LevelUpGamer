@@ -1,5 +1,5 @@
 package com.example.levelup_gamer.ui.theme.Screen
-// ^^^ PAQUETE CORREGIDO
+
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
@@ -51,7 +51,7 @@ fun LoginScreen(
         )
         Spacer(modifier = Modifier.height(18.dp))
 
-        // ** CAMPO 2: PASSWORD **
+        // ** CAMPO 2: Contraseña **
         OutlinedTextField(
             value = usuario.password,
             onValueChange = viewModel::onChangePassword,
