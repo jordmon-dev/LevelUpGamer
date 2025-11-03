@@ -1,6 +1,5 @@
 package com.example.levelup_gamer.viewmodel
 
-
 import androidx.lifecycle.ViewModel
 import com.example.levelup_gamer.model.UsuarioErrores
 import com.example.levelup_gamer.model.UsuarioPerfil
@@ -37,7 +36,6 @@ class UsuarioViewModel: ViewModel() {
         }
     }
 
-
     fun onChangeCorreo(correo: String){
         _usuario.update {
             it.copy(
@@ -46,7 +44,17 @@ class UsuarioViewModel: ViewModel() {
             )
         }
     }
+
     fun onChangePassword(pass: String){
+        _usuario.update {
+            it.copy(
+                password = pass,
+                errores = it.errores.copy(password = null)
+            )
+        }
+    }
+
+    fun onChangeConfirmPassword(pass: String){ // <-- Asumo que esta función te falta o está incompleta
         _usuario.update {
             it.copy(
                 confirmPassword = pass,
@@ -54,35 +62,42 @@ class UsuarioViewModel: ViewModel() {
             )
         }
     }
+
     fun onChangeAceptarTerminos(valor: Boolean){
-        _usuario.update { it.copy(aceptarTerminos = valor) }
+        _usuario.update {
+            it.copy(
+                aceptarTerminos = valor,
+                errores = it.errores.copy(aceptaTerminos = null)
+            )
+        }
     }
 
     fun validar(): Boolean{
         val f = _usuario.value
 
-        //Aquí para validar la edad y que sea mayor de 18 años
-
+        // Validación de EDAD
         val edadInt =f.edad.toIntOrNull() ?:0
         val errorEdad = if (f.edad.isBlank() || edadInt < 18) "Debes ser mayor de 18 años" else null
+
+        // Validación de CONTRASEÑAS COINCIDENTES
+        val errorConfirmPass = if (f.password != f.confirmPassword) "Las contraseñas no coinciden" else null
+
         val errores = UsuarioErrores(
             nombre = if (f.nombre.isBlank()) "El nombre está vacío" else null,
             correo = if (f.correo.isBlank() || !f.correo.contains("@")) "Error en el ingreso de dirección del correo" else null,
-            password = if (f.password.isBlank()) "pass vacia" else null,
+            password = if (f.password.isBlank()) "Contraseña vacía" else null,
             edad = errorEdad,
-            aceptaTerminos = if (f.aceptarTerminos == false) "debe aceptar" else null
-
+            confirmPassword = errorConfirmPass, // <- Se asume que este campo ya existe en UsuarioErrores
+            aceptaTerminos = if (f.aceptarTerminos == false) "Debe aceptar los términos y condiciones" else null
         )
+
         _usuario.update {
             it.copy(errores = errores)
         }
-        if (errores.nombre==null && errores.correo==null && errores.password==null
-            && errores.aceptaTerminos==null && errores.edad==null){
-            return  true
-        } else{
-            return  false
-        }
 
+        // Se comprueban todos los errores (incluyendo el nuevo de confirmPassword)
+        return errores.nombre==null && errores.correo==null && errores.password==null
+                && errores.edad==null && errores.confirmPassword==null && errores.aceptaTerminos==null
     }
 
     fun limpiarUsuario(){
@@ -91,4 +106,3 @@ class UsuarioViewModel: ViewModel() {
         }
     }
 }
-
