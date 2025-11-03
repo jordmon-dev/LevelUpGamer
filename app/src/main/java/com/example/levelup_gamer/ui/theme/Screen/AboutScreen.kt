@@ -14,10 +14,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.levelup_gamer.viewmodel.AboutViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun About(navController: NavController) {
+fun About(navController: NavController, viewModel: AboutViewModel) {
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
