@@ -80,7 +80,7 @@ fun Catalogo(navController: NavController, viewModel: ProductoViewModel) {
             // Filtros de categoría
             LazyColumn(
                 modifier = Modifier
-                    .padding(horizontal = 16.dp)
+                    .padding(vertical = 16.dp)
                     .height(60.dp)
             ) {
                 items(categorias) { categoria ->

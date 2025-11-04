@@ -125,6 +125,7 @@ fun RegistroScreen(
                         errores.password?.let { Text(it, color = Color.Red) }
                     }
                 },
+                visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier.fillMaxWidth()
             )
 
