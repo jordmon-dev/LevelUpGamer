@@ -18,19 +18,23 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.levelup_gamer.model.UsuarioPerfil
 import com.example.levelup_gamer.viewmodel.UsuarioViewModel
+import java.text.SimpleDateFormat
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Perfil(navController: NavController, viewModel: UsuarioViewModel) {
-    var usuario by remember {
-        mutableStateOf(
-            UsuarioPerfil(
-                nombre = "Juan Pérez",
-                email = "juan.perez@duocuc.cl",
-                puntosLevelUp = 1500,
-                nivel = "Gamer Pro",
-                fechaRegistro = "15/03/2024"
-            )
+    // Obtener el estado actual del usuario desde el ViewModel
+    val uiState by viewModel.usuario.collectAsState()
+
+    // Crear el objeto UsuarioPerfil con los datos del ViewModel
+    val usuario = remember(uiState) {
+        UsuarioPerfil(
+            nombre = uiState.nombre,
+            email = uiState.correo,
+            puntosLevelUp = 1500, // Puedes mantener esto como valor por defecto o agregarlo al ViewModel
+            nivel = if (uiState.correo.endsWith("@duocuc.cl")) "Gamer Pro Estudiante" else "Gamer",
+            fechaRegistro = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date()) // Fecha actual
         )
     }
 
@@ -44,7 +48,9 @@ fun Perfil(navController: NavController, viewModel: UsuarioViewModel) {
                     }
                 },
                 actions = {
-                    IconButton(onClick = { /* Editar perfil */ }) {
+                    IconButton(onClick = {
+                        // Navegar a pantalla de edición o abrir diálogo
+                    }) {
                         Icon(Icons.Default.Edit, contentDescription = "Editar")
                     }
                 }
@@ -90,6 +96,16 @@ fun Perfil(navController: NavController, viewModel: UsuarioViewModel) {
 
                     Spacer(modifier = Modifier.height(8.dp))
 
+                    // Mostrar edad si está disponible
+                    if (uiState.edad.isNotEmpty()) {
+                        Text(
+                            "${uiState.edad} años",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.LightGray
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+
                     // Nivel y puntos
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -126,7 +142,19 @@ fun Perfil(navController: NavController, viewModel: UsuarioViewModel) {
 
                     InfoRow("Miembro desde:", usuario.fechaRegistro)
                     InfoRow("Estado:", "Activo")
-                    InfoRow("Descuento:", "20% (Estudiante Duoc)")
+
+                    // Mostrar descuento especial para estudiantes Duoc
+                    val descuento = if (uiState.correo.endsWith("@duocuc.cl")) {
+                        "20% (Estudiante Duoc)"
+                    } else {
+                        "10% (Usuario Regular)"
+                    }
+                    InfoRow("Descuento:", descuento)
+
+                    // Mostrar edad si está disponible
+                    if (uiState.edad.isNotEmpty()) {
+                        InfoRow("Edad:", "${uiState.edad} años")
+                    }
                 }
             }
 
@@ -146,7 +174,12 @@ fun Perfil(navController: NavController, viewModel: UsuarioViewModel) {
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    BenefitItem("✓ Descuento exclusivo para estudiantes Duoc")
+                    // Beneficios dinámicos basados en el tipo de usuario
+                    if (uiState.correo.endsWith("@duocuc.cl")) {
+                        BenefitItem("✓ Descuento exclusivo 20% para estudiantes Duoc")
+                    } else {
+                        BenefitItem("✓ Descuento regular 10% para usuarios")
+                    }
                     BenefitItem("✓ Acumulación de puntos por compras")
                     BenefitItem("✓ Acceso a ofertas especiales")
                     BenefitItem("✓ Soporte prioritario")
@@ -158,10 +191,25 @@ fun Perfil(navController: NavController, viewModel: UsuarioViewModel) {
             // Acciones
             Button(
                 onClick = {
-                    // Navegar al historial de compras
-                    navController.navigate("catalogo_screen")
+                    // Navegar al catálogo
+                    navController.navigate("catalogo")
                 },
                 modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Ver Catálogo de Productos")
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Button(
+                onClick = {
+                    // Navegar al historial de compras (si existe esa pantalla)
+                    navController.navigate("historial")
+                },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF1E90FF)
+                )
             ) {
                 Text("Ver Historial de Compras")
             }
@@ -171,8 +219,9 @@ fun Perfil(navController: NavController, viewModel: UsuarioViewModel) {
             OutlinedButton(
                 onClick = {
                     // Cerrar sesión y volver al login
-                    navController.navigate("login_screen") {
-                        popUpTo("home_screen") { inclusive = true }
+                    viewModel.limpiarEstado() // Limpiar los datos del usuario
+                    navController.navigate("login") {
+                        popUpTo("home") { inclusive = true }
                     }
                 },
                 modifier = Modifier.fillMaxWidth()

@@ -101,8 +101,6 @@ fun LoginScreen(
         ) {
             TextButton(
                 onClick = {
-                    // Navegación a "registro" usando el string de ruta
-                    viewModel.limpiarUsuario() // Limpia el estado antes de ir al registro
                     navController.navigate(route = "registro")
                 }
             ) {
