@@ -53,8 +53,12 @@ fun AppNavigate(){
 
         // 5. CATÁLOGO
         composable(route = "catalogo") {
-            // Pasamos el ProductoViewModel
-            Catalogo(navController = navController, viewModel = productoViewModel)
+            // Pasar ambos ViewModels al catálogo
+            Catalogo(
+                navController = navController,
+                viewModel = productoViewModel,
+                carritoViewModel = carritoViewModel
+            )
         }
 
         // 6. PERFIL

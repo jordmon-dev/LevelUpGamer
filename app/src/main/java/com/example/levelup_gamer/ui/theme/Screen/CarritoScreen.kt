@@ -1,4 +1,4 @@
-package com.example.levelup_gamer.ui.theme.Screen // <-- 1. PACKAGE CORREGIDO
+package com.example.levelup_gamer.ui.theme.Screen
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -10,7 +10,9 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -18,19 +20,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.levelup_gamer.model.Producto
-import com.example.levelup_gamer.viewmodel.CarritoViewModel
-import kotlin.math.roundToInt
-
+import com.example.levelup_gamer.viewmodel.CarritoItem // Importar CarritoItem
+import kotlin.math.roundToInt // Importar roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Carrito(
     navController: NavController,
-    // 2. RECIBE EL VIEWMODEL
-    viewModel: CarritoViewModel = viewModel()
+    viewModel: com.example.levelup_gamer.viewmodel.CarritoViewModel = viewModel() // Especificar el package completo
 ) {
-    // 3. CONSUME EL ESTADO DEL VIEWMODEL
     val resumen by viewModel.resumen.collectAsState()
     val itemsCarrito = resumen.items
 
@@ -54,7 +52,7 @@ fun Carrito(
                         .padding(16.dp)
                         .fillMaxWidth()
                 ) {
-                    // Resumen de compra (usa valores del VM)
+                    // Resumen de compra
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
@@ -93,7 +91,6 @@ fun Carrito(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Button(
-                        // 4. NAVEGACIÓN CORREGIDA A "home"
                         onClick = { navController.navigate("home") },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -109,12 +106,38 @@ fun Carrito(
         }
     ) { innerPadding ->
         if (itemsCarrito.isEmpty()) {
-            // ... (Lógica de carrito vacío)
-            Button(
-                // 4. NAVEGACIÓN CORREGIDA A "catalogo"
-                onClick = { navController.navigate("catalogo") }
+            // Carrito vacío
+            Column(
+                modifier = Modifier
+                    .padding(innerPadding)
+                    .fillMaxSize(),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("Explorar Catálogo")
+                Icon(
+                    Icons.Default.ShoppingCart,
+                    contentDescription = "Carrito vacío",
+                    modifier = Modifier.size(80.dp),
+                    tint = Color.Gray
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    "Tu carrito está vacío",
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = Color.White
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    "Agrega algunos productos para continuar",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.Gray
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+                Button(
+                    onClick = { navController.navigate("catalogo") }
+                ) {
+                    Text("Explorar Catálogo")
+                }
             }
         } else {
             LazyColumn(
@@ -125,7 +148,6 @@ fun Carrito(
                 items(itemsCarrito) { item ->
                     ItemCarrito(
                         item = item,
-                        // LLAMA A LOS MÉTODOS DEL VIEWMODEL
                         onCantidadChange = { nuevaCantidad ->
                             viewModel.onCantidadChange(item, nuevaCantidad)
                         },
@@ -139,22 +161,12 @@ fun Carrito(
     }
 }
 
-// 5. SE ASUME QUE ESTA DATA CLASS AHORA ES 'CarritoItem'
-// Y DEBERÍA VIVIR EN TU VIEWMODEL/MODELO, PERO LA DEJO AQUÍ PARA NO ROMPER EL FLUJO.
-data class ProductoCarrito(
-    val producto: Producto,
-    val cantidad: Int
-)
-
-
 @Composable
 fun ItemCarrito(
-    // AHORA RECIBE PRODUCTOCARRITO (o el CarritoItem de tu VM)
-    item: com.example.levelup_gamer.viewmodel.CarritoItem,
+    item: CarritoItem,
     onCantidadChange: (Int) -> Unit,
     onEliminar: () -> Unit
 ) {
-    // ... (El resto del código ItemCarrito es correcto)
     Card(
         modifier = Modifier
             .padding(8.dp)
@@ -172,9 +184,25 @@ fun ItemCarrito(
                 Text(
                     item.producto.nombre,
                     style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Bold,
                     color = Color.White
                 )
-                // ... (El resto del texto)
+                Text(
+                    item.producto.categoria,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Gray
+                )
+                Text(
+                    "$${(item.producto.precio * item.cantidad).roundToInt()} CLP",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color(0xFF1E90FF),
+                    modifier = Modifier.padding(top = 4.dp)
+                )
+                Text(
+                    "$${item.producto.precio.roundToInt()} CLP c/u",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.LightGray
+                )
             }
 
             // Controles de cantidad
@@ -186,7 +214,7 @@ fun ItemCarrito(
                         if (item.cantidad > 1) onCantidadChange(item.cantidad - 1)
                     }
                 ) {
-                    Icon(Icons.Default.Remove, contentDescription = "Reducir cantidad")
+                    Icon(Icons.Default.Remove, contentDescription = "Reducir cantidad", tint = Color.White)
                 }
 
                 Text(
@@ -198,7 +226,7 @@ fun ItemCarrito(
                 IconButton(
                     onClick = { onCantidadChange(item.cantidad + 1) }
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "Aumentar cantidad")
+                    Icon(Icons.Default.Add, contentDescription = "Aumentar cantidad", tint = Color.White)
                 }
             }
 

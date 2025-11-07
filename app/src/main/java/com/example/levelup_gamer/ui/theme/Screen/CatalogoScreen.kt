@@ -15,14 +15,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.levelup_gamer.model.Producto
+import com.example.levelup_gamer.viewmodel.CarritoViewModel
 import com.example.levelup_gamer.viewmodel.ProductoViewModel
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Catalogo(navController: NavController, viewModel: ProductoViewModel) {
+fun Catalogo(
+    navController: NavController,
+    viewModel: ProductoViewModel = viewModel(),
+    carritoViewModel: CarritoViewModel = viewModel() // Agregar el ViewModel del carrito
+) {
     var busqueda by remember { mutableStateOf("") }
     var categoriaSeleccionada by remember { mutableStateOf("Todas") }
 
@@ -54,7 +60,7 @@ fun Catalogo(navController: NavController, viewModel: ProductoViewModel) {
                     }
                 },
                 actions = {
-                    IconButton(onClick = { navController.navigate("carrito_screen") }) {
+                    IconButton(onClick = { navController.navigate("carrito") }) { // Ruta corregida
                         Icon(Icons.Default.ShoppingCart, contentDescription = "Carrito")
                     }
                 }
@@ -105,7 +111,8 @@ fun Catalogo(navController: NavController, viewModel: ProductoViewModel) {
                     ProductoItem(
                         producto = producto,
                         onAgregarCarrito = {
-                            // Lógica para agregar al carrito
+                            // LÓGICA CORREGIDA: Agregar producto al carrito
+                            carritoViewModel.agregarProducto(producto)
                         }
                     )
                 }
