@@ -1,5 +1,6 @@
 package com.example.levelup_gamer.navegate
 
+import ConfirmacionScreen
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
@@ -78,6 +79,16 @@ fun AppNavigate(){
         composable(route = "about") {
             // Pasamos el AboutViewModel
             About(navController = navController, viewModel = aboutViewModel)
+        }
+
+        // 9. PAGO
+        composable(route = "pago") {
+            PagoScreen(navController = navController, carritoViewModel = carritoViewModel)
+        }
+
+        // 10. CONFIRMACIÓN
+        composable(route = "confirmacion") {
+            ConfirmacionScreen(navController = navController)
         }
     }
 }

@@ -91,7 +91,7 @@ fun Carrito(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Button(
-                        onClick = { navController.navigate("home") },
+                        onClick = { navController.navigate("pago") },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(50.dp),
