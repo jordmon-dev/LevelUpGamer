@@ -42,6 +42,45 @@ android {
 
 dependencies {
 
+    /* ============================ DEPENDENCIAS RECURSO NATIVO CÁMARA ===================== */
+
+    implementation("androidx.camera:camera-camera2:1.5.0")
+    implementation("androidx.camera:camera-lifecycle:1.5.0")
+    implementation("androidx.camera:camera-view:1.5.0")
+    // Para la vista previa en compose (o usa AndroidView)
+    implementation("androidx.camera:camera-compose:1.0.0-alpha02")
+    // Para manejar los permisos fácilmente
+    implementation("com.google.accompanist:accompanist-permissions:0.34.0")
+    // Dependencia para cargar la imagen después de ser capturada
+    implementation("io.coil-kt:coil-compose:2.1.0")
+
+    /* ======================================================================================== */
+
+    //Dependencias para Geolocalización
+
+    // ... otras dependencias ...
+    implementation("com.google.android.gms:play-services-location:21.3.0") // Usa la última versión
+    // Para usar .await() con tasks de Google Play Services en coroutines
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.0")
+
+    implementation("androidx.activity:activity-compose:1.9.3")
+    implementation("androidx.compose.ui:ui:1.7.3")
+    implementation("androidx.compose.material3:material3:1.3.0")
+
+
+    implementation("androidx.core:core-ktx:1.12.0") // Usa la última versión
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.7.0") // Usa la última versión
+
+    // Opcional: Para obtener la ubicación del usuario (FusedLocationProviderClient)
+    implementation("com.google.android.gms:play-services-location:21.0.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.0")
+
+    //Dependencias de MapBox
+    implementation("com.mapbox.maps:android-ndk27:11.16.2")
+    implementation("com.mapbox.extension:maps-compose-ndk27:11.16.2")
+    implementation(libs.androidx.compose.foundation.layout)
+    /* ===================================================================================== */
+
     val roomVersion = "2.8.1"
     implementation("androidx.room:room-runtime:$roomVersion")
 
