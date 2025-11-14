@@ -7,8 +7,6 @@ Incluye un catálogo con imágenes, carrito de compras, login, registro, perfil,
 
 Proyecto desarrollado para la asignatura **Desarrollo de Aplicaciones Móviles – Duoc UC (2025)**.
 
-
-
 ----------------------------------------------------------------------------------------------------------------------------------
 
 Integrantes
@@ -36,7 +34,7 @@ Carrera: Analista Programador
 
 ### 🧭 Navegación
 - Implementada con **Navigation Compose**
-- Más de **10 pantallas**, como pide la guía del profesor
+- Más de **10 pantallas**
 
 ### 🧠 Arquitectura MVVM
 - Uso de **ViewModel**, **StateFlow** y estados reactivos
