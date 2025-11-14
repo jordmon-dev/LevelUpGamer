@@ -12,10 +12,7 @@ import com.example.levelup_gamer.viewmodel.UsuarioViewModel
 import com.example.levelup_gamer.viewmodel.ProductoViewModel
 import com.example.levelup_gamer.viewmodel.CarritoViewModel
 import com.example.levelup_gamer.viewmodel.AboutViewModel
-import com.example.levelup_gamer.viewmodel.ConfirmacionViewModel
-import com.example.levelup_gamer.viewmodel.NotificacionesViewModel
-import com.example.levelup_gamer.viewmodel.PagoViewModel
-
+import com.example.levelup_gamer.viewmodel.OfertasViewModel
 
 @Composable
 fun AppNavigate(){
@@ -26,9 +23,6 @@ fun AppNavigate(){
     val productoViewModel: ProductoViewModel = viewModel()
     val carritoViewModel: CarritoViewModel = viewModel()
     val aboutViewModel: AboutViewModel = viewModel()
-    val notificacionesViewModel: NotificacionesViewModel = viewModel()
-    val pagoViewModel: PagoViewModel = viewModel()
-    val confirmacionViewModel: ConfirmacionViewModel = viewModel()
 
     NavHost(
         navController = navController,
@@ -68,47 +62,39 @@ fun AppNavigate(){
             )
         }
 
-        // 6. PERFIL
+        // 6. OFERTAS - CORREGIDO
+        composable(route = "ofertas") {
+            // Crear el ViewModel aquí mismo
+            val ofertasViewModel: OfertasViewModel = viewModel()
+            OfertasScreen(navController = navController, viewModel = ofertasViewModel)
+        }
+
+        // 7. PERFIL
         composable(route = "perfil") {
             // Pasamos el UsuarioViewModel para ver/editar perfil
             Perfil(navController = navController, viewModel = usuarioViewModel)
         }
 
-        // 7. CARRITO
+        // 8. CARRITO
         composable(route = "carrito") {
             // Pasamos el CarritoViewModel
             Carrito(navController = navController, viewModel = carritoViewModel)
         }
 
-
-        // 8. ACERCA DE
+        // 9. ACERCA DE
         composable(route = "about") {
             // Pasamos el AboutViewModel
             About(navController = navController, viewModel = aboutViewModel)
         }
 
-        // 9. PAGO
+        // 10. PAGO
         composable(route = "pago") {
             PagoScreen(navController = navController, carritoViewModel = carritoViewModel)
         }
 
-        // 10. CONFIRMACIÓN
+        // 11. CONFIRMACIÓN
         composable(route = "confirmacion") {
             ConfirmacionScreen(navController = navController)
         }
-
-        composable("notificaciones") { NotificacionScreen(navController) }
-        composable("ayuda") { PantallaAyuda(navController) }
-
-        // PARA UTILIZAR LA CÁMARA
-
-        composable("camaraCaptura") { CamaraCaptura(navController) }
-
-        //PARA LA GEOLOCALIZACIÓN (GPS)
-
-        composable("gps") { PantallaGps(navController) }
-
     }
 }
-
-
