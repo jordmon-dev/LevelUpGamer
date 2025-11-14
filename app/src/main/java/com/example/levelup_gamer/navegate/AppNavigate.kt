@@ -12,6 +12,9 @@ import com.example.levelup_gamer.viewmodel.UsuarioViewModel
 import com.example.levelup_gamer.viewmodel.ProductoViewModel
 import com.example.levelup_gamer.viewmodel.CarritoViewModel
 import com.example.levelup_gamer.viewmodel.AboutViewModel
+import com.example.levelup_gamer.viewmodel.ConfirmacionViewModel
+import com.example.levelup_gamer.viewmodel.NotificacionesViewModel
+import com.example.levelup_gamer.viewmodel.PagoViewModel
 
 
 @Composable
@@ -23,6 +26,9 @@ fun AppNavigate(){
     val productoViewModel: ProductoViewModel = viewModel()
     val carritoViewModel: CarritoViewModel = viewModel()
     val aboutViewModel: AboutViewModel = viewModel()
+    val notificacionesViewModel: NotificacionesViewModel = viewModel()
+    val pagoViewModel: PagoViewModel = viewModel()
+    val confirmacionViewModel: ConfirmacionViewModel = viewModel()
 
     NavHost(
         navController = navController,
@@ -90,6 +96,18 @@ fun AppNavigate(){
         composable(route = "confirmacion") {
             ConfirmacionScreen(navController = navController)
         }
+
+        composable("notificaciones") { NotificacionScreen(navController) }
+        composable("ayuda") { PantallaAyuda(navController) }
+
+        // PARA UTILIZAR LA CÁMARA
+
+        composable("camaraCaptura") { CamaraCaptura(navController) }
+
+        //PARA LA GEOLOCALIZACIÓN (GPS)
+
+        composable("gps") { PantallaGps(navController) }
+
     }
 }
 

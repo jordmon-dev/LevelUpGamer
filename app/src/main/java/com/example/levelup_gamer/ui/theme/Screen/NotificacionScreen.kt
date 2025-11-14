@@ -17,7 +17,7 @@ import androidx.navigation.NavController
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PantallaNotificaciones(navController: NavController) {
+fun NotificacionScreen(navController: NavController) {
     val contexto = LocalContext.current
     var listaNotificaciones by remember { mutableStateOf(obtenerNotificacionesIniciales().toMutableList()) }
 

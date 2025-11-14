@@ -25,18 +25,12 @@ fun Home(
     navController: NavController,
     viewModel: UsuarioViewModel = viewModel()
 ) {
-    // Obtener el estado del usuario desde el ViewModel
     val usuario by viewModel.usuario.collectAsState()
 
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        "Level-Up Gamer",
-                        color = Color(0xFF1E90FF)
-                    )
-                },
+                title = { Text("Level-Up Gamer", color = Color(0xFF1E90FF)) },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = Color(0xFF1A1A1A)
                 )
@@ -51,7 +45,7 @@ fun Home(
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Header con bienvenida personalizada
+            // 💬 Bienvenida
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A1A))
@@ -60,37 +54,26 @@ fun Home(
                     modifier = Modifier.padding(24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // Mostrar nombre del usuario si está disponible
-                    if (usuario.nombre.isNotEmpty()) {
-                        Text(
-                            "¡Bienvenido, ${usuario.nombre}!",
-                            style = MaterialTheme.typography.headlineSmall,
-                            color = Color.White
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                    } else {
-                        Text(
-                            "¡Bienvenido a Level-Up Gamer!",
-                            style = MaterialTheme.typography.headlineSmall,
-                            color = Color.White
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                    }
-
+                    Text(
+                        if (usuario.nombre.isNotEmpty())
+                            "¡Bienvenido, ${usuario.nombre}!"
+                        else "¡Bienvenido a Level-Up Gamer!",
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = Color.White
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         "Level-Up Gamer",
                         style = MaterialTheme.typography.headlineMedium,
                         color = Color(0xFF1E90FF),
                         fontWeight = FontWeight.Bold
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         "Tu tienda gaming de confianza",
                         style = MaterialTheme.typography.bodyMedium,
                         color = Color.Gray
                     )
 
-                    // Mostrar beneficio especial si es estudiante Duoc
                     if (usuario.correo.endsWith("@duocuc.cl")) {
                         Spacer(modifier = Modifier.height(12.dp))
                         Card(
@@ -120,7 +103,7 @@ fun Home(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Tarjetas de navegación
+            // 🔹 Tarjetas de navegación principales
             NavigationCard(
                 icon = Icons.Default.Storefront,
                 title = "📱 Catálogo de Productos",
@@ -153,12 +136,48 @@ fun Home(
                 color = Color(0xFFFF6B6B)
             )
 
+            // 🔔 NUEVAS PANTALLAS (correctamente ubicadas)
+            NavigationCard(
+                icon = Icons.Default.Notifications,
+                title = "🔔 Notificaciones",
+                description = "Consulta tus alertas, ofertas y mensajes",
+                onClick = { navController.navigate("notificaciones") },
+                color = Color(0xFF1E90FF)
+            )
+
+            NavigationCard(
+                icon = Icons.Default.Help,
+                title = "❓ Centro de Ayuda",
+                description = "Soporte técnico y preguntas frecuentes",
+                onClick = { navController.navigate("ayuda") },
+                color = Color(0xFF39FF14)
+            )
+
+            // NUEVA TARJETA DE CÁMARA
+            NavigationCard(
+                icon = Icons.Default.CameraAlt,
+                title = "📸 Cámara de Captura",
+                description = "Toma una foto con la cámara",
+                onClick = { navController.navigate("camaraCaptura") },
+                color = Color(0xFFFFD700)
+            )
+
+            //TARJETA PARA GPS
+
+            NavigationCard(
+                icon = Icons.Default.LocationOn,
+                title = "🧭 GPS",
+                description = "Muestra tu ubicación actual",
+                onClick = { navController.navigate("gps") },
+                color = Color(0xFF1E90FF)
+            )
+
+
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Botón de cerrar sesión
+            // 🚪 Botón de cierre de sesión
             OutlinedButton(
                 onClick = {
-                    // Limpiar el estado del usuario al cerrar sesión
                     viewModel.limpiarEstado()
                     navController.navigate("login") {
                         popUpTo("login") { inclusive = true }
@@ -167,9 +186,7 @@ fun Home(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = Color.Red
-                )
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Red)
             ) {
                 Icon(Icons.Default.Logout, contentDescription = "Cerrar sesión")
                 Spacer(modifier = Modifier.width(8.dp))
@@ -179,6 +196,7 @@ fun Home(
     }
 }
 
+/** 🔸 Composable reutilizable para las tarjetas de navegación */
 @Composable
 fun NavigationCard(
     icon: ImageVector,
@@ -199,34 +217,13 @@ fun NavigationCard(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = color,
-                modifier = Modifier.size(32.dp)
-            )
+            Icon(imageVector = icon, contentDescription = null, tint = color, modifier = Modifier.size(32.dp))
             Spacer(modifier = Modifier.width(16.dp))
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(
-                    title,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = Color.White,
-                    fontWeight = FontWeight.Medium
-                )
-                Text(
-                    description,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray
-                )
+            Column(modifier = Modifier.weight(1f)) {
+                Text(title, style = MaterialTheme.typography.bodyLarge, color = Color.White, fontWeight = FontWeight.Medium)
+                Text(description, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
             }
-            Icon(
-                Icons.Default.ChevronRight,
-                contentDescription = "Ir",
-                tint = Color.Gray,
-                modifier = Modifier.size(20.dp)
-            )
+            Icon(Icons.Default.ChevronRight, contentDescription = "Ir", tint = Color.Gray, modifier = Modifier.size(20.dp))
         }
     }
 }
