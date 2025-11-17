@@ -2,6 +2,7 @@ package com.example.levelup_gamer.ui.theme.Screen
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -41,7 +42,8 @@ fun Catalogo(
         Producto("CG001", "PC Gamer ASUS ROG", 1299990.0, "Computadores", "Alto rendimiento"),
         Producto("SG001", "Silla Gamer SecretLab", 349990.0, "Sillas", "Máximo confort"),
         Producto("MS001", "Mouse Logitech G502", 49990.0, "Mouse", "Alta precisión"),
-        Producto("PP001", "Polera Gamer Personalizada", 14990.0, "Poleras", "Personalizable")
+        Producto("PP001", "Polera Gamer Personalizada", 14990.0, "Poleras", "Personalizable"),
+        Producto("JP003", "Cyberpunk 2077", 40000.0, "PlayStation", "Juego de PlayStation")
     )
 
     val productosFiltrados = productos.filter { producto ->
@@ -84,7 +86,7 @@ fun Catalogo(
             )
 
             // Filtros de categoría
-            LazyColumn(
+            LazyRow(
                 modifier = Modifier
                     .padding(vertical = 16.dp)
                     .height(60.dp)
@@ -117,6 +119,8 @@ fun Catalogo(
                     )
                 }
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }

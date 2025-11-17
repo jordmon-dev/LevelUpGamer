@@ -96,5 +96,10 @@ fun AppNavigate(){
         composable(route = "confirmacion") {
             ConfirmacionScreen(navController = navController)
         }
+
+        // 12. AYUDA
+        composable(route = "ayuda") {
+            PantallaAyuda(navController = navController)
+        }
     }
 }
