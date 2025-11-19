@@ -1,71 +1,61 @@
 package com.example.levelup_gamer.navegate
 
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
+import androidx.navigation.compose.*
 import com.example.levelup_gamer.datastore.UserPreferences
-// Importamos todas las pantallas del paquete correcto
-import com.example.levelup_gamer.ui.theme.screen.*
-import com.example.levelup_gamer.viewmodel.UsuarioViewModel
-import com.example.levelup_gamer.viewmodel.ProductoViewModel
-import com.example.levelup_gamer.viewmodel.CarritoViewModel
-import com.example.levelup_gamer.viewmodel.AboutViewModel
-import com.example.levelup_gamer.viewmodel.OfertasViewModel
+import com.example.levelup_gamer.ui.theme.Screen.*
+import com.example.levelup_gamer.viewmodel.*
 
 @Composable
-fun AppNavigate(){
+fun AppNavigate() {
+
     val navController = rememberNavController()
 
-    // Inyección de ViewModels al inicio para que persistan en toda la aplicación
+    // ViewModels globales
     val usuarioViewModel: UsuarioViewModel = viewModel()
     val productoViewModel: ProductoViewModel = viewModel()
     val carritoViewModel: CarritoViewModel = viewModel()
     val aboutViewModel: AboutViewModel = viewModel()
+    val reclamoViewModel: ReclamoViewModel = viewModel()
+    val ofertasVM: OfertasViewModel = viewModel()
 
+    // DataStore
     val contexto = LocalContext.current
-    val userPrefs = UserPreferences(contexto)
+    val prefs = UserPreferences(contexto)
+    val isLogged by prefs.sesionIniciada.collectAsState(initial = false)
 
-    val isLogged by userPrefs.sesionIniciada.collectAsState(initial = false)
-
+    // Pantalla inicial
     val startDestination = if (isLogged) "home" else "login"
-
 
     NavHost(
         navController = navController,
-        // La aplicación siempre comienza en la pantalla de Login
-        startDestination = "login"
-    )
-    {
-        // 1. LOGIN
-        composable(route = "login") {
-            // Pasamos navController y el ViewModel
-            LoginScreen(navController = navController, viewModel = usuarioViewModel)
+        startDestination = startDestination
+    ) {
+
+        // LOGIN
+        composable("login") {
+            LoginScreen(navController, usuarioViewModel)
         }
 
-        // 2. REGISTRO
-        composable(route = "registro") {
-            // Pasamos navController y el ViewModel
-            RegistroScreen(navController = navController, viewModel = usuarioViewModel)
+        // REGISTRO
+        composable("registro") {
+            RegistroScreen(navController, usuarioViewModel)
         }
 
-        // 3. HOME (Destino después de un Login/Registro exitoso)
-        composable(route = "home") {
-            Home(navController = navController)
+        // HOME
+        composable("home") {
+            HomeScreen(navController, usuarioViewModel)
         }
 
-        // 4. BIENVENIDA (Asumo que esta es la pantalla de Bienvenida de prueba)
-        composable(route="bienvenida") {
-            BienvenidaScreen(viewModel = usuarioViewModel)
+        // BIENVENIDA
+        composable("bienvenida") {
+            BienvenidaScreen(usuarioViewModel)
         }
 
-        // 5. CATÁLOGO
-        composable(route = "catalogo") {
-            // Pasar ambos ViewModels al catálogo
+        // CATÁLOGO
+        composable("catalogo") {
             CatalogoScreen(
                 navController = navController,
                 viewModel = productoViewModel,
@@ -73,49 +63,64 @@ fun AppNavigate(){
             )
         }
 
-        // 6. OFERTAS - CORREGIDO
-        composable(route = "ofertas") {
-            // Crear el ViewModel aquí mismo
-            val ofertasViewModel: OfertasViewModel = viewModel()
-            OfertasScreen(navController = navController, viewModel = ofertasViewModel)
+        // OFERTAS
+        composable("ofertas") {
+            OfertasScreen(navController, ofertasVM)
         }
 
-        // 7. PERFIL
-        composable(route = "perfil") {
-            // Pasamos el UsuarioViewModel para ver/editar perfil
-            Perfil(navController = navController, viewModel = usuarioViewModel)
+        // PERFIL
+        composable("perfil") {
+            PerfilScreen(navController, usuarioViewModel)
         }
 
-        // 8. CARRITO
-        composable(route = "carrito") {
-            // Pasamos el CarritoViewModel
-            Carrito(navController = navController, viewModel = carritoViewModel)
+        // CARRITO
+        composable("carrito") {
+            CarritoScreen(navController, carritoViewModel)
         }
 
-        // 9. ACERCA DE
-        composable(route = "about") {
-            // Pasamos el AboutViewModel
-            AboutScreen(navController = navController, viewModel = aboutViewModel)
+        // ABOUT
+        composable("about") {
+            AboutScreen(navController, aboutViewModel)
         }
 
-        // 10. PAGO
-        composable(route = "pago") {
-            PagoScreen(navController = navController, carritoViewModel = carritoViewModel)
+        // PAGO
+        composable("pago") {
+            PagoScreen(navController, carritoViewModel)
         }
 
-        // 11. CONFIRMACIÓN
-        composable(route = "confirmacion") {
-            ConfirmacionScreen(navController = navController)
+        // CONFIRMACIÓN DE PAGO
+        composable("confirmacion") {
+            ConfirmacionScreen(navController)
         }
 
-        // 12. AYUDA
-        composable(route = "ayuda") {
-            PantallaAyuda(navController = navController)
+        // AYUDA
+        composable("ayuda") {
+            AyudaScreen(navController)
         }
 
-        // 12. NOTIFICACIONES
-        composable(route = "notificaciones") {
-            NotificacionScreen(navController = navController)
+        // NOTIFICACIONES
+        composable("notificaciones") {
+            NotificacionScreen(navController)
+        }
+
+        // 📸 CÁMARA — AHORA SÍ FUNCIONA
+        composable("camaraCaptura") {
+            CamaraCapturaScreen(navController, reclamoViewModel)
+        }
+
+        // 📍 GPS — AHORA SÍ FUNCIONA
+        composable("gps") {
+            PantallaGpsScreen(navController, reclamoViewModel)
+        }
+
+        // 📄 RECLAMO
+        composable("reporteReclamo") {
+            ReporteReclamoScreen(navController, reclamoViewModel)
+        }
+
+        // ✔ CONFIRMACIÓN DE RECLAMO
+        composable("confirmacionReclamo") {
+            ConfirmacionReclamoScreen(navController)
         }
     }
 }

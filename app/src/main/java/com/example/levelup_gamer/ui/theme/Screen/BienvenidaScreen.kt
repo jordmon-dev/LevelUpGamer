@@ -1,4 +1,4 @@
-package com.example.levelup_gamer.ui.theme.screen
+package com.example.levelup_gamer.ui.theme.Screen
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding

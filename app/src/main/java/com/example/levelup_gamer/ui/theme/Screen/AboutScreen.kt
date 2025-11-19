@@ -1,4 +1,4 @@
-package com.example.levelup_gamer.ui.theme.screen
+package com.example.levelup_gamer.ui.theme.Screen
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -19,19 +19,25 @@ import androidx.navigation.NavController
 @Composable
 fun AboutScreen(navController: NavController, viewModel: Any? = null) {
 
+    // Mismo gradiente que LoginScreen
     val fondo = Brush.verticalGradient(
         listOf(
             Color(0xFF0A0A0A),
-            Color(0xFF111122),
             Color(0xFF1A1A2E),
-            Color(0xFF0D0D18)
+            Color(0xFF16213E)
         )
     )
 
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Sobre Nosotros", color = Color.White) },
+                title = {
+                    Text(
+                        "Sobre Nosotros",
+                        color = Color.White,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
@@ -58,29 +64,27 @@ fun AboutScreen(navController: NavController, viewModel: Any? = null) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            // 🔵 LOGO O TÍTULO
+            // Título estilo Login
             Text(
                 "LEVEL-UP GAMER",
-                color = Color(0xFF00E5FF),
+                color = Color(0xFF00FF88),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.ExtraBold
             )
 
             Spacer(Modifier.height(20.dp))
 
-            // 💠 MISIÓN
             TarjetaInfo(
                 titulo = "Nuestra Misión",
                 texto = """
                     Entregar a nuestra comunidad gamer productos de alta calidad, 
                     asesoría confiable y una experiencia de compra segura, ágil 
-                    y con un enfoque centrado en las necesidades reales de cada jugador.
+                    y centrada en las necesidades reales de cada jugador.
                 """.trimIndent()
             )
 
             Spacer(Modifier.height(16.dp))
 
-            // 💠 VISIÓN
             TarjetaInfo(
                 titulo = "Nuestra Visión",
                 texto = """
@@ -92,7 +96,6 @@ fun AboutScreen(navController: NavController, viewModel: Any? = null) {
 
             Spacer(Modifier.height(16.dp))
 
-            // 💠 INFORMACIÓN EXTRA
             TarjetaInfo(
                 titulo = "¿Qué nos hace únicos?",
                 texto = """
@@ -108,7 +111,7 @@ fun AboutScreen(navController: NavController, viewModel: Any? = null) {
 
             Text(
                 "Gracias por ser parte de la comunidad gamer.",
-                color = Color.LightGray,
+                color = Color(0xFFA0A0A0),
                 style = MaterialTheme.typography.bodySmall
             )
         }
@@ -120,14 +123,16 @@ fun TarjetaInfo(titulo: String, texto: String) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(Color(0xFF1A1A26)),
-        elevation = CardDefaults.cardElevation(6.dp)
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF1E1E2E) // mismo estilo de tarjeta que login
+        ),
+        elevation = CardDefaults.cardElevation(8.dp)
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
 
             Text(
                 titulo,
-                color = Color(0xFF00E5FF),
+                color = Color(0xFF00FF88),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )

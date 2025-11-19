@@ -1,4 +1,4 @@
-package com.example.levelup_gamer.ui.theme.screen
+package com.example.levelup_gamer.ui.theme.Screen
 
 import android.content.Intent
 import android.net.Uri
@@ -15,7 +15,7 @@ import androidx.navigation.NavController
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PantallaAyuda(navController: NavController) {
+fun AyudaScreen(navController: NavController) {
     val contexto = LocalContext.current
 
     Scaffold(

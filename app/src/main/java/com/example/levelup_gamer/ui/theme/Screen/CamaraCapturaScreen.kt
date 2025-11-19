@@ -1,4 +1,4 @@
-package com.example.levelup_gamer.ui.theme.screen
+package com.example.levelup_gamer.ui.theme.Screen
 
 import android.content.Context
 import android.net.Uri
@@ -43,8 +43,9 @@ fun CamaraCapturaScreen(
     }
 
     fun crearArchivo(context: Context): Uri {
+        val carpeta = context.getExternalFilesDir(null) // ahora usamos la carpeta /cache
         val archivo = File(
-            context.getExternalFilesDir(null),
+            carpeta,
             "foto_reclamo_${System.currentTimeMillis()}.jpg"
         )
         return FileProvider.getUriForFile(
@@ -53,6 +54,7 @@ fun CamaraCapturaScreen(
             archivo
         )
     }
+
 
     Scaffold(
         topBar = {

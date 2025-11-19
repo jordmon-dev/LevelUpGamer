@@ -1,43 +1,22 @@
-package com.example.levelup_gamer.ui.theme.screen
+package com.example.levelup_gamer.ui.theme.Screen
 
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CheckboxDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -49,7 +28,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -58,13 +36,15 @@ import com.example.levelup_gamer.viewmodel.UsuarioViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LoginScreen(
+fun RegistroScreen(
     navController: NavController,
     viewModel: UsuarioViewModel = viewModel()
 ) {
     val usuario by viewModel.usuario.collectAsState()
     val contexto = LocalContext.current
     var passwordVisible by remember { mutableStateOf(false) }
+    var confirmPasswordVisible by remember { mutableStateOf(false) }
+    var codigoReferido by remember { mutableStateOf("") }
 
     // Gradiente para el fondo
     val gradient = Brush.verticalGradient(
@@ -83,49 +63,44 @@ fun LoginScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(24.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+                .verticalScroll(rememberScrollState())
         ) {
-            // Header mejorado
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
+            // Header con botón de regreso
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                // Icono de la app (opcional - puedes eliminar si no tienes el recurso)
-                /*
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_game_controller),
-                    contentDescription = "App Icon",
-                    tint = Color(0xFF00FF88),
-                    modifier = Modifier.size(80.dp)
-                )
-                */
-
-                Spacer(modifier = Modifier.height(16.dp))
-
+                IconButton(
+                    onClick = { navController.popBackStack() },
+                    modifier = Modifier
+                        .size(48.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(Color(0xFF1E1E2E))
+                ) {
+                    Icon(
+                        Icons.Default.ArrowBack,
+                        contentDescription = "Volver",
+                        tint = Color(0xFF00FF88)
+                    )
+                }
+                Spacer(modifier = Modifier.width(16.dp))
                 Text(
-                    "Bienvenido a",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = Color(0xFFA0A0A0),
-                    fontSize = 16.sp
-                )
-                Text(
-                    "LEVEL-UP GAMER",
-                    style = MaterialTheme.typography.headlineLarge,
-                    color = Color(0xFF00FF88),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 28.sp,
-                    letterSpacing = 2.sp
+                    "Crear Cuenta",
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
                 )
             }
 
-            Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Tarjeta de formulario
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .padding(24.dp)
                     .shadow(
                         elevation = 16.dp,
                         shape = RoundedCornerShape(20.dp),
@@ -140,24 +115,22 @@ fun LoginScreen(
                     modifier = Modifier.padding(24.dp)
                 ) {
                     Text(
-                        "Iniciar Sesión",
+                        "Únete a LEVEL-UP GAMER",
                         style = MaterialTheme.typography.headlineSmall,
                         color = Color.White,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(bottom = 24.dp)
                     )
 
-                    // Campo de Usuario/Email - DEFINITIVO
+                    // Campo de Nombre completo
                     OutlinedTextField(
                         value = usuario.nombre,
                         onValueChange = viewModel::onChangeNombre,
-                        label = {
-                            Text("Usuario o Email")
-                        },
+                        label = { Text("Nombre completo") },
                         leadingIcon = {
                             Icon(
                                 Icons.Default.Person,
-                                contentDescription = "Usuario",
+                                contentDescription = "Nombre",
                                 tint = Color(0xFF00FF88)
                             )
                         },
@@ -191,13 +164,101 @@ fun LoginScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-// Campo de Contraseña - DEFINITIVO
+                    // Campo de Email
+                    OutlinedTextField(
+                        value = usuario.correo,
+                        onValueChange = viewModel::onChangeCorreo,
+                        label = { Text("Correo electrónico") },
+                        leadingIcon = {
+                            Icon(
+                                Icons.Default.Email,
+                                contentDescription = "Email",
+                                tint = Color(0xFF00FF88)
+                            )
+                        },
+                        isError = usuario.errores.correo != null,
+                        supportingText = {
+                            if (usuario.errores.correo != null) {
+                                Text(
+                                    usuario.errores.correo!!,
+                                    color = MaterialTheme.colorScheme.error,
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                            } else if (usuario.correo.endsWith("@duocuc.cl")) {
+                                Text(
+                                    "🎓 20% de descuento para estudiantes Duoc",
+                                    color = Color(0xFF39FF14),
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                            }
+                        },
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            errorContainerColor = Color.Transparent,
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            cursorColor = Color(0xFF00FF88),
+                            focusedIndicatorColor = Color(0xFF00FF88),
+                            unfocusedIndicatorColor = Color(0xFF666666),
+                            errorIndicatorColor = MaterialTheme.colorScheme.error,
+                            focusedLabelColor = Color(0xFF00FF88),
+                            unfocusedLabelColor = Color(0xFFCCCCCC)
+                        ),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Campo de Edad
+                    OutlinedTextField(
+                        value = usuario.edad,
+                        onValueChange = viewModel::onChangeEdad,
+                        label = { Text("Edad") },
+                        leadingIcon = {
+                            Icon(
+                                Icons.Default.Person,
+                                contentDescription = "Edad",
+                                tint = Color(0xFF00FF88)
+                            )
+                        },
+                        isError = usuario.errores.edad != null,
+                        supportingText = {
+                            usuario.errores.edad?.let {
+                                Text(
+                                    it,
+                                    color = MaterialTheme.colorScheme.error,
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                            }
+                        },
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            errorContainerColor = Color.Transparent,
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            cursorColor = Color(0xFF00FF88),
+                            focusedIndicatorColor = Color(0xFF00FF88),
+                            unfocusedIndicatorColor = Color(0xFF666666),
+                            errorIndicatorColor = MaterialTheme.colorScheme.error,
+                            focusedLabelColor = Color(0xFF00FF88),
+                            unfocusedLabelColor = Color(0xFFCCCCCC)
+                        ),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Campo de Contraseña
                     OutlinedTextField(
                         value = usuario.password,
                         onValueChange = viewModel::onChangePassword,
-                        label = {
-                            Text("Contraseña")
-                        },
+                        label = { Text("Contraseña") },
                         leadingIcon = {
                             Icon(
                                 Icons.Default.Lock,
@@ -251,7 +312,91 @@ fun LoginScreen(
                         modifier = Modifier.fillMaxWidth()
                     )
 
-                    // Checkbox de Términos mejorado
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Campo de Confirmar Contraseña
+                    OutlinedTextField(
+                        value = usuario.confirmPassword,
+                        onValueChange = viewModel::onChangeConfirmPassword,
+                        label = { Text("Confirmar contraseña") },
+                        leadingIcon = {
+                            Icon(
+                                Icons.Default.Lock,
+                                contentDescription = "Confirmar contraseña",
+                                tint = Color(0xFF00FF88)
+                            )
+                        },
+                        trailingIcon = {
+                            val image = if (confirmPasswordVisible)
+                                Icons.Filled.Visibility
+                            else
+                                Icons.Filled.VisibilityOff
+
+                            IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
+                                Icon(
+                                    imageVector = image,
+                                    contentDescription = "Toggle visibility",
+                                    tint = Color(0xFF00FF88)
+                                )
+                            }
+                        },
+                        isError = usuario.errores.confirmPassword != null,
+                        visualTransformation = if (confirmPasswordVisible)
+                            VisualTransformation.None
+                        else
+                            PasswordVisualTransformation(),
+                        supportingText = {
+                            usuario.errores.confirmPassword?.let {
+                                Text(
+                                    it,
+                                    color = MaterialTheme.colorScheme.error,
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                            }
+                        },
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            errorContainerColor = Color.Transparent,
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            cursorColor = Color(0xFF00FF88),
+                            focusedIndicatorColor = Color(0xFF00FF88),
+                            unfocusedIndicatorColor = Color(0xFF666666),
+                            errorIndicatorColor = MaterialTheme.colorScheme.error,
+                            focusedLabelColor = Color(0xFF00FF88),
+                            unfocusedLabelColor = Color(0xFFCCCCCC)
+                        ),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Campo de Código de referido (opcional)
+                    OutlinedTextField(
+                        value = codigoReferido,
+                        onValueChange = { codigoReferido = it },
+                        label = { Text("Código de referido (opcional)") },
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                            cursorColor = Color(0xFF00FF88),
+                            focusedIndicatorColor = Color(0xFF00FF88),
+                            unfocusedIndicatorColor = Color(0xFF666666),
+                            focusedLabelColor = Color(0xFF00FF88),
+                            unfocusedLabelColor = Color(0xFFCCCCCC)
+                        ),
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Checkbox de Términos y condiciones
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -290,12 +435,12 @@ fun LoginScreen(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // Botón de Login mejorado
+                    // Botón de Registro
                     Button(
                         onClick = {
                             if (viewModel.validar()) {
-                                Toast.makeText(contexto, "¡Inicio de sesión exitoso!", Toast.LENGTH_SHORT).show()
-                                navController.navigate(route = "home")
+                                Toast.makeText(contexto, "¡Cuenta creada exitosamente!", Toast.LENGTH_SHORT).show()
+                                navController.navigate("home")
                             } else {
                                 Toast.makeText(contexto, "Error: revise los campos.", Toast.LENGTH_LONG).show()
                             }
@@ -314,7 +459,7 @@ fun LoginScreen(
                         )
                     ) {
                         Text(
-                            "Iniciar Sesión",
+                            "Crear Cuenta",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             fontSize = 16.sp
@@ -323,44 +468,27 @@ fun LoginScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Enlace a Registro mejorado
+                    // Enlace a Login
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            "¿No tienes una cuenta? ",
+                            "¿Ya tienes una cuenta? ",
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color(0xFFA0A0A0)
                         )
                         Text(
-                            "Crear Cuenta",
+                            "Iniciar Sesión",
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color(0xFF00FF88),
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.clickable {
-                                navController.navigate(route = "registro")
+                                navController.popBackStack()
                             }
                         )
                     }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    // Opción de "Olvidé mi contraseña"
-                    Text(
-                        "¿Olvidaste tu contraseña?",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFF00FF88),
-                        fontWeight = FontWeight.Medium,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                // Navegar a pantalla de recuperación
-                                Toast.makeText(contexto, "Función en desarrollo", Toast.LENGTH_SHORT).show()
-                            }
-                    )
                 }
             }
         }

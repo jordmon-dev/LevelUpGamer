@@ -1,4 +1,4 @@
-package com.example.levelup_gamer.ui.theme.screen
+package com.example.levelup_gamer.ui.theme.Screen
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -39,16 +39,21 @@ fun CatalogoScreen(
     val fondo = Brush.verticalGradient(
         listOf(
             Color(0xFF0A0A0A),
-            Color(0xFF111122),
             Color(0xFF1A1A2E),
-            Color(0xFF0D0D18)
+            Color(0xFF16213E)
         )
     )
 
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Catálogo Gamer", color = Color.White) },
+                title = {
+                    Text(
+                        "Catálogo Gamer",
+                        color = Color.White,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
@@ -73,25 +78,25 @@ fun CatalogoScreen(
                 .background(fondo)
         ) {
 
-            // 🔍 BUSCADOR
+            // Buscador
             OutlinedTextField(
                 value = uiState.busqueda,
                 onValueChange = viewModel::onBusquedaChange,
-                placeholder = { Text("Buscar productos...", color = Color.LightGray) },
+                placeholder = { Text("Buscar productos...", color = Color(0xFFA0A0A0)) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
                 shape = RoundedCornerShape(14.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFF00E5FF),
+                    focusedBorderColor = Color(0xFF00FF88),
                     unfocusedBorderColor = Color(0xFF444466),
-                    cursorColor = Color(0xFF00E5FF),
+                    cursorColor = Color(0xFF00FF88),
                     focusedTextColor = Color.White,
                     unfocusedTextColor = Color.White
                 )
             )
 
-            // 🔥 FILTROS POR CATEGORÍA
+            // Filtros por categoría
             LazyRow(
                 modifier = Modifier.padding(start = 16.dp, bottom = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -100,16 +105,24 @@ fun CatalogoScreen(
                     FilterChip(
                         selected = uiState.categoriaSeleccionada == categoria,
                         onClick = { viewModel.onCategoriaSeleccionada(categoria) },
-                        label = { Text(categoria, color = Color.White) },
+                        label = {
+                            Text(
+                                categoria,
+                                color = if (uiState.categoriaSeleccionada == categoria)
+                                    Color.Black
+                                else
+                                    Color.White
+                            )
+                        },
                         colors = FilterChipDefaults.filterChipColors(
                             containerColor = Color(0xFF1F1F2E),
-                            selectedContainerColor = Color(0xFF00E5FF)
+                            selectedContainerColor = Color(0xFF00FF88)
                         )
                     )
                 }
             }
 
-            // 🛒 LISTA DE PRODUCTOS
+            // Lista de productos
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(16.dp),
@@ -137,7 +150,7 @@ fun ProductoCard(
             .fillMaxWidth()
             .clip(RoundedCornerShape(20.dp)),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF1A1A26)
+            containerColor = Color(0xFF1E1E2E)
         ),
         elevation = CardDefaults.cardElevation(6.dp)
     ) {
@@ -148,7 +161,6 @@ fun ProductoCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
 
-            // 🖼 IMAGEN
             Image(
                 painter = painterResource(id = producto.imagen ?: R.drawable.banner_game),
                 contentDescription = "Producto",
@@ -172,7 +184,7 @@ fun ProductoCard(
 
                 Text(
                     "$${producto.precio.toInt()} CLP",
-                    color = Color(0xFF00E5FF),
+                    color = Color(0xFF00FF88),
                     style = MaterialTheme.typography.bodyLarge
                 )
             }
@@ -181,7 +193,7 @@ fun ProductoCard(
                 onClick = onAgregar,
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.filledTonalButtonColors(
-                    containerColor = Color(0xFF00E5FF),
+                    containerColor = Color(0xFF00FF88),
                     contentColor = Color.Black
                 )
             ) {

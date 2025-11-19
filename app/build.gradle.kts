@@ -79,6 +79,7 @@ dependencies {
     implementation("com.mapbox.maps:android-ndk27:11.16.2")
     implementation("com.mapbox.extension:maps-compose-ndk27:11.16.2")
     implementation(libs.androidx.compose.foundation.layout)
+    implementation(libs.androidx.tv.material)
     /* ===================================================================================== */
 
     val roomVersion = "2.8.1"

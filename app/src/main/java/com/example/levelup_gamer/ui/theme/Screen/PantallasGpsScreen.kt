@@ -1,4 +1,4 @@
-package com.example.levelup_gamer.ui.theme.screen
+package com.example.levelup_gamer.ui.theme.Screen
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.levelup_gamer.viewmodel.ReclamoViewModel
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.mapbox.geojson.Point
@@ -27,7 +28,7 @@ import kotlinx.coroutines.tasks.await
 @SuppressLint("MissingPermission")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PantallaGps(navController: NavController) {
+fun PantallaGpsScreen(navController: NavController, reclamoViewModel: ReclamoViewModel) {
     val contexto = LocalContext.current
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(contexto) }
 
