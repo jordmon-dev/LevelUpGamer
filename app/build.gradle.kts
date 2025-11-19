@@ -52,7 +52,7 @@ dependencies {
     // Para manejar los permisos fácilmente
     implementation("com.google.accompanist:accompanist-permissions:0.34.0")
     // Dependencia para cargar la imagen después de ser capturada
-    implementation("io.coil-kt:coil-compose:2.1.0")
+    implementation("io.coil-kt:coil-compose:2.4.0")
 
     /* ======================================================================================== */
 

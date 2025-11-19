@@ -158,4 +158,14 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
             ).format(java.util.Date())
         )
     }
+
+    // En UsuarioViewModel.kt
+    fun guardarFotoPerfil(uri: String) {
+        viewModelScope.launch {
+            // Aquí puedes guardar la URI en tu base de datos, SharedPreferences, etc.
+            // Por ejemplo:
+            // userRepository.guardarFotoPerfil(currentUser.id, uri)
+            println("Foto de perfil guardada: $uri")
+        }
+    }
 }
