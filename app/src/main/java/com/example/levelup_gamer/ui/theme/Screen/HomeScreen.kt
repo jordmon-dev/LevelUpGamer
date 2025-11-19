@@ -338,6 +338,9 @@ fun Home(
                     BottomNavItem(icon = Icons.Default.LocalOffer, label = "Ofertas") {
                         navController.navigate("ofertas")
                     }
+                    BottomNavItem(icon = Icons.Default.NotificationsActive, label = "notificaciones") {
+                        navController.navigate("notificaciones")
+                    }
                     BottomNavItem(icon = Icons.Default.Person, label = "Perfil") {
                         navController.navigate("perfil")
                     }

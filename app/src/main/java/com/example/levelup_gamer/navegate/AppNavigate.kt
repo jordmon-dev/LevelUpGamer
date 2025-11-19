@@ -101,5 +101,10 @@ fun AppNavigate(){
         composable(route = "ayuda") {
             PantallaAyuda(navController = navController)
         }
+
+        // 12. NOTIFICACIONES
+        composable(route = "notificaciones") {
+            NotificacionScreen(navController = navController)
+        }
     }
 }

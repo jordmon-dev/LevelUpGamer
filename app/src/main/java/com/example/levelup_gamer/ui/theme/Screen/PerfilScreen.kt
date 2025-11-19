@@ -24,7 +24,6 @@ import java.util.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Perfil(navController: NavController, viewModel: UsuarioViewModel) {
-    // Obtener el estado actual del usuario desde el ViewModel
     val uiState by viewModel.usuario.collectAsState()
 
     // Crear el objeto UsuarioPerfil con los datos del ViewModel

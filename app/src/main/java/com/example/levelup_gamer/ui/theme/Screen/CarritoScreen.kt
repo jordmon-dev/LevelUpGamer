@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -20,17 +21,35 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.levelup_gamer.viewmodel.CarritoItem // Importar CarritoItem
-import kotlin.math.roundToInt // Importar roundToInt
+import com.example.levelup_gamer.viewmodel.CarritoItem
+import com.example.levelup_gamer.viewmodel.CarritoViewModel
+import com.example.levelup_gamer.viewmodel.UsuarioViewModel
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Carrito(
     navController: NavController,
-    viewModel: com.example.levelup_gamer.viewmodel.CarritoViewModel = viewModel() // Especificar el package completo
+    viewModel: CarritoViewModel = viewModel(),
+    usuarioViewModel: UsuarioViewModel = viewModel()
 ) {
     val resumen by viewModel.resumen.collectAsState()
+    val usuario by usuarioViewModel.usuario.collectAsState()
     val itemsCarrito = resumen.items
+
+    // Efecto para actualizar el resumen cuando cambien los datos
+    LaunchedEffect(usuario.correo, itemsCarrito.size) {
+        if (usuario.correo.isNotEmpty()) {
+            viewModel.actualizarResumen(usuario.correo)
+        }
+    }
+
+    // Validación if-else para determinar el texto y cálculo del descuento
+    val (textoDescuento, montoDescuento, porcentajeTexto) = if (usuario.correo.endsWith("@duocuc.cl")) {
+        Triple("Descto 20%:", resumen.descuento.roundToInt(), "20%")
+    } else {
+        Triple("Descto 10%:", resumen.descuento.roundToInt(), "10%")
+    }
 
     Scaffold(
         topBar = {
@@ -67,9 +86,22 @@ fun Carrito(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Text("Descuento 10%:", color = Color(0xFF39FF14))
-                            Text("-$${resumen.descuento.roundToInt()} CLP", color = Color(0xFF39FF14))
+                            Text(textoDescuento, color = Color(0xFF39FF14))
+                            Text("-$${montoDescuento} CLP", color = Color(0xFF39FF14))
                         }
+
+                        // Mostrar información del tipo de descuento
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = if (usuario.correo.endsWith("@duocuc.cl")) {
+                                "🎓 Descuento especial estudiante Duoc - $porcentajeTexto"
+                            } else {
+                                "👍 Descuento regular de usuario - $porcentajeTexto"
+                            },
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color(0xFF39FF14),
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     }
 
                     Spacer(modifier = Modifier.height(8.dp))
@@ -85,6 +117,21 @@ fun Carrito(
                             "$${resumen.total.roundToInt()} CLP",
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF1E90FF)
+                        )
+                    }
+
+                    // Mostrar ahorro total con validación if-else
+                    if (resumen.descuento > 0) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = if (usuario.correo.endsWith("@duocuc.cl")) {
+                                "💰 Ahorras: $${montoDescuento} CLP (20% descuento estudiante)"
+                            } else {
+                                "💰 Ahorras: $${montoDescuento} CLP (10% descuento regular)"
+                            },
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color(0xFF39FF14),
+                            modifier = Modifier.fillMaxWidth()
                         )
                     }
 
@@ -149,12 +196,65 @@ fun Carrito(
                     ItemCarrito(
                         item = item,
                         onCantidadChange = { nuevaCantidad ->
-                            viewModel.onCantidadChange(item, nuevaCantidad)
+                            viewModel.onCantidadChange(item, nuevaCantidad, usuario.correo)
                         },
                         onEliminar = {
-                            viewModel.onEliminar(item)
+                            viewModel.onEliminar(item, usuario.correo)
                         }
                     )
+                }
+
+                // Mostrar información del descuento aplicado con validación if-else
+                item {
+                    Card(
+                        modifier = Modifier
+                            .padding(8.dp)
+                            .fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (usuario.correo.endsWith("@duocuc.cl")) {
+                                Color(0xFF1B5E20) // Verde oscuro para 20%
+                            } else {
+                                Color(0xFF1A237E) // Azul oscuro para 10%
+                            }
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp)
+                        ) {
+                            Text(
+                                text = if (usuario.correo.endsWith("@duocuc.cl")) {
+                                    "🎓 Descuento Estudiante Duoc - 20%"
+                                } else {
+                                    "👍 Descuento Usuario - 10%"
+                                },
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = if (usuario.correo.endsWith("@duocuc.cl")) {
+                                    "Estás disfrutando de un descuento especial del 20% por ser estudiante Duoc"
+                                } else {
+                                    "Descuento regular del 10% aplicado a tu compra"
+                                },
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.LightGray
+                            )
+
+                            // Información adicional de cálculo
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = if (usuario.correo.endsWith("@duocuc.cl")) {
+                                    "Cálculo: Subtotal ($${resumen.subtotal.roundToInt()}) × 20% = Ahorro de $${resumen.descuento.roundToInt()}"
+                                } else {
+                                    "Cálculo: Subtotal ($${resumen.subtotal.roundToInt()}) × 10% = Ahorro de $${resumen.descuento.roundToInt()}"
+                                },
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color(0xFF39FF14)
+                            )
+                        }
+                    }
                 }
             }
         }
