@@ -1,11 +1,14 @@
 package com.example.levelup_gamer.navegate
 
-import ConfirmacionScreen
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.levelup_gamer.datastore.UserPreferences
 // Importamos todas las pantallas del paquete correcto
 import com.example.levelup_gamer.ui.theme.screen.*
 import com.example.levelup_gamer.viewmodel.UsuarioViewModel
@@ -23,6 +26,14 @@ fun AppNavigate(){
     val productoViewModel: ProductoViewModel = viewModel()
     val carritoViewModel: CarritoViewModel = viewModel()
     val aboutViewModel: AboutViewModel = viewModel()
+
+    val contexto = LocalContext.current
+    val userPrefs = UserPreferences(contexto)
+
+    val isLogged by userPrefs.sesionIniciada.collectAsState(initial = false)
+
+    val startDestination = if (isLogged) "home" else "login"
+
 
     NavHost(
         navController = navController,

@@ -1,125 +1,123 @@
 package com.example.levelup_gamer.ui.theme.screen
 
-import android.Manifest
-//import android.graphics.Color
+import android.content.Context
 import android.net.Uri
-import android.os.Environment
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.core.content.FileProvider
 import androidx.navigation.NavController
+import androidx.core.content.FileProvider
 import coil.compose.rememberAsyncImagePainter
+import com.example.levelup_gamer.viewmodel.ReclamoViewModel
 import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CamaraCaptura(navController: NavController) {
+fun CamaraCapturaScreen(
+    navController: NavController,
+    reclamoViewModel: ReclamoViewModel
+) {
     val contexto = LocalContext.current
+    var fotoUri by remember { mutableStateOf<Uri?>(null) }
 
-    var permisoCamara by remember { mutableStateOf(false) }
-    var capturaImagenUri by remember { mutableStateOf<Uri?>(null) }
-
-    // Crear archivo temporal para guardar la imagen
-    val fotoFile: File = remember {
-        val tiempo = System.currentTimeMillis()
-        File.createTempFile(
-            "Foto_${tiempo}",
-            ".jpg",
-            contexto.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
-        )
-    }
-
-    val uri = remember {
-        FileProvider.getUriForFile(
-            contexto,
-            "${contexto.packageName}.fileprovider",
-            fotoFile
-        )
-    }
-
-    // Solicitar permiso de cámara
-    val pedirPermisoCamara = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        permisoCamara = isGranted
-    }
-
-    // Lanzar cámara
-    val lanzarCamara = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.TakePicture()
+    // Launcher de cámara
+    val launcher = rememberLauncherForActivityResult(
+        ActivityResultContracts.TakePicture()
     ) { success ->
         if (success) {
-            capturaImagenUri = uri
+            reclamoViewModel.guardarFoto(fotoUri)
         }
+    }
+
+    fun crearArchivo(context: Context): Uri {
+        val archivo = File(
+            context.getExternalFilesDir(null),
+            "foto_reclamo_${System.currentTimeMillis()}.jpg"
+        )
+        return FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.fileprovider",
+            archivo
+        )
     }
 
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Cámara de Captura") },
+                title = { Text("Capturar Foto", color = Color.White) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver", tint = Color.White)
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = Color(0xFF1A1A1A),
-                    titleContentColor = Color.White
+                    containerColor = Color(0xFF111111)
                 )
             )
         }
-    ) { innerPadding ->
+    ) { padding ->
+
         Column(
             modifier = Modifier
-                .padding(innerPadding)
+                .padding(padding)
                 .fillMaxSize()
-                .padding(20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+                .background(Color(0xFF0D0D0D)),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            capturaImagenUri?.let {
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Mostrar imagen
+            val fotoGuardada = reclamoViewModel.fotoUri.value
+            fotoGuardada?.let { uri ->
                 Image(
-                    painter = rememberAsyncImagePainter(model = it),
-                    contentDescription = "Foto capturada",
+                    painter = rememberAsyncImagePainter(uri),
+                    contentDescription = "Foto",
                     modifier = Modifier
-                        .size(250.dp)
-                        .padding(8.dp)
+                        .size(280.dp)
+                        .padding(8.dp),
+                    contentScale = ContentScale.Crop
                 )
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
+            // Botón para tomar foto
             Button(
                 onClick = {
-                    if (!permisoCamara) {
-                        pedirPermisoCamara.launch(Manifest.permission.CAMERA)
-                    } else {
-                        lanzarCamara.launch(uri)
-                    }
+                    val nuevaUri = crearArchivo(contexto)
+                    fotoUri = nuevaUri
+                    launcher.launch(nuevaUri)
                 },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1E90FF))
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00E5FF))
             ) {
-                Icon(Icons.Default.CameraAlt, contentDescription = "Tomar foto")
-                Spacer(modifier = Modifier.width(8.dp))
                 Text("Tomar Foto")
+            }
+
+            Spacer(modifier = Modifier.height(30.dp))
+
+            // Confirmar y volver
+            Button(
+                onClick = { navController.popBackStack() },
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF39FF14))
+            ) {
+                Text("Usar esta foto")
             }
         }
     }
 }
-
-

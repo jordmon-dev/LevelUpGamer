@@ -1,21 +1,54 @@
 package com.example.levelup_gamer.viewmodel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.example.levelup_gamer.datastore.UserPreferences
 import com.example.levelup_gamer.model.UsuarioErrores
 import com.example.levelup_gamer.model.UsuarioState
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.update
 import com.example.levelup_gamer.model.UsuarioPerfil
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 
-class UsuarioViewModel: ViewModel() {
+class UsuarioViewModel(application: Application) : AndroidViewModel(application) {
 
-    // StateFlow con UsuarioState
+    // ===============================
+    //      DATASTORE
+    // ===============================
+    private val prefs = UserPreferences(application)
+
+    private val _sesionIniciada = MutableStateFlow(false)
+    val sesionIniciada: StateFlow<Boolean> = _sesionIniciada
+
+    init {
+        // Cargar si está logueado
+        viewModelScope.launch {
+            _sesionIniciada.value = prefs.sesionIniciada.first()
+        }
+    }
+
+    fun iniciarSesion(email: String, pass: String) {
+        viewModelScope.launch {
+            prefs.guardarSesion(email, pass)
+            _sesionIniciada.value = true
+        }
+    }
+
+    fun cerrarSesion() {
+        viewModelScope.launch {
+            prefs.cerrarSesion()
+            _sesionIniciada.value = false
+        }
+    }
+
+    // ===============================
+    //      ESTADO DEL FORMULARIO
+    // ===============================
+
     private val _usuario = MutableStateFlow(UsuarioState())
     val usuario: StateFlow<UsuarioState> = _usuario
 
-    // Métodos de cambio
-    fun onChangeNombre(nombre: String){
+    fun onChangeNombre(nombre: String) {
         _usuario.update {
             it.copy(
                 nombre = nombre,
@@ -24,8 +57,8 @@ class UsuarioViewModel: ViewModel() {
         }
     }
 
-    fun onChangeEdad(edad: String){
-        if(edad.all { char -> char.isDigit() } || edad.isEmpty()){
+    fun onChangeEdad(edad: String) {
+        if (edad.all { it.isDigit() } || edad.isEmpty()) {
             _usuario.update {
                 it.copy(
                     edad = edad,
@@ -35,7 +68,7 @@ class UsuarioViewModel: ViewModel() {
         }
     }
 
-    fun onChangeCorreo(correo: String){
+    fun onChangeCorreo(correo: String) {
         _usuario.update {
             it.copy(
                 correo = correo,
@@ -44,7 +77,7 @@ class UsuarioViewModel: ViewModel() {
         }
     }
 
-    fun onChangePassword(pass: String){
+    fun onChangePassword(pass: String) {
         _usuario.update {
             it.copy(
                 password = pass,
@@ -53,7 +86,7 @@ class UsuarioViewModel: ViewModel() {
         }
     }
 
-    fun onChangeConfirmPassword(pass: String){
+    fun onChangeConfirmPassword(pass: String) {
         _usuario.update {
             it.copy(
                 confirmPassword = pass,
@@ -62,7 +95,7 @@ class UsuarioViewModel: ViewModel() {
         }
     }
 
-    fun onChangeAceptarTerminos(valor: Boolean){
+    fun onChangeAceptarTerminos(valor: Boolean) {
         _usuario.update {
             it.copy(
                 aceptarTerminos = valor,
@@ -71,28 +104,34 @@ class UsuarioViewModel: ViewModel() {
         }
     }
 
-    fun validar(): Boolean{
+    fun validar(): Boolean {
         val f = _usuario.value
 
-        // Validación de EDAD
         val edadInt = f.edad.toIntOrNull() ?: 0
-        val errorEdad = if (f.edad.isBlank() || edadInt < 18) "Debes ser mayor de 18 años" else null
+        val errorEdad =
+            if (f.edad.isBlank() || edadInt < 18) "Debes ser mayor de 18 años" else null
 
-        // Validación de CONTRASEÑAS COINCIDENTES
-        val errorConfirmPass = if (f.password != f.confirmPassword) "Las contraseñas no coinciden" else null
+        val errorConfirmPass =
+            if (f.password != f.confirmPassword) "Las contraseñas no coinciden" else null
 
         val errores = UsuarioErrores(
             nombre = if (f.nombre.isBlank()) "El nombre está vacío" else null,
-            correo = if (f.correo.isBlank() || !f.correo.contains("@")) "Error en el ingreso de dirección del correo" else null,
-            password = if (f.password.isBlank()) "Contraseña vacía" else if (f.password.length < 6) "La contraseña debe tener al menos 6 caracteres" else null,
+            correo = if (f.correo.isBlank() || !f.correo.contains("@"))
+                "Error en el ingreso del correo"
+            else null,
+            password = when {
+                f.password.isBlank() -> "Contraseña vacía"
+                f.password.length < 6 -> "Debe tener mínimo 6 caracteres"
+                else -> null
+            },
             edad = errorEdad,
             confirmPassword = errorConfirmPass,
-            aceptaTerminos = if (!f.aceptarTerminos) "Debe aceptar los términos y condiciones" else null
+            aceptaTerminos = if (!f.aceptarTerminos)
+                "Debe aceptar los términos"
+            else null
         )
 
-        _usuario.update {
-            it.copy(errores = errores)
-        }
+        _usuario.update { it.copy(errores = errores) }
 
         return errores.nombre == null &&
                 errores.correo == null &&
@@ -106,15 +145,17 @@ class UsuarioViewModel: ViewModel() {
         _usuario.value = UsuarioState()
     }
 
-    // Método para crear UsuarioPerfil a partir del estado actual
-    fun toUsuarioPerfil():UsuarioPerfil {
-        val state = _usuario.value
+    fun toUsuarioPerfil(): UsuarioPerfil {
+        val f = _usuario.value
         return UsuarioPerfil(
-            nombre = state.nombre,
-            email = state.correo,
+            nombre = f.nombre,
+            email = f.correo,
             puntosLevelUp = 1500,
-            nivel = if (state.correo.endsWith("@duocuc.cl")) "Gamer Pro Estudiante" else "Gamer",
-            fechaRegistro = java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault()).format(java.util.Date())
+            nivel = if (f.correo.endsWith("@duocuc.cl")) "Gamer Pro Estudiante" else "Gamer",
+            fechaRegistro = java.text.SimpleDateFormat(
+                "dd/MM/yyyy",
+                java.util.Locale.getDefault()
+            ).format(java.util.Date())
         )
     }
 }
