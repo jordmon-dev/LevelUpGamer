@@ -7,7 +7,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 // Importamos todas las pantallas del paquete correcto
-import com.example.levelup_gamer.ui.theme.Screen.*
+import com.example.levelup_gamer.ui.theme.screen.*
 import com.example.levelup_gamer.viewmodel.UsuarioViewModel
 import com.example.levelup_gamer.viewmodel.ProductoViewModel
 import com.example.levelup_gamer.viewmodel.CarritoViewModel
@@ -55,7 +55,7 @@ fun AppNavigate(){
         // 5. CATÁLOGO
         composable(route = "catalogo") {
             // Pasar ambos ViewModels al catálogo
-            Catalogo(
+            CatalogoScreen(
                 navController = navController,
                 viewModel = productoViewModel,
                 carritoViewModel = carritoViewModel
@@ -84,7 +84,7 @@ fun AppNavigate(){
         // 9. ACERCA DE
         composable(route = "about") {
             // Pasamos el AboutViewModel
-            About(navController = navController, viewModel = aboutViewModel)
+            AboutScreen(navController = navController, viewModel = aboutViewModel)
         }
 
         // 10. PAGO

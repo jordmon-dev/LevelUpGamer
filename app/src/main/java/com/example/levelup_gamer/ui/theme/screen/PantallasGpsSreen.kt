@@ -1,7 +1,6 @@
-package com.example.levelup_gamer.ui.theme.Screen
+package com.example.levelup_gamer.ui.theme.screen
 
 import android.Manifest
-import android.R.attr.padding
 import android.annotation.SuppressLint
 //mport android.graphics.Color
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -11,17 +10,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
-import androidx.compose.material3.ButtonDefaults.buttonColors
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
-import androidx.core.content.PermissionChecker.PERMISSION_GRANTED
 import androidx.navigation.NavController
-import androidx.room.util.TableInfo
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.mapbox.geojson.Point

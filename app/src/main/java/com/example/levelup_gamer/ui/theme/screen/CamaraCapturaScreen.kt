@@ -1,4 +1,4 @@
-package com.example.levelup_gamer.ui.theme.Screen
+package com.example.levelup_gamer.ui.theme.screen
 
 import android.Manifest
 //import android.graphics.Color
