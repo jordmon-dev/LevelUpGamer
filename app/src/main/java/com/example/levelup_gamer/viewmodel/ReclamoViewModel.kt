@@ -1,3 +1,4 @@
+// ReclamoViewModel.kt
 package com.example.levelup_gamer.viewmodel
 
 import android.net.Uri
@@ -5,39 +6,34 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 
 class ReclamoViewModel : ViewModel() {
+    val fotoUri = mutableStateOf<Uri?>(null)
+    val descripcion = mutableStateOf("")
+    val latitud = mutableStateOf<Double?>(null)
+    val longitud = mutableStateOf<Double?>(null)
 
-    // FOTO TOMADA POR LA CÁMARA
-    var fotoUri = mutableStateOf<Uri?>(null)
-        private set
-
-    fun guardarFoto(uri: Uri?) {
+    // Cambia el nombre del método a actualizarFoto (o usa guardarFoto si prefieres)
+    fun actualizarFoto(uri: Uri?) {
         fotoUri.value = uri
     }
 
-    // UBICACIÓN GPS
-    var latitud = mutableStateOf<Double?>(null)
-        private set
-
-    var longitud = mutableStateOf<Double?>(null)
-        private set
-
-    fun guardarUbicacion(lat: Double, lon: Double) {
-        latitud.value = lat
-        longitud.value = lon
+    // O si prefieres mantener el nombre guardarFoto:
+    fun guardarFoto(uri: Uri?) {
+        fotoUri.value = uri
     }
-
-    // DESCRIPCIÓN
-    var descripcion = mutableStateOf("")
-        private set
 
     fun actualizarDescripcion(texto: String) {
         descripcion.value = texto
     }
 
-    fun limpiar() {
+    fun actualizarUbicacion(lat: Double, lon: Double) {
+        latitud.value = lat
+        longitud.value = lon
+    }
+
+    fun limpiarDatos() {
         fotoUri.value = null
+        descripcion.value = ""
         latitud.value = null
         longitud.value = null
-        descripcion.value = ""
     }
 }

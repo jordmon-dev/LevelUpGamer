@@ -307,6 +307,10 @@ fun PerfilScreen(
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
 
+                    BotonOpcionPerfil("Ver Carrito") {
+                        navController.navigate("carrito")
+                    }
+
                     BotonOpcionPerfil("Ver Notificaciones") {
                         navController.navigate("notificaciones")
                     }

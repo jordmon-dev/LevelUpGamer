@@ -113,14 +113,17 @@ fun AppNavigate() {
             PantallaGpsScreen(navController, reclamoViewModel)
         }
 
-        // 📄 RECLAMO
+        // ✔ CONFIRMACIÓN DE RECLAMO
+        composable("confirmacionReclamo") {
+            ConfirmacionReclamoScreen(navController)
+        }
+
         composable("reporteReclamo") {
             ReporteReclamoScreen(navController, reclamoViewModel)
         }
 
-        // ✔ CONFIRMACIÓN DE RECLAMO
-        composable("confirmacionReclamo") {
-            ConfirmacionReclamoScreen(navController)
+        composable("camaraReclamo") {
+            CamaraReclamoScreen(navController, reclamoViewModel)
         }
     }
 }
