@@ -1,60 +1,64 @@
-package com.example.levelup_gamer.navegate
+package com.example.levelup_gamer.ui.theme
 
-import androidx.compose.runtime.*
-import androidx.compose.ui.platform.LocalContext
+import android.os.Build
+import androidx.annotation.RequiresApi
+import androidx.compose.runtime.Composable
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.compose.*
-import com.example.levelup_gamer.datastore.UserPreferences
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
 import com.example.levelup_gamer.ui.theme.Screen.*
 import com.example.levelup_gamer.viewmodel.*
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun AppNavigate() {
+fun AppNavigate(
+    navController: NavHostController,
+    usuarioViewModel: UsuarioViewModel,
+    reclamoViewModel: ReclamoViewModel
+) {
 
-    val navController = rememberNavController()
-
-    // ViewModels globales
-    val usuarioViewModel: UsuarioViewModel = viewModel()
+    // ViewModels adicionales requeridos por algunas pantallas
     val productoViewModel: ProductoViewModel = viewModel()
     val carritoViewModel: CarritoViewModel = viewModel()
-    val aboutViewModel: AboutViewModel = viewModel()
-    val reclamoViewModel: ReclamoViewModel = viewModel()
-    val ofertasVM: OfertasViewModel = viewModel()
-
-    // DataStore
-    val contexto = LocalContext.current
-    val prefs = UserPreferences(contexto)
-    val isLogged by prefs.sesionIniciada.collectAsState(initial = false)
-
-    // Pantalla inicial
-    val startDestination = if (isLogged) "home" else "login"
 
     NavHost(
         navController = navController,
-        startDestination = startDestination
+        startDestination = "login"
     ) {
 
-        // LOGIN
+        // -----------------------
+        // LOGIN Y REGISTRO
+        // -----------------------
+
         composable("login") {
             LoginScreen(navController, usuarioViewModel)
         }
 
-        // REGISTRO
         composable("registro") {
             RegistroScreen(navController, usuarioViewModel)
         }
 
-        // HOME
+        // -----------------------
+        // HOME + PERFIL + NOTI
+        // -----------------------
+
         composable("home") {
             HomeScreen(navController, usuarioViewModel)
         }
 
-        // BIENVENIDA
-        composable("bienvenida") {
-            BienvenidaScreen(usuarioViewModel)
+        composable("perfil") {
+            PerfilScreen(navController, usuarioViewModel)
         }
 
-        // CATÁLOGO
+        composable("notificaciones") {
+            NotificacionScreen(navController)
+        }
+
+        // -----------------------
+        // CATALOGO
+        // -----------------------
+
         composable("catalogo") {
             CatalogoScreen(
                 navController = navController,
@@ -63,64 +67,36 @@ fun AppNavigate() {
             )
         }
 
-        // OFERTAS
-        composable("ofertas") {
-            OfertasScreen(navController, ofertasVM)
-        }
-
-        // PERFIL
-        composable("perfil") {
-            PerfilScreen(navController, usuarioViewModel)
-        }
-
+        // -----------------------
         // CARRITO
+        // -----------------------
+
+        // CarritoScreen usa viewModels internos así que NO pasamos nada
         composable("carrito") {
-            CarritoScreen(navController, carritoViewModel)
+            CarritoScreen(navController)
         }
 
-        // ABOUT
-        composable("about") {
-            AboutScreen(navController, aboutViewModel)
-        }
+        // -----------------------
+        // RECLAMOS
+        // -----------------------
 
-        // PAGO
-        composable("pago") {
-            PagoScreen(navController, carritoViewModel)
-        }
-
-        // CONFIRMACIÓN DE PAGO
-        composable("confirmacion") {
-            ConfirmacionScreen(navController)
-        }
-
-        // AYUDA
-        composable("ayuda") {
-            AyudaScreen(navController)
-        }
-
-        // NOTIFICACIONES
-        composable("notificaciones") {
-            NotificacionScreen(navController)
-        }
-
-        // 📸 CÁMARA — AHORA SÍ FUNCIONA
-        composable("camaraCaptura") {
-            CamaraCapturaScreen(navController, reclamoViewModel)
-        }
-
-        // 📍 GPS — AHORA SÍ FUNCIONA
-        composable("gps") {
-            PantallaGpsScreen(navController, reclamoViewModel)
-        }
-
-        // 📄 RECLAMO
         composable("reporteReclamo") {
             ReporteReclamoScreen(navController, reclamoViewModel)
         }
 
-        // ✔ CONFIRMACIÓN DE RECLAMO
+        composable("camaraCaptura") {
+            CamaraCapturaScreen(navController, reclamoViewModel)
+        }
+
         composable("confirmacionReclamo") {
             ConfirmacionReclamoScreen(navController)
+        }
+
+        // -----------------------
+        // PAGO (botón desde carrito)
+        // -----------------------
+        composable("pago") {
+            PagoScreen(navController)
         }
     }
 }
