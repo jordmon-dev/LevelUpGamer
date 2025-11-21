@@ -40,14 +40,14 @@ fun CarritoScreen(
     val itemsCarrito = resumen.items
 
     // Actualizar resumen cuando cambia usuario o items
-    LaunchedEffect(usuario.correo, itemsCarrito.size) {
-        if (usuario.correo.isNotEmpty()) {
-            viewModel.actualizarResumen(usuario.correo)
+    LaunchedEffect(usuario.email, itemsCarrito.size) {
+        if (usuario.email.isNotEmpty()) {
+            viewModel.actualizarResumen(usuario.email)
         }
     }
 
     val (textoDescuento, montoDescuento, porcentajeTexto) =
-        if (usuario.correo.endsWith("@duocuc.cl")) {
+        if (usuario.email.endsWith("@duocuc.cl")) {
             Triple("Descto 20%:", resumen.descuento.roundToInt(), "20%")
         } else {
             Triple("Descto 10%:", resumen.descuento.roundToInt(), "10%")
@@ -118,7 +118,7 @@ fun CarritoScreen(
 
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = if (usuario.correo.endsWith("@duocuc.cl")) {
+                            text = if (usuario.email.endsWith("@duocuc.cl")) {
                                 "🎓 Descuento especial estudiante Duoc - $porcentajeTexto"
                             } else {
                                 "👍 Descuento regular de usuario - $porcentajeTexto"
@@ -148,7 +148,7 @@ fun CarritoScreen(
                     if (resumen.descuento > 0) {
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = if (usuario.correo.endsWith("@duocuc.cl")) {
+                            text = if (usuario.email.endsWith("@duocuc.cl")) {
                                 "💰 Ahorras: $${montoDescuento} CLP (20% descuento estudiante)"
                             } else {
                                 "💰 Ahorras: $${montoDescuento} CLP (10% descuento regular)"
@@ -236,10 +236,10 @@ fun CarritoScreen(
                         ItemCarrito(
                             item = item,
                             onCantidadChange = { nuevaCantidad ->
-                                viewModel.onCantidadChange(item, nuevaCantidad, usuario.correo)
+                                viewModel.onCantidadChange(item, nuevaCantidad, usuario.email)
                             },
                             onEliminar = {
-                                viewModel.onEliminar(item, usuario.correo)
+                                viewModel.onEliminar(item, usuario.email)
                             }
                         )
                     }
@@ -257,7 +257,7 @@ fun CarritoScreen(
                                 modifier = Modifier.padding(16.dp)
                             ) {
                                 Text(
-                                    text = if (usuario.correo.endsWith("@duocuc.cl")) {
+                                    text = if (usuario.email.endsWith("@duocuc.cl")) {
                                         "🎓 Descuento Estudiante Duoc - 20%"
                                     } else {
                                         "👍 Descuento Usuario - 10%"
@@ -268,7 +268,7 @@ fun CarritoScreen(
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
-                                    text = if (usuario.correo.endsWith("@duocuc.cl")) {
+                                    text = if (usuario.email.endsWith("@duocuc.cl")) {
                                         "Estás disfrutando de un descuento especial del 20% por ser estudiante Duoc"
                                     } else {
                                         "Descuento regular del 10% aplicado a tu compra"
@@ -278,7 +278,7 @@ fun CarritoScreen(
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(
-                                    text = if (usuario.correo.endsWith("@duocuc.cl")) {
+                                    text = if (usuario.email.endsWith("@duocuc.cl")) {
                                         "Cálculo: Subtotal ($${resumen.subtotal.roundToInt()}) × 20% = Ahorro de $${resumen.descuento.roundToInt()}"
                                     } else {
                                         "Cálculo: Subtotal ($${resumen.subtotal.roundToInt()}) × 10% = Ahorro de $${resumen.descuento.roundToInt()}"
