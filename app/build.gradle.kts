@@ -52,7 +52,7 @@ dependencies {
     // Para manejar los permisos fácilmente
     implementation("com.google.accompanist:accompanist-permissions:0.34.0")
     // Dependencia para cargar la imagen después de ser capturada
-    implementation("io.coil-kt:coil-compose:2.1.0")
+    implementation("io.coil-kt:coil-compose:2.4.0")
 
     /* ======================================================================================== */
 
@@ -80,6 +80,8 @@ dependencies {
     implementation("com.mapbox.extension:maps-compose-ndk27:11.16.2")
     implementation(libs.androidx.compose.foundation.layout)
     implementation(libs.androidx.tv.material)
+    implementation(libs.androidx.compose.foundation)
+    implementation(libs.androidx.compose.ui.text)
     /* ===================================================================================== */
 
     val roomVersion = "2.8.1"

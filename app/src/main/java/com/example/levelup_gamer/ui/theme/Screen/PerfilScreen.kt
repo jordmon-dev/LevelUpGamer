@@ -1,6 +1,8 @@
+// PerfilScreen.kt - VERSIÓN SIMPLIFICADA
 package com.example.levelup_gamer.ui.theme.Screen
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -8,27 +10,32 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.example.levelup_gamer.viewmodel.UsuarioViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PerfilScreen(
     navController: NavController,
-    usuarioViewModel: UsuarioViewModel
+    usuarioViewModel: UsuarioViewModel = viewModel()
 ) {
-    // Si en tu UsuarioViewModel no existe esta función, avísame
     val usuarioPerfil = usuarioViewModel.toUsuarioPerfil()
+    val fotoPerfilUri by usuarioViewModel.fotoPerfilUri.collectAsState()
 
     val fondo = Brush.verticalGradient(
         listOf(
@@ -78,20 +85,69 @@ fun PerfilScreen(
 
                 Spacer(Modifier.height(16.dp))
 
-                // ICONO / AVATAR
+                // FOTO DE PERFIL - Clickable para cambiar
                 Box(
                     modifier = Modifier
-                        .size(110.dp)
-                        .background(Color(0xFF1B2338), CircleShape),
+                        .size(130.dp)
+                        .clickable {
+                            // Navegar a la pantalla de cámara de perfil
+                            navController.navigate("camaraPerfil")
+                        },
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Person,
-                        contentDescription = "Usuario",
-                        tint = Color(0xFF00E5FF),
-                        modifier = Modifier.size(60.dp)
-                    )
+                    // Contenedor circular de la imagen
+                    Box(
+                        modifier = Modifier
+                            .size(110.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF1B2338)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (fotoPerfilUri != null) {
+                            // Mostrar la foto de perfil
+                            AsyncImage(
+                                model = fotoPerfilUri,
+                                contentDescription = "Foto de perfil",
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .clip(CircleShape),
+                                contentScale = ContentScale.Crop
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.Person,
+                                contentDescription = "Usuario",
+                                tint = Color(0xFF00E5FF),
+                                modifier = Modifier.size(60.dp)
+                            )
+                        }
+                    }
+
+                    // Badge de cámara
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .size(36.dp)
+                            .background(Color(0xFF00E5FF), CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            Icons.Default.CameraAlt,
+                            contentDescription = "Cambiar foto",
+                            tint = Color.White,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                 }
+
+                Spacer(Modifier.height(8.dp))
+
+                // Texto indicador
+                Text(
+                    text = "Toca para cambiar foto",
+                    color = Color(0xFFB0BEC5),
+                    style = MaterialTheme.typography.labelSmall
+                )
 
                 Spacer(Modifier.height(18.dp))
 
@@ -156,6 +212,10 @@ fun PerfilScreen(
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
 
+                    BotonOpcionPerfil("Ver Carrito") {
+                        navController.navigate("carrito")
+                    }
+
                     BotonOpcionPerfil("Ver Notificaciones") {
                         navController.navigate("notificaciones")
                     }
@@ -193,7 +253,7 @@ fun PerfilScreen(
                     Text("Cerrar sesión", fontWeight = FontWeight.Bold)
                 }
 
-                Spacer(Modifier.height(24.dp)) // margen para la BottomBar
+                Spacer(Modifier.height(24.dp))
             }
         }
     }

@@ -33,17 +33,9 @@ fun CamaraCapturaScreen(
     val contexto = LocalContext.current
     var fotoUri by remember { mutableStateOf<Uri?>(null) }
 
-    // Launcher de cámara
-    val launcher = rememberLauncherForActivityResult(
-        ActivityResultContracts.TakePicture()
-    ) { success ->
-        if (success) {
-            reclamoViewModel.guardarFoto(fotoUri)
-        }
-    }
-
+    // Función para crear archivo
     fun crearArchivo(context: Context): Uri {
-        val carpeta = context.getExternalFilesDir(null) // ahora usamos la carpeta /cache
+        val carpeta = context.getExternalFilesDir(null)
         val archivo = File(
             carpeta,
             "foto_reclamo_${System.currentTimeMillis()}.jpg"
@@ -55,6 +47,17 @@ fun CamaraCapturaScreen(
         )
     }
 
+    // Launcher de cámara
+    val launcher = rememberLauncherForActivityResult(
+        ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success) {
+            reclamoViewModel.guardarFoto(fotoUri)
+        }
+    }
+
+    // Observar la foto guardada en el ViewModel
+    val fotoGuardada by reclamoViewModel.fotoUri.collectAsState()
 
     Scaffold(
         topBar = {
@@ -62,7 +65,11 @@ fun CamaraCapturaScreen(
                 title = { Text("Capturar Foto", color = Color.White) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver", tint = Color.White)
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Volver",
+                            tint = Color.White
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -77,25 +84,50 @@ fun CamaraCapturaScreen(
                 .padding(padding)
                 .fillMaxSize()
                 .background(Color(0xFF0D0D0D)),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
 
-            Spacer(modifier = Modifier.height(20.dp))
-
             // Mostrar imagen
-            val fotoGuardada = reclamoViewModel.fotoUri.value
-            fotoGuardada?.let { uri ->
+            if (fotoGuardada != null) {
                 Image(
-                    painter = rememberAsyncImagePainter(uri),
-                    contentDescription = "Foto",
+                    painter = rememberAsyncImagePainter(fotoGuardada),
+                    contentDescription = "Foto del reclamo",
                     modifier = Modifier
                         .size(280.dp)
                         .padding(8.dp),
                     contentScale = ContentScale.Crop
                 )
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                // Botón para confirmar y volver
+                Button(
+                    onClick = {
+                        navController.popBackStack()
+                    },
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF39FF14)),
+                    modifier = Modifier.fillMaxWidth(0.8f)
+                ) {
+                    Text("Usar esta foto")
+                }
+            } else {
+                // Placeholder cuando no hay foto
+                Box(
+                    modifier = Modifier
+                        .size(280.dp)
+                        .background(Color(0xFF1E1E1E), RoundedCornerShape(8.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        "No hay foto tomada",
+                        color = Color(0xFF888888)
+                    )
+                }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(30.dp))
 
             // Botón para tomar foto
             Button(
@@ -105,20 +137,10 @@ fun CamaraCapturaScreen(
                     launcher.launch(nuevaUri)
                 },
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00E5FF))
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00E5FF)),
+                modifier = Modifier.fillMaxWidth(0.8f)
             ) {
                 Text("Tomar Foto")
-            }
-
-            Spacer(modifier = Modifier.height(30.dp))
-
-            // Confirmar y volver
-            Button(
-                onClick = { navController.popBackStack() },
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF39FF14))
-            ) {
-                Text("Usar esta foto")
             }
         }
     }

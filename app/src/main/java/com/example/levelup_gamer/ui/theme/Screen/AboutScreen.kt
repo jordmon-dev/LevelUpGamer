@@ -28,6 +28,9 @@ fun AboutScreen(navController: NavController, viewModel: Any? = null) {
         )
     )
 
+    // Color para la top bar que coincida con el fondo
+    val topBarColor = Color(0xFF0A0A0A) // Usamos el color más oscuro del gradiente
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -48,7 +51,7 @@ fun AboutScreen(navController: NavController, viewModel: Any? = null) {
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = Color.Transparent
+                    containerColor = topBarColor // Cambiar a color sólido que coincida
                 )
             )
         },

@@ -44,14 +44,17 @@ fun CatalogoScreen(
         )
     )
 
+    // Color para la top bar que coincida con el fondo
+    val topBarColor = Color(0xFF0A0A0A) // Usamos el color más oscuro del gradiente
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
                     Text(
                         "Catálogo Gamer",
-                        color = Color.White,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.SemiBold,
+                        color = Color.White // Asegurar que el texto sea blanco
                     )
                 },
                 navigationIcon = {
@@ -64,7 +67,7 @@ fun CatalogoScreen(
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = Color.Transparent
+                    containerColor = topBarColor // Cambiar a color sólido que coincida
                 )
             )
         },
