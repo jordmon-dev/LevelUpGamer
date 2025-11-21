@@ -141,6 +141,24 @@ fun PerfilScreen(
                             "Miembro desde: ${usuario.fechaRegistro}",
                             color = cianNeon
                         )
+                        Spacer(Modifier.height(10.dp)) // Añadido para espaciar el nuevo campo
+
+                        // NUEVA INFORMACIÓN: Estado de Cuenta / Descuento
+                        Text(
+                            "Estado de Cuenta:",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            text = if (usuario.email.endsWith("@duocuc.cl")) {
+                                "✅ Estudiante DUOCUC (20% Descuento)"
+                            } else {
+                                "👤 Usuario Regular (10% Descuento)"
+                            },
+                            color = if (usuario.email.endsWith("@duocuc.cl")) verdeNeon else cianNeon,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
                     }
                 }
 

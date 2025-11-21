@@ -314,44 +314,7 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Bottom Navigation simplificado
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-                    .shadow(
-                        elevation = 16.dp,
-                        shape = RoundedCornerShape(20.dp),
-                        clip = true
-                    ),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFF1E1E2E).copy(alpha = 0.9f)
-                ),
-                shape = RoundedCornerShape(20.dp)
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.SpaceAround
-                ) {
-                    BottomNavItem(icon = Icons.Default.Home, label = "Inicio", isSelected = true)
-                    BottomNavItem(icon = Icons.Default.Category, label = "productos") {
-                        navController.navigate("catalogo")
-                    }
-                    BottomNavItem(icon = Icons.Default.LocalOffer, label = "Ofertas") {
-                        navController.navigate("ofertas")
-                    }
-                    BottomNavItem(icon = Icons.Default.NotificationsActive, label = "notificaciones") {
-                        navController.navigate("notificaciones")
-                    }
-                    BottomNavItem(icon = Icons.Default.Person, label = "Perfil") {
-                        navController.navigate("perfil")
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
+            // Bottom Navigation simplificado (ELIMINADO para usar la barra global y fija)
         }
     }
 }
@@ -457,35 +420,9 @@ fun GameCard(game: Game) {
     }
 }
 
-@Composable
-fun BottomNavItem(
-    icon: ImageVector,
-    label: String,
-    isSelected: Boolean = false,
-    onClick: (() -> Unit)? = null
-) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .clickable { onClick?.invoke() }
-            .padding(8.dp)
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = label,
-            tint = if (isSelected) Color(0xFF00FF88) else Color(0xFFA0A0A0),
-            modifier = Modifier.size(24.dp)
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            label,
-            style = MaterialTheme.typography.labelSmall,
-            color = if (isSelected) Color(0xFF00FF88) else Color(0xFFA0A0A0)
-        )
-    }
-}
+// ⚠️ El Composable BottomNavItem fue eliminado ya que ahora se usa el componente global BottomBar.
 
-// 🔹 NUEVO: Composable para las tarjetas de navegación
+// 🔹 Composable para las tarjetas de navegación (MANTENIDO)
 @Composable
 fun NavigationCard(
     icon: ImageVector,
@@ -536,7 +473,7 @@ fun NavigationCard(
     }
 }
 
-// Data classes para los modelos (SIN recursos de imagen)
+// Data classes para los modelos (MANTENIDAS)
 data class Game(
     val title: String,
     val platforms: String,

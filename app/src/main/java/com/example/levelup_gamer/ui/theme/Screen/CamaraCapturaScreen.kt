@@ -44,7 +44,7 @@ fun CamaraCapturaScreen(
 
         return FileProvider.getUriForFile(
             context,
-            "${context.packageName}.provider",   // ← CORREGIDO
+            "${context.packageName}.fileprovider",   // ✅ CORRECCIÓN: Autoridad corregida
             archivo
         )
     }

@@ -1,5 +1,8 @@
 package com.example.levelup_gamer.ui.theme.Screen
 
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -9,15 +12,17 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.painterResource // ⬅️ Import necesario
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -25,6 +30,8 @@ import com.example.levelup_gamer.R
 import com.example.levelup_gamer.model.Producto
 import com.example.levelup_gamer.viewmodel.CarritoViewModel
 import com.example.levelup_gamer.viewmodel.ProductoViewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -44,8 +51,7 @@ fun CatalogoScreen(
         )
     )
 
-    // Color para la top bar que coincida con el fondo
-    val topBarColor = Color(0xFF0A0A0A) // Usamos el color más oscuro del gradiente
+    val topBarColor = Color(0xFF0A0A0A)
 
     Scaffold(
         topBar = {
@@ -54,7 +60,7 @@ fun CatalogoScreen(
                     Text(
                         "Catálogo Gamer",
                         fontWeight = FontWeight.SemiBold,
-                        color = Color.White // Asegurar que el texto sea blanco
+                        color = Color.White
                     )
                 },
                 navigationIcon = {
@@ -67,7 +73,7 @@ fun CatalogoScreen(
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = topBarColor // Cambiar a color sólido que coincida
+                    containerColor = topBarColor
                 )
             )
         },
@@ -148,6 +154,15 @@ fun ProductoCard(
     producto: Producto,
     onAgregar: () -> Unit
 ) {
+    var isAdded by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+
+    val scale by animateFloatAsState(
+        targetValue = if (isAdded) 1.1f else 1.0f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
+        label = "AddButtonScale"
+    )
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -164,8 +179,9 @@ fun ProductoCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
 
+            // ✅ Usar painterResource con el ID de la imagen del producto
             Image(
-                painter = painterResource(id = producto.imagen ?: R.drawable.banner_game),
+                painter = painterResource(id = producto.imagen ?: R.drawable.banner_game), // Usa la imagen del producto o un placeholder
                 contentDescription = "Producto",
                 modifier = Modifier
                     .size(90.dp)
@@ -193,14 +209,38 @@ fun ProductoCard(
             }
 
             FilledTonalButton(
-                onClick = onAgregar,
+                onClick = {
+                    onAgregar()
+                    if (!isAdded) {
+                        isAdded = true
+                        scope.launch {
+                            delay(600)
+                            isAdded = false
+                        }
+                    }
+                },
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.filledTonalButtonColors(
-                    containerColor = Color(0xFF00FF88),
+                    containerColor = if (isAdded) Color(0xFF39FF14) else Color(0xFF00FF88),
                     contentColor = Color.Black
-                )
+                ),
+                modifier = Modifier.scale(if (isAdded) scale else 1f)
             ) {
-                Text("Agregar")
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (isAdded) {
+                        Icon(
+                            Icons.Default.Check,
+                            contentDescription = "Agregado",
+                        )
+                        Spacer(Modifier.width(4.dp))
+                        Text("¡Agregado!")
+                    } else {
+                        Text("Agregar")
+                    }
+                }
             }
         }
     }

@@ -26,7 +26,7 @@ data class BottomNavItem(
 )
 
 @Composable
-fun BottomBar(
+fun BottomBar( // ✅ Nombre de función corregido
     navController: NavController,
     currentRoute: String?,
     carritoViewModel: CarritoViewModel = viewModel()
