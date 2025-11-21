@@ -133,7 +133,7 @@ fun HomeScreen(
                     }
 
                     // Badge de descuento estudiante
-                    if (usuario.correo.endsWith("@duocuc.cl")) {
+                    if (usuario.email.endsWith("@duocuc.cl")) {
                         Spacer(modifier = Modifier.height(12.dp))
                         Card(
                             colors = CardDefaults.cardColors(

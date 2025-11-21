@@ -1,11 +1,11 @@
-@file:Suppress("DEPRECATION")
+package com.example.levelup_gamer.ui.theme.components
 
-/*package com.example.levelup_gamer.ui.theme.components
-
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 
 @Composable
 fun LevelUpOutlinedButton(
@@ -17,13 +17,13 @@ fun LevelUpOutlinedButton(
         onClick = onClick,
         modifier = modifier,
         colors = ButtonDefaults.outlinedButtonColors(
-            contentColor = Color(0xFF00FF88)
+            contentColor = Color(0xFF00FF88)   // Texto e ícono en verde neon
         ),
-        border = ButtonDefaults.outlinedButtonBorder.copy(
-            borderColor = Color(0xFF00FF88)
+        border = BorderStroke(
+            width = 2.dp,
+            color = Color(0xFF00FF88)         // Borde neon
         )
     ) {
         Text(text)
     }
 }
-*/
