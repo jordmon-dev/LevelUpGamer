@@ -1,9 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Permite files/ directamente -->
     <external-files-path
-        name="my_images"
+        name="external_files"
+        path="." />
+
+    <!-- Permite subcarpeta Pictures/ -->
+    <external-files-path
+        name="pictures"
         path="Pictures" />
+
+    <!-- Cache si la necesitas -->
     <cache-path
         name="my_cache"
-        path="/" />
+        path="." />
+
 </paths>

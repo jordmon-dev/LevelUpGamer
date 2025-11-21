@@ -13,9 +13,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.levelup_gamer.viewmodel.ReclamoViewModel
 
 @Composable
-fun ConfirmacionReclamoScreen(navController: NavController) {
+fun ConfirmacionReclamoScreen(navController: NavController, reclamoViewModel: ReclamoViewModel) {
 
     // Gradiente estilo Login
     val fondo = Brush.verticalGradient(

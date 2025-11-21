@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
@@ -25,6 +26,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.levelup_gamer.viewmodel.CarritoItem
 import com.example.levelup_gamer.viewmodel.CarritoViewModel
+import com.example.levelup_gamer.viewmodel.ProductoViewModel
 import com.example.levelup_gamer.viewmodel.UsuarioViewModel
 import kotlin.math.roundToInt
 
@@ -33,15 +35,15 @@ import kotlin.math.roundToInt
 fun CarritoScreen(
     navController: NavController,
     viewModel: CarritoViewModel = viewModel(),
-    usuarioViewModel: UsuarioViewModel = viewModel()
+    usuarioViewModel: UsuarioViewModel = viewModel(),   // 👈 AHORA SÍ: UsuarioViewModel
 ) {
     val resumen by viewModel.resumen.collectAsState()
-    val usuario by usuarioViewModel.usuario.collectAsState()
+    val usuario by usuarioViewModel.usuario.collectAsState()   // 👈 usamos el StateFlow<UsuarioState>
     val itemsCarrito = resumen.items
 
     // Actualizar resumen cuando cambia usuario o items
     LaunchedEffect(usuario.email, itemsCarrito.size) {
-        if (usuario.email.isNotEmpty()) {
+        if (usuario.email.isNotEmpty()) {             // 👈 YA NO UsuarioState.email
             viewModel.actualizarResumen(usuario.email)
         }
     }
@@ -77,7 +79,11 @@ fun CarritoScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Volver", tint = Color.White)
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Volver",
+                            tint = Color.White
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -346,7 +352,11 @@ fun ItemCarrito(
                         if (item.cantidad > 1) onCantidadChange(item.cantidad - 1)
                     }
                 ) {
-                    Icon(Icons.Default.Remove, contentDescription = "Reducir cantidad", tint = Color.White)
+                    Icon(
+                        Icons.Default.Remove,
+                        contentDescription = "Reducir cantidad",
+                        tint = Color.White
+                    )
                 }
 
                 Text(
@@ -358,12 +368,20 @@ fun ItemCarrito(
                 IconButton(
                     onClick = { onCantidadChange(item.cantidad + 1) }
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "Aumentar cantidad", tint = Color.White)
+                    Icon(
+                        Icons.Default.Add,
+                        contentDescription = "Aumentar cantidad",
+                        tint = Color.White
+                    )
                 }
             }
 
             IconButton(onClick = onEliminar) {
-                Icon(Icons.Default.Delete, contentDescription = "Eliminar del carrito", tint = Color(0xFFFF6B6B))
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = "Eliminar del carrito",
+                    tint = Color(0xFFFF6B6B)
+                )
             }
         }
     }

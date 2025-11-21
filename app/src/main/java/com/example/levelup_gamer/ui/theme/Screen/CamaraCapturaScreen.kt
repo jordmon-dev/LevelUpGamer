@@ -36,16 +36,19 @@ fun CamaraCapturaScreen(
     // Función para crear archivo
     fun crearArchivo(context: Context): Uri {
         val carpeta = context.getExternalFilesDir(null)
+
         val archivo = File(
             carpeta,
             "foto_reclamo_${System.currentTimeMillis()}.jpg"
         )
+
         return FileProvider.getUriForFile(
             context,
-            "${context.packageName}.fileprovider",
+            "${context.packageName}.provider",   // ← CORREGIDO
             archivo
         )
     }
+
 
     // Launcher de cámara
     val launcher = rememberLauncherForActivityResult(

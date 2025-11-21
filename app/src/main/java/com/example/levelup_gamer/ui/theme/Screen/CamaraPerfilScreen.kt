@@ -4,12 +4,12 @@ import android.content.Context
 import android.net.Uri
 import androidx.core.content.FileProvider
 import androidx.lifecycle.ViewModel
+import androidx.navigation.NavHostController
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.update
 import java.io.File
 
-class CamaraPerfilViewModel : ViewModel() {
+class CamaraPerfilScreen(navController: NavHostController, usuarioViewModel: UsuarioViewModel) : ViewModel() {
 
     private val _fotoPerfilUri = MutableStateFlow<Uri?>(null)
     val fotoPerfilUri: StateFlow<Uri?> = _fotoPerfilUri

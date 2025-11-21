@@ -32,11 +32,15 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.levelup_gamer.viewmodel.UsuarioViewModel
 import androidx.compose.foundation.lazy.items
+import com.example.levelup_gamer.viewmodel.CarritoViewModel
+import com.example.levelup_gamer.viewmodel.ProductoViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     navController: NavController,
+    productoViewModel: ProductoViewModel,
+    carritoViewModel: CarritoViewModel,
     viewModel: UsuarioViewModel = viewModel()
 ) {
     val usuario by viewModel.usuario.collectAsState()
