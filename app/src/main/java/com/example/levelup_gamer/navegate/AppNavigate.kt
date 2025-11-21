@@ -24,7 +24,7 @@ fun AppNavigate() {
     // DataStore
     val contexto = LocalContext.current
     val prefs = UserPreferences(contexto)
-    val isLogged by prefs.sesionIniciada.collectAsState(initial = false)
+    val isLogged by prefs.isLogged.collectAsState(initial = false)
 
     // Pantalla inicial
     val startDestination = if (isLogged) "home" else "login"

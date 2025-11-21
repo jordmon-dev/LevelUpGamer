@@ -1,4 +1,3 @@
-// UserPreferences.kt - Agrega estas funciones
 package com.example.levelup_gamer.datastore
 
 import android.content.Context
@@ -12,55 +11,70 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(na
 
 class UserPreferences(private val context: Context) {
 
+    // KEYS
     companion object {
-        private val SESION_INICIADA = booleanPreferencesKey("sesion_iniciada")
-        private val USER_EMAIL = stringPreferencesKey("user_email")
-        private val USER_PASSWORD = stringPreferencesKey("user_password")
-        // NUEVO: Key para la foto de perfil
-        private val FOTO_PERFIL_URI = stringPreferencesKey("foto_perfil_uri")
+        private val KEY_LOGGED = booleanPreferencesKey("logged")
+        private val KEY_NOMBRE = stringPreferencesKey("nombre")
+        private val KEY_PASSWORD = stringPreferencesKey("password")
+
+        // Foto de perfil
+        private val KEY_FOTO_PERFIL = stringPreferencesKey("foto_perfil")
     }
 
-    // Función existente para guardar sesión
-    suspend fun guardarSesion(email: String, password: String) {
-        context.dataStore.edit { preferences ->
-            preferences[SESION_INICIADA] = true
-            preferences[USER_EMAIL] = email
-            preferences[USER_PASSWORD] = password
-        }
-    }
-
-    // Función existente para cerrar sesión
-    suspend fun cerrarSesion() {
-        context.dataStore.edit { preferences ->
-            preferences[SESION_INICIADA] = false
-            preferences.remove(USER_EMAIL)
-            preferences.remove(USER_PASSWORD)
-            // Opcional: también limpiar la foto al cerrar sesión
-            // preferences.remove(FOTO_PERFIL_URI)
+    // ------------------------------
+    // GUARDAR CREDENCIALES
+    // ------------------------------
+    suspend fun saveCredentials(nombre: String, password: String) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_LOGGED] = true
+            prefs[KEY_NOMBRE] = nombre
+            prefs[KEY_PASSWORD] = password
         }
     }
 
-    // Flow existente para sesión iniciada
-    val sesionIniciada: Flow<Boolean> = context.dataStore.data
-        .map { preferences ->
-            preferences[SESION_INICIADA] ?: false
-        }
-
-    // NUEVAS FUNCIONES PARA FOTO DE PERFIL
-    suspend fun guardarFotoPerfil(uri: String) {
-        context.dataStore.edit { preferences ->
-            preferences[FOTO_PERFIL_URI] = uri
-        }
-    }
-
-    suspend fun limpiarFotoPerfil() {
-        context.dataStore.edit { preferences ->
-            preferences.remove(FOTO_PERFIL_URI)
+    // ------------------------------
+    // CERRAR SESIÓN
+    // ------------------------------
+    suspend fun logout() {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_LOGGED] = false
+            prefs.remove(KEY_NOMBRE)
+            prefs.remove(KEY_PASSWORD)
+            // NO borramos foto si no quieres
         }
     }
 
-    val fotoPerfil: Flow<String?> = context.dataStore.data
-        .map { preferences ->
-            preferences[FOTO_PERFIL_URI]
+    // ------------------------------
+    // GETTERS (Flows)
+    // ------------------------------
+    val isLogged: Flow<Boolean> = context.dataStore.data.map { prefs ->
+        prefs[KEY_LOGGED] ?: false
+    }
+
+    val usuario: Flow<String> = context.dataStore.data.map { prefs ->
+        prefs[KEY_NOMBRE] ?: ""
+    }
+
+    val password: Flow<String> = context.dataStore.data.map { prefs ->
+        prefs[KEY_PASSWORD] ?: ""
+    }
+
+    // ------------------------------
+    // FOTO DE PERFIL
+    // ------------------------------
+    suspend fun saveProfilePhoto(uri: String) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_FOTO_PERFIL] = uri
         }
+    }
+
+    val fotoPerfil: Flow<String?> = context.dataStore.data.map { prefs ->
+        prefs[KEY_FOTO_PERFIL]
+    }
+
+    suspend fun clearProfilePhoto() {
+        context.dataStore.edit { prefs ->
+            prefs.remove(KEY_FOTO_PERFIL)
+        }
+    }
 }
