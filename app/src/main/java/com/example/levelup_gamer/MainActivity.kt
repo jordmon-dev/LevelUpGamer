@@ -1,26 +1,44 @@
 package com.example.levelup_gamer
 
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.*
+import androidx.annotation.RequiresApi
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.unit.dp
-import com.example.levelup_gamer.navegate.AppNavigate
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.compose.rememberNavController
+import com.example.levelup_gamer.ui.theme.AppNavigate
+import com.example.levelup_gamer.viewmodel.ReclamoViewModel
+import com.example.levelup_gamer.viewmodel.UsuarioViewModel
 import com.example.levelup_gamer.ui.theme.theme.LevelUpGamerTheme
 
 class MainActivity : ComponentActivity() {
+
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContent {
             LevelUpGamerTheme {
-                //Aquí llamamos al sistema de navegación
-                AppNavigate()
+
+                // Controlador de navegación
+                val navController = rememberNavController()
+
+                // ViewModels principales (los que AppNavigate necesita)
+                val reclamoViewModel: ReclamoViewModel = viewModel()
+                val usuarioViewModel: UsuarioViewModel = viewModel()
+                LaunchedEffect(Unit) {
+                    usuarioViewModel.cargarDatosGuardados()
+                }
+
+                // Navegación principal
+                AppNavigate(
+                    navController = navController,
+                    usuarioViewModel = usuarioViewModel,
+                    reclamoViewModel = reclamoViewModel
+                )
             }
         }
     }
