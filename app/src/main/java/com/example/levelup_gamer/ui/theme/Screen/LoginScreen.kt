@@ -294,8 +294,13 @@ fun LoginScreen(
                     Button(
                         onClick = {
                             if (viewModel.validar()) {
+                                viewModel.guardarSesion()  // NUEVO
+
                                 Toast.makeText(contexto, "¡Inicio de sesión exitoso!", Toast.LENGTH_SHORT).show()
-                                navController.navigate(route = "home")
+
+                                navController.navigate("home") {
+                                    popUpTo("login") { inclusive = true }
+                                }
                             } else {
                                 Toast.makeText(contexto, "Error: revise los campos.", Toast.LENGTH_LONG).show()
                             }
