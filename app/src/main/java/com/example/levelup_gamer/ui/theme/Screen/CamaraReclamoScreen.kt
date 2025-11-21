@@ -1,9 +1,12 @@
 package com.example.levelup_gamer.ui.theme.Screen
 
-import android.content.Context
+import android.Manifest
 import android.net.Uri
+import android.os.Environment
 import android.util.Log
-import androidx.camera.view.PreviewView
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -15,14 +18,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.levelup_gamer.viewmodel.CameraViewModel
+import coil.compose.rememberAsyncImagePainter
 import com.example.levelup_gamer.viewmodel.ReclamoViewModel
+import java.io.File
 import java.util.concurrent.Executors
 
 @Composable
@@ -30,11 +33,33 @@ fun CamaraReclamoScreen(
     navController: NavController,
     reclamoViewModel: ReclamoViewModel = viewModel()
 ) {
-    val cameraViewModel: CameraViewModel = viewModel()
-    val context = LocalContext.current
-    val cameraExecutor = remember { Executors.newSingleThreadExecutor() }
+    val contexto = LocalContext.current
+    val fotoUri by reclamoViewModel.fotoUri.collectAsState()
+    val permisoCamara by reclamoViewModel.permisoCamara.collectAsState()
 
-    var isPreviewReady by remember { mutableStateOf(false) }
+    // Preparar cámara al iniciar
+    LaunchedEffect(Unit) {
+        reclamoViewModel.prepararCamara(contexto)
+    }
+
+    // Lanzar cámara
+    val lanzarCamara = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        reclamoViewModel.manejarFotoTomada(success)
+    }
+
+    // Pedir permisos
+    val pedirPermisosCamara = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        reclamoViewModel.actualizarPermisoCamara(isGranted)
+        if (isGranted) {
+            reclamoViewModel.getUriParaCamara()?.let { uri ->
+                lanzarCamara.launch(uri)
+            }
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -51,16 +76,13 @@ fun CamaraReclamoScreen(
         ) {
             IconButton(
                 onClick = {
-                    cameraViewModel.closeCamera()
                     navController.popBackStack()
-                },
-                modifier = Modifier.size(48.dp)
+                }
             ) {
                 Icon(
                     Icons.Default.Close,
                     contentDescription = "Cerrar cámara",
-                    tint = Color.White,
-                    modifier = Modifier.size(30.dp)
+                    tint = Color.White
                 )
             }
 
@@ -74,96 +96,81 @@ fun CamaraReclamoScreen(
             Spacer(modifier = Modifier.size(48.dp))
         }
 
-        // Vista de la cámara
+        // Vista previa
         Box(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
-                .background(Color.Black),
+                .background(Color.DarkGray)
+                .padding(16.dp),
             contentAlignment = Alignment.Center
         ) {
-            AndroidView(
-                factory = { context ->
-                    PreviewView(context).apply {
-                        scaleType = PreviewView.ScaleType.FILL_CENTER
-                        post {
-                            cameraViewModel.startCamera(context, this, cameraExecutor)
-                            isPreviewReady = true
-                        }
-                    }
-                },
-                modifier = Modifier.fillMaxSize()
-            )
-
-            if (!isPreviewReady) {
+            if (fotoUri != null) {
+                Image(
+                    painter = rememberAsyncImagePainter(model = fotoUri),
+                    contentDescription = "Foto del reclamo",
+                    modifier = Modifier.fillMaxSize()
+                )
+            } else {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    CircularProgressIndicator(color = Color.White)
+                    Icon(
+                        Icons.Default.CameraAlt,
+                        contentDescription = "Cámara",
+                        tint = Color.White,
+                        modifier = Modifier.size(80.dp)
+                    )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        "Inicializando cámara...",
-                        color = Color.White
+                        "Presiona el botón para tomar una foto",
+                        color = Color.White,
+                        style = MaterialTheme.typography.bodyMedium
                     )
                 }
             }
         }
 
-        // Botón para tomar foto
-        Box(
+        // Botones
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(32.dp),
-            contentAlignment = Alignment.Center
+            horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            val isCameraReady = cameraViewModel.isCameraInitialized
-
-            FloatingActionButton(
+            Button(
                 onClick = {
-                    if (isCameraReady) {
-                        cameraViewModel.takePhoto(context, cameraExecutor) { uri ->
-                            // Guardar la foto en el ViewModel de reclamos
-                            reclamoViewModel.actualizarFoto(uri)
-                            Log.d("CamaraReclamo", "Foto tomada: $uri")
-                            cameraViewModel.closeCamera()
-                            navController.popBackStack()
+                    if (!permisoCamara) {
+                        pedirPermisosCamara.launch(Manifest.permission.CAMERA)
+                    } else {
+                        reclamoViewModel.getUriParaCamara()?.let { uri ->
+                            lanzarCamara.launch(uri)
                         }
                     }
                 },
-                containerColor = if (isCameraReady) Color.White else Color.Gray,
-                contentColor = if (isCameraReady) Color.Black else Color.White,
-                modifier = Modifier.size(70.dp)
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.White,
+                    contentColor = Color.Black
+                ),
+                modifier = Modifier.weight(1f)
             ) {
-                if (isCameraReady) {
-                    Icon(
-                        Icons.Default.CameraAlt,
-                        contentDescription = "Tomar foto",
-                        modifier = Modifier.size(35.dp)
-                    )
-                } else {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(25.dp),
-                        color = Color.White,
-                        strokeWidth = 2.dp
-                    )
+                Icon(Icons.Default.CameraAlt, contentDescription = "Tomar foto")
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Tomar Foto")
+            }
+
+            Spacer(modifier = Modifier.width(16.dp))
+
+            if (fotoUri != null) {
+                Button(
+                    onClick = {
+                        navController.popBackStack()
+                    },
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Usar Foto")
                 }
             }
-        }
-    }
-
-    // Manejar errores
-    cameraViewModel.cameraError?.let { error ->
-        LaunchedEffect(error) {
-            Log.e("CamaraReclamo", "Error de cámara: $error")
-            // Podrías mostrar un Snackbar con el error
-        }
-    }
-
-    // Cleanup
-    DisposableEffect(Unit) {
-        onDispose {
-            cameraExecutor.shutdown()
-            cameraViewModel.closeCamera()
         }
     }
 }

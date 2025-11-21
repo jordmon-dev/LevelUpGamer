@@ -1,13 +1,6 @@
-// PerfilScreen.kt - VERSIÓN CORREGIDA
+// PerfilScreen.kt - VERSIÓN SIMPLIFICADA
 package com.example.levelup_gamer.ui.theme.Screen
 
-import android.Manifest
-import android.content.Context
-import android.content.pm.PackageManager
-import android.util.Log
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.camera.view.PreviewView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -18,7 +11,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CameraAlt
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
@@ -29,64 +21,21 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import com.example.levelup_gamer.viewmodel.CameraViewModel
 import com.example.levelup_gamer.viewmodel.UsuarioViewModel
-import java.util.concurrent.Executors
-
-// Clase para manejar el estado de permisos
-class CameraPermissionState(
-    val hasPermission: Boolean,
-    val onRequestPermission: () -> Unit
-)
-
-@Composable
-fun rememberCameraPermissionState(): CameraPermissionState {
-    val context = LocalContext.current
-    var hasPermission by remember { mutableStateOf(checkCameraPermission(context)) }
-
-    val launcher = rememberLauncherForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        hasPermission = isGranted
-        Log.d("CameraPermission", "Permiso de cámara concedido: $isGranted")
-    }
-
-    return remember(hasPermission) {
-        CameraPermissionState(
-            hasPermission = hasPermission,
-            onRequestPermission = { launcher.launch(Manifest.permission.CAMERA) }
-        )
-    }
-}
-
-private fun checkCameraPermission(context: Context): Boolean {
-    return ContextCompat.checkSelfPermission(
-        context,
-        Manifest.permission.CAMERA
-    ) == PackageManager.PERMISSION_GRANTED
-}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PerfilScreen(
     navController: NavController,
-    usuarioViewModel: UsuarioViewModel
+    usuarioViewModel: UsuarioViewModel = viewModel()
 ) {
     val usuarioPerfil = usuarioViewModel.toUsuarioPerfil()
-    val cameraViewModel: CameraViewModel = viewModel()
-    val cameraPermissionState = rememberCameraPermissionState()
-
-    // Estado para la foto de perfil
-    var fotoPerfilUri by remember { mutableStateOf<String?>(null) }
+    val fotoPerfilUri by usuarioViewModel.fotoPerfilUri.collectAsState()
 
     val fondo = Brush.verticalGradient(
         listOf(
@@ -98,51 +47,6 @@ fun PerfilScreen(
     )
 
     val scrollState = rememberScrollState()
-
-    // Manejar la lógica de apertura de cámara con permisos
-    LaunchedEffect(cameraViewModel.showCamera) {
-        if (cameraViewModel.showCamera && !cameraPermissionState.hasPermission) {
-            cameraPermissionState.onRequestPermission()
-        }
-    }
-
-    // Mostrar cámara si está activa y tenemos permisos
-    if (cameraViewModel.showCamera && cameraPermissionState.hasPermission) {
-        CameraScreen(
-            cameraViewModel = cameraViewModel,
-            onPhotoTaken = { uri ->
-                fotoPerfilUri = uri
-                usuarioViewModel.guardarFotoPerfil(uri)
-            },
-            onClose = {
-                cameraViewModel.closeCamera()
-            }
-        )
-        return
-    }
-
-    // Mostrar diálogo si no hay permisos pero se intentó abrir la cámara
-    if (cameraViewModel.showCamera && !cameraPermissionState.hasPermission) {
-        AlertDialog(
-            onDismissRequest = { cameraViewModel.closeCamera() },
-            title = { Text("Permiso de cámara requerido") },
-            text = { Text("La aplicación necesita acceso a la cámara para tomar fotos de perfil.") },
-            confirmButton = {
-                Button(
-                    onClick = { cameraPermissionState.onRequestPermission() }
-                ) {
-                    Text("Solicitar permiso")
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { cameraViewModel.closeCamera() }
-                ) {
-                    Text("Cancelar")
-                }
-            }
-        )
-    }
 
     Scaffold(
         containerColor = Color.Transparent,
@@ -181,16 +85,17 @@ fun PerfilScreen(
 
                 Spacer(Modifier.height(16.dp))
 
-                // ICONO / AVATAR - Ahora clickeable para cambiar foto
+                // FOTO DE PERFIL - Clickable para cambiar
                 Box(
                     modifier = Modifier
                         .size(130.dp)
                         .clickable {
-                            cameraViewModel.openCamera()
+                            // Navegar a la pantalla de cámara de perfil
+                            navController.navigate("camaraPerfil")
                         },
                     contentAlignment = Alignment.Center
                 ) {
-                    // Contenedor de la imagen
+                    // Contenedor circular de la imagen
                     Box(
                         modifier = Modifier
                             .size(110.dp)
@@ -199,7 +104,7 @@ fun PerfilScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         if (fotoPerfilUri != null) {
-                            // Mostrar la foto tomada
+                            // Mostrar la foto de perfil
                             AsyncImage(
                                 model = fotoPerfilUri,
                                 contentDescription = "Foto de perfil",
@@ -218,7 +123,7 @@ fun PerfilScreen(
                         }
                     }
 
-                    // Badge de cámara (icono de cámara en esquina inferior derecha)
+                    // Badge de cámara
                     Box(
                         modifier = Modifier
                             .align(Alignment.BottomEnd)
@@ -350,142 +255,6 @@ fun PerfilScreen(
 
                 Spacer(Modifier.height(24.dp))
             }
-        }
-    }
-}
-
-@Composable
-fun CameraScreen(
-    cameraViewModel: CameraViewModel,
-    onPhotoTaken: (String) -> Unit,
-    onClose: () -> Unit
-) {
-    val context = LocalContext.current
-    val lifecycleOwner = LocalLifecycleOwner.current
-    val cameraExecutor = remember { Executors.newSingleThreadExecutor() }
-
-    // Estado para controlar si la cámara está lista
-    var isPreviewReady by remember { mutableStateOf(false) }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black)
-    ) {
-        // Header
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(
-                onClick = onClose,
-                modifier = Modifier.size(48.dp)
-            ) {
-                Icon(
-                    Icons.Default.Close,
-                    contentDescription = "Cerrar cámara",
-                    tint = Color.White,
-                    modifier = Modifier.size(30.dp)
-                )
-            }
-
-            Text(
-                text = "Tomar foto de perfil",
-                color = Color.White,
-                style = MaterialTheme.typography.titleMedium
-            )
-
-            Spacer(modifier = Modifier.size(48.dp))
-        }
-
-        // Vista de la cámara con indicador de carga
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .background(Color.Black),
-            contentAlignment = Alignment.Center
-        ) {
-            AndroidView(
-                factory = { context ->
-                    PreviewView(context).apply {
-                        scaleType = PreviewView.ScaleType.FILL_CENTER
-                        post {
-                            cameraViewModel.startCamera(context, this, cameraExecutor)
-                            isPreviewReady = true
-                        }
-                    }
-                },
-                modifier = Modifier.fillMaxSize()
-            )
-
-            // Mostrar mensaje de carga mientras la cámara se inicializa
-            if (!isPreviewReady) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    CircularProgressIndicator(color = Color.White)
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        "Inicializando cámara...",
-                        color = Color.White
-                    )
-                }
-            }
-        }
-
-        // Botón para tomar foto (solo habilitado cuando la cámara está lista)
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(32.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            val isCameraReady = cameraViewModel.isCameraInitialized
-
-            FloatingActionButton(
-                onClick = {
-                    if (isCameraReady) {
-                        cameraViewModel.takePhoto(context, cameraExecutor) { uri ->
-                            onPhotoTaken(uri.toString())
-                        }
-                    }
-                },
-                containerColor = if (isCameraReady) Color.White else Color.Gray,
-                contentColor = if (isCameraReady) Color.Black else Color.White,
-                modifier = Modifier.size(70.dp)
-            ) {
-                if (isCameraReady) {
-                    Icon(
-                        Icons.Default.CameraAlt,
-                        contentDescription = "Tomar foto",
-                        modifier = Modifier.size(35.dp)
-                    )
-                } else {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(25.dp),
-                        color = Color.White,
-                        strokeWidth = 2.dp
-                    )
-                }
-            }
-        }
-    }
-
-    // Manejar errores de la cámara
-    cameraViewModel.cameraError?.let { error ->
-        LaunchedEffect(error) {
-            Log.e("CameraScreen", "Error de cámara: $error")
-        }
-    }
-
-    // Cleanup al desmontar el composable
-    DisposableEffect(Unit) {
-        onDispose {
-            cameraExecutor.shutdown()
         }
     }
 }

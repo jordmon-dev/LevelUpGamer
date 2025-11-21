@@ -125,5 +125,10 @@ fun AppNavigate() {
         composable("camaraReclamo") {
             CamaraReclamoScreen(navController, reclamoViewModel)
         }
+
+        // CAMARA DEL PERFIL
+        composable("camaraPerfil") {
+            CamaraPerfilScreen(navController = navController)
+        }
     }
 }

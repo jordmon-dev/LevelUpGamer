@@ -1,6 +1,10 @@
 package com.example.levelup_gamer.viewmodel
 
 import android.app.Application
+import android.content.Context
+import android.net.Uri
+import android.os.Environment
+import androidx.core.content.FileProvider
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.levelup_gamer.datastore.UserPreferences
@@ -9,6 +13,7 @@ import com.example.levelup_gamer.model.UsuarioState
 import com.example.levelup_gamer.model.UsuarioPerfil
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.io.File
 
 class UsuarioViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -20,12 +25,100 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
     private val _sesionIniciada = MutableStateFlow(false)
     val sesionIniciada: StateFlow<Boolean> = _sesionIniciada
 
+    // ===============================
+    //      FOTO DE PERFIL
+    // ===============================
+    private val _fotoPerfilUri = MutableStateFlow<Uri?>(null)
+    val fotoPerfilUri: StateFlow<Uri?> = _fotoPerfilUri.asStateFlow()
+
+    private val _permisoCamara = MutableStateFlow(false)
+    val permisoCamara: StateFlow<Boolean> = _permisoCamara.asStateFlow()
+
+    // Variables para la cámara
+    private var _fotoFile: File? = null
+    private var _uri: Uri? = null
+
     init {
-        // Cargar si está logueado
+        // Cargar si está logueado y la foto de perfil
         viewModelScope.launch {
             _sesionIniciada.value = prefs.sesionIniciada.first()
+            cargarFotoPerfilGuardada()
         }
     }
+
+    // ===============================
+    //      FUNCIONES PARA LA CÁMARA
+    // ===============================
+
+    fun prepararCamara(context: Context) {
+        val tiempo = System.currentTimeMillis()
+        _fotoFile = File.createTempFile(
+            "perfil_${tiempo}",
+            ".jpg",
+            context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+        )
+
+        _uri = FileProvider.getUriForFile(
+            context,
+            "${context.packageName}.fileprovider",
+            _fotoFile!!
+        )
+    }
+
+    fun getUriParaCamara(): Uri? {
+        return _uri
+    }
+
+    fun actualizarPermisoCamara(concedido: Boolean) {
+        _permisoCamara.value = concedido
+    }
+
+    fun manejarFotoTomada(success: Boolean) {
+        if (success) {
+            _fotoPerfilUri.value = _uri
+            // Guardar automáticamente cuando se toma la foto
+            _uri?.let { uri ->
+                guardarFotoPerfil(uri.toString())
+            }
+        }
+    }
+
+    fun guardarFotoPerfil(uri: String) {
+        viewModelScope.launch {
+            prefs.guardarFotoPerfil(uri)
+            println("Foto de perfil guardada en DataStore: $uri")
+        }
+    }
+
+    private fun cargarFotoPerfilGuardada() {
+        viewModelScope.launch {
+            prefs.fotoPerfil.collect { uriString ->
+                if (!uriString.isNullOrEmpty()) {
+                    try {
+                        _fotoPerfilUri.value = Uri.parse(uriString)
+                        println("Foto de perfil cargada desde DataStore: $uriString")
+                    } catch (e: Exception) {
+                        println("Error al cargar foto de perfil: ${e.message}")
+                    }
+                } else {
+                    println("No hay foto de perfil guardada")
+                    _fotoPerfilUri.value = null
+                }
+            }
+        }
+    }
+
+    fun limpiarFotoPerfil() {
+        viewModelScope.launch {
+            _fotoPerfilUri.value = null
+            prefs.limpiarFotoPerfil()
+            println("Foto de perfil limpiada")
+        }
+    }
+
+    // ===============================
+    //      SESIÓN
+    // ===============================
 
     fun iniciarSesion(email: String, pass: String) {
         viewModelScope.launch {
@@ -38,6 +131,8 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch {
             prefs.cerrarSesion()
             _sesionIniciada.value = false
+            // Opcional: limpiar también la foto al cerrar sesión
+            // limpiarFotoPerfil()
         }
     }
 
@@ -157,15 +252,5 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
                 java.util.Locale.getDefault()
             ).format(java.util.Date())
         )
-    }
-
-    // En UsuarioViewModel.kt
-    fun guardarFotoPerfil(uri: String) {
-        viewModelScope.launch {
-            // Aquí puedes guardar la URI en tu base de datos, SharedPreferences, etc.
-            // Por ejemplo:
-            // userRepository.guardarFotoPerfil(currentUser.id, uri)
-            println("Foto de perfil guardada: $uri")
-        }
     }
 }
