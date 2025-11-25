@@ -92,15 +92,17 @@ fun AppNavigate(
 
         // RUTAS DE RECLAMOS
         composable("reporteReclamo") {
-            ReporteReclamoScreen(navController, reclamoViewModel)
-        }
-
-        composable("camaraCaptura") {
-            CamaraCapturaScreen(navController, reclamoViewModel)
+            ReporteReclamoScreen(
+                navController = navController,
+                reclamoViewModel = reclamoViewModel
+            )
         }
 
         composable("camaraReclamo") {
-            CamaraCapturaScreen(navController, reclamoViewModel)
+            CamaraReclamoScreen(
+                navController = navController,
+                reclamoViewModel = reclamoViewModel
+            )
         }
 
         composable("confirmacionReclamo") {

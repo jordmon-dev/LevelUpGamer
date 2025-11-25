@@ -55,7 +55,7 @@ fun CamaraCapturaScreen(
         ActivityResultContracts.TakePicture()
     ) { success ->
         if (success) {
-            reclamoViewModel.guardarFoto(fotoUri)
+            reclamoViewModel.actualizarFoto(fotoUri)
         }
     }
 

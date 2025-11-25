@@ -1,4 +1,3 @@
-// ReporteReclamoScreen.kt - VERSIÓN MEJORADA
 package com.example.levelup_gamer.ui.theme.Screen
 
 import androidx.compose.foundation.BorderStroke
@@ -203,8 +202,6 @@ fun ReporteReclamoScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(140.dp),
-                minLines = 4,
-                maxLines = 6,
                 placeholder = {
                     Text(
                         "Describe el problema con el producto...",

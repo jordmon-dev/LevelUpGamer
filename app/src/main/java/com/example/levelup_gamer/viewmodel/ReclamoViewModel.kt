@@ -1,21 +1,17 @@
 package com.example.levelup_gamer.viewmodel
 
-import android.content.Context
 import android.net.Uri
-import android.os.Environment
-import androidx.core.content.FileProvider
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.io.File
 
 class ReclamoViewModel : ViewModel() {
 
-    // Estados para los datos del reclamo
+    // Estados para el formulario
     private val _fotoUri = MutableStateFlow<Uri?>(null)
     val fotoUri: StateFlow<Uri?> = _fotoUri.asStateFlow()
 
@@ -28,95 +24,61 @@ class ReclamoViewModel : ViewModel() {
     private val _longitud = MutableStateFlow<Double?>(null)
     val longitud: StateFlow<Double?> = _longitud.asStateFlow()
 
-    private val _permisoCamara = MutableStateFlow(false)
-    val permisoCamara: StateFlow<Boolean> = _permisoCamara.asStateFlow()
-
-    // Estado para formulario completo
     private val _formularioCompleto = MutableStateFlow(false)
     val formularioCompleto: StateFlow<Boolean> = _formularioCompleto.asStateFlow()
 
-    // Variables para la cámara
-    private var _fotoFile: File? = null
-    private var _uri: Uri? = null
-
-    init {
-        // Combinar los flows para verificar si el formulario está completo
-        viewModelScope.launch {
-            combine(_fotoUri, _descripcion, _latitud, _longitud) { foto, desc, lat, lon ->
-                foto != null && desc.isNotBlank() && lat != null && lon != null
-            }.collect { completo ->
-                _formularioCompleto.value = completo
-            }
-        }
-    }
-
-    // Funciones para la cámara
-    fun prepararCamara(context: Context) {
-        val tiempo = System.currentTimeMillis()
-        _fotoFile = File.createTempFile(
-            "reclamo_${tiempo}",
-            ".jpg",
-            context.getExternalFilesDir(Environment.DIRECTORY_PICTURES)
-        )
-
-        _uri = FileProvider.getUriForFile(
-            context,
-            "${context.packageName}.fileprovider",
-            _fotoFile!!
-        )
-    }
-
-    fun getUriParaCamara(): Uri? {
-        return _uri
-    }
-
-    fun actualizarPermisoCamara(concedido: Boolean) {
-        _permisoCamara.value = concedido
-    }
-
-    fun manejarFotoTomada(success: Boolean) {
-        if (success) {
-            _fotoUri.value = _uri
-        }
-    }
-
-    // Funciones para actualizar los datos
-    fun guardarFoto(uri: Uri?) {
-        _fotoUri.value = uri
-    }
-
+    // Funciones para actualizar los estados
     fun actualizarFoto(uri: Uri?) {
         _fotoUri.value = uri
+        validarFormulario()
     }
 
     fun actualizarDescripcion(texto: String) {
         _descripcion.value = texto
+        validarFormulario()
     }
 
     fun actualizarUbicacion(lat: Double, lon: Double) {
         _latitud.value = lat
         _longitud.value = lon
+        validarFormulario()
     }
 
+    fun limpiarUbicacion() {
+        _latitud.value = null
+        _longitud.value = null
+        validarFormulario()
+    }
+
+    // Validar si el formulario está completo
+    private fun validarFormulario() {
+        val fotoValida = _fotoUri.value != null
+        val descripcionValida = _descripcion.value.isNotBlank()
+        val ubicacionValida = _latitud.value != null && _longitud.value != null
+
+        _formularioCompleto.value = fotoValida && descripcionValida && ubicacionValida
+    }
+
+    // Función para enviar el reclamo
+    fun enviarReclamo(): Boolean {
+        return if (_formularioCompleto.value) {
+            // Aquí iría la lógica para enviar el reclamo al servidor
+            viewModelScope.launch {
+                // Simular envío
+                kotlinx.coroutines.delay(1000)
+            }
+            true
+        } else {
+            false
+        }
+    }
+
+    // Limpiar todo el formulario
     fun limpiarFormulario() {
         _fotoUri.value = null
         _descripcion.value = ""
         _latitud.value = null
         _longitud.value = null
-        _fotoFile = null
-        _uri = null
-    }
-
-    // Función para enviar el reclamo
-    fun enviarReclamo(): Boolean {
-        return if (_fotoUri.value != null && _descripcion.value.isNotBlank() &&
-            _latitud.value != null && _longitud.value != null) {
-            // Aquí iría la lógica para enviar a tu backend
-            // Por ahora solo limpiamos el formulario
-            limpiarFormulario()
-            true
-        } else {
-            false
-        }
+        _formularioCompleto.value = false
     }
 }
