@@ -52,11 +52,14 @@ class ReclamoViewModel : ViewModel() {
 
     // Validar si el formulario está completo
     private fun validarFormulario() {
-        val fotoValida = _fotoUri.value != null
+        // Validación original (Estricta - Comentada)
+        // val fotoValida = _fotoUri.value != null
         val descripcionValida = _descripcion.value.isNotBlank()
-        val ubicacionValida = _latitud.value != null && _longitud.value != null
+        // val ubicacionValida = _latitud.value != null && _longitud.value != null
 
-        _formularioCompleto.value = fotoValida && descripcionValida && ubicacionValida
+        // NUEVA VALIDACIÓN: Solo la descripción es obligatoria.
+        // La foto y el GPS son opcionales.
+        _formularioCompleto.value = descripcionValida
     }
 
     // Función para enviar el reclamo
