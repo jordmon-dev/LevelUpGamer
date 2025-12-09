@@ -38,6 +38,21 @@ android {
     buildFeatures {
         compose = true
     }
+    packaging {
+        resources {
+            // Excluir los archivos LICENSE.md duplicados que causan el conflicto
+            excludes += "META-INF/LICENSE.md"
+
+            // A veces también es necesario excluir estos otros archivos comunes:
+            excludes += "META-INF/LICENSE-apache-2.0.txt"
+            excludes += "META-INF/LICENSE"
+            excludes += "META-INF/NOTICE.md"
+            excludes += "META-INF/NOTICE"
+            excludes += "META-INF/ASL2.0"
+            excludes += "META-INF/LICENSE-notice.md"
+        }
+    }
+
 }
 
 dependencies {
@@ -108,6 +123,23 @@ dependencies {
     // Retrofit
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+
+    //Pruebas Unitarias
+
+    // MockK
+    testImplementation("io.mockk:mockk:1.13.8")
+    // Si también haces pruebas instrumentadas (androidTest), añade esta línea también:
+    androidTestImplementation("io.mockk:mockk-android:1.13.8")
+    // --- Instrumented Tests (androidTest - UI Tests) ---
+
+    // Dependencias base de AndroidX Test (Versiones actualizadas y compatibles)
+    // Usa las versiones del libs.versions.toml si existen, si no, usa cableado:
+    androidTestImplementation("androidx.test.ext:junit:1.1.5") // Usa una version consistente
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1") // Usa una version consistente
+
+    // Dependencias de Compose UI Test (usando el BOM para compatibilidad)
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4) // Usa la versión gestionada por el BOM/libs
+
 
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
