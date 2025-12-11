@@ -6,6 +6,7 @@ import com.example.levelup_gamer.modelo.CarritoRequest
 import com.example.levelup_gamer.modelo.CarritoResumenModel
 import com.example.levelup_gamer.modelo.CarritoResumenUI
 import com.example.levelup_gamer.modelo.CarritoItemUI
+import com.example.levelup_gamer.modelo.toCarritoResumenUI
 import com.example.levelup_gamer.remote.CarritoRetrofitInstance
 import kotlinx.coroutines.delay
 
