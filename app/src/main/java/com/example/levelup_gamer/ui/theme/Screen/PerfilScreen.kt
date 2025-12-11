@@ -125,19 +125,6 @@ fun PerfilScreen(
                     Column(Modifier.padding(20.dp)) {
 
                         Text(
-                            "Nivel: ${usuario.nivel}",
-                            color = verdeNeon,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(Modifier.height(10.dp))
-
-                        Text(
-                            "Puntos Level-Up: ${usuario.puntosLevelUp}",
-                            color = Color.White
-                        )
-                        Spacer(Modifier.height(10.dp))
-
-                        Text(
                             "Miembro desde: ${usuario.fechaRegistro}",
                             color = cianNeon
                         )

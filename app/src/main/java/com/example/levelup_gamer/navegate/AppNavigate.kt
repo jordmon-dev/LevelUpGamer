@@ -1,14 +1,29 @@
 package com.example.levelup_gamer.navigation
 
 import android.annotation.SuppressLint
-import androidx.compose.foundation.layout.PaddingValues // Importado para usar PaddingValues
-import androidx.compose.foundation.layout.padding // Importado para usar el modificador .padding
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier // Importado para usar Modifier
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.example.levelup_gamer.ui.theme.Screen.*
+import com.example.levelup_gamer.ui.theme.Screen.AboutScreen
+import com.example.levelup_gamer.ui.theme.Screen.AyudaScreen
+import com.example.levelup_gamer.ui.theme.Screen.CamaraReclamoScreen
+import com.example.levelup_gamer.ui.theme.Screen.CarritoScreen
+import com.example.levelup_gamer.ui.theme.Screen.ConfirmacionReclamoScreen
+import com.example.levelup_gamer.ui.theme.Screen.ConfirmacionScreen
+import com.example.levelup_gamer.ui.theme.Screen.HomeScreen
+import com.example.levelup_gamer.ui.theme.Screen.NotificacionScreen
+import com.example.levelup_gamer.ui.theme.Screen.OfertasScreen
+import com.example.levelup_gamer.ui.theme.Screen.PagoScreen
+import com.example.levelup_gamer.ui.theme.Screen.PantallaGpsScreen
+import com.example.levelup_gamer.ui.theme.Screen.PerfilScreen
+import com.example.levelup_gamer.ui.theme.Screen.ReporteReclamoScreen
+import com.example.levelup_gamer.ui.theme.screen.*
 
 import com.example.levelup_gamer.viewmodel.*
 
@@ -51,11 +66,23 @@ fun AppNavigate(
         }
 
         composable("carrito") {
-            CarritoScreen(navController, carritoViewModel)
+            // CORREGIDO: Pasamos el usuarioViewModel explícitamente
+            CarritoScreen(navController, carritoViewModel, usuarioViewModel)
         }
 
         composable("catalogo") {
-            CatalogoScreen(navController, productoViewModel, carritoViewModel)
+            // CORREGIDO: Obtenemos el email y se lo pasamos a la pantalla
+            val usuarioState by usuarioViewModel.usuario.collectAsState()
+            CatalogoScreen(
+                navController = navController,
+                viewModel = productoViewModel,
+                carritoViewModel = carritoViewModel,
+                usuarioEmail = usuarioState.email
+            )
+        }
+
+        composable("notificaciones") {
+            NotificacionScreen(navController)
         }
 
         // RUTAS DE INFORMACIÓN Y SOPORTE (Desde HomeScreen)
@@ -73,9 +100,7 @@ fun AppNavigate(
             OfertasScreen(navController, OfertasViewModel())
         }
 
-        composable("notificaciones") {
-            NotificacionScreen(navController)
-        }
+        // ELIMINADO: Se borró la ruta "notificaciones" duplicada
 
         composable("pago") {
             PagoScreen(navController, carritoViewModel)
@@ -108,7 +133,15 @@ fun AppNavigate(
         composable("confirmacionReclamo") {
             ConfirmacionReclamoScreen(navController, reclamoViewModel)
         }
-
-        // Nota: camaraPerfil fue omitida en el NavHost ya que CamaraPerfilScreen es un ViewModel, no un Composable.
     }
+}
+
+@Composable
+fun RegistroScreen(x0: NavHostController, x1: UsuarioViewModel) {
+    TODO("Not yet implemented")
+}
+
+@Composable
+fun LoginScreen(x0: NavHostController, x1: UsuarioViewModel) {
+    TODO("Not yet implemented")
 }

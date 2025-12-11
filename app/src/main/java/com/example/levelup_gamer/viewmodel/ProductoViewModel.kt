@@ -8,11 +8,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
-import com.example.levelup_gamer.R // ⬅️ FIX 1: Importar la clase R para acceder a los recursos
-import kotlinx.coroutines.launch
+import com.example.levelup_gamer.R
 
 // 1. Definición del Estado de la UI para el Catálogo
 data class CatalogoUiState(
@@ -102,13 +101,12 @@ class ProductoViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(CatalogoUiState())
     val uiState: StateFlow<CatalogoUiState> = _uiState.asStateFlow()
 
-    // 2. Flujo de datos filtrados (Lógica de filtrado)
-    // FIX 2: Volver a la estructura .combine / .stateIn para reactividad y evitar el casting problemático.
-    val productosFiltrados: StateFlow<List<Producto>> = _uiState.combine(_uiState) { state, _ ->
+    // Flujo de datos filtrados usando map para mayor eficiencia
+    val productosFiltrados: StateFlow<List<Producto>> = uiState.map { state ->
         productosBase.filter { producto ->
             (state.categoriaSeleccionada == "Todas" || producto.categoria == state.categoriaSeleccionada) &&
                     (producto.nombre.contains(state.busqueda, ignoreCase = true) ||
-                            producto.descripcion.contains(state.busqueda, ignoreCase = true))
+                            (producto.descripcion ?: "").contains(state.busqueda, ignoreCase = true)) // <-- CORREGIDO
         }
     }.stateIn(
         scope = viewModelScope,
@@ -116,18 +114,12 @@ class ProductoViewModel : ViewModel() {
         initialValue = productosBase
     )
 
-    // 3. Métodos para actualizar el estado desde la UI (Buscador/Filtros)
+    // Métodos para actualizar el estado desde la UI (Buscador/Filtros)
     fun onBusquedaChange(texto: String) {
         _uiState.update { it.copy(busqueda = texto) }
     }
 
     fun onCategoriaSeleccionada(categoria: String) {
         _uiState.update { it.copy(categoriaSeleccionada = categoria) }
-    }
-
-    fun agregarAlCarrito(productoId: Int, cantidad: Int, email: String, carritoViewModel: CarritoViewModel) {
-        viewModelScope.launch {
-            carritoViewModel.agregarProductoAlCarrito(productoId, cantidad, email)
-        }
     }
 }

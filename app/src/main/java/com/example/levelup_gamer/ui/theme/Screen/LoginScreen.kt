@@ -294,7 +294,7 @@ fun LoginScreen(
                     Button(
                         onClick = {
                             if (viewModel.validar()) {
-                                viewModel.guardarSesion()  // NUEVO
+                                viewModel.guardarSesionLocal()  // NUEVO
 
                                 Toast.makeText(contexto, "¡Inicio de sesión exitoso!", Toast.LENGTH_SHORT).show()
 

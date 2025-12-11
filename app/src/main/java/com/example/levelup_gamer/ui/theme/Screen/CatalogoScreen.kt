@@ -1,4 +1,4 @@
-package com.example.levelup_gamer.ui.theme.Screen
+package com.example.levelup_gamer.ui.theme.screen // <--- CORREGIDO: en minúsculas
 
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -22,12 +22,12 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource // ⬅️ Import necesario
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.levelup_gamer.R
-import com.example.levelup_gamer.model.Producto
+import com.example.levelup_gamer.modelo.Producto
 import com.example.levelup_gamer.viewmodel.CarritoViewModel
 import com.example.levelup_gamer.viewmodel.ProductoViewModel
 import kotlinx.coroutines.delay
@@ -38,7 +38,8 @@ import kotlinx.coroutines.launch
 fun CatalogoScreen(
     navController: NavController,
     viewModel: ProductoViewModel,
-    carritoViewModel: CarritoViewModel
+    carritoViewModel: CarritoViewModel,
+    usuarioEmail: String // <-- AÑADIDO: Recibe el email del usuario
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val productos by viewModel.productosFiltrados.collectAsState()
@@ -136,12 +137,18 @@ fun CatalogoScreen(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp)
-            ) {
+            ) { 
                 items(productos) { producto ->
-
                     ProductoCard(
                         producto = producto,
-                        onAgregar = { carritoViewModel.agregarProducto(producto) }
+                        // 👇 CORREGIDO: Pasa los parámetros correctos
+                        onAgregar = { 
+                            carritoViewModel.agregarProducto(
+                                productoId = producto.id,
+                                cantidad = 1, // Por defecto se agrega 1
+                                email = usuarioEmail
+                            )
+                        }
                     )
                 }
             }
@@ -179,9 +186,9 @@ fun ProductoCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
 
-            // ✅ Usar painterResource con el ID de la imagen del producto
             Image(
-                painter = painterResource(id = producto.imagen ?: R.drawable.banner_game), // Usa la imagen del producto o un placeholder
+                // ✅ CORREGIDO: Ahora `producto.imagen` es un Int?
+                painter = painterResource(id = producto.imagen ?: R.drawable.banner_game), 
                 contentDescription = "Producto",
                 modifier = Modifier
                     .size(90.dp)

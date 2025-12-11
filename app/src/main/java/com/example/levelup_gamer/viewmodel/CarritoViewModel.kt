@@ -88,6 +88,33 @@ class CarritoViewModel : ViewModel() {
         }
     }
 
+    fun limpiarCarrito(email: String) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true)
+
+            try {
+                // Obtén todos los items actuales
+                val currentItems = _uiState.value.resumen.items
+
+                // Elimina cada item
+                currentItems.forEach { item ->
+                    item?.id?.let { id ->
+                        repository.eliminarDelCarrito(id, email)
+                    }
+                }
+
+                // Actualiza el resumen (ahora estará vacío)
+                actualizarResumen(email)
+
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    errorMessage = "Error al limpiar el carrito: ${e.message}",
+                    isLoading = false
+                )
+            }
+        }
+    }
+
     // Nueva función para agregar productos
     fun agregarProducto(productoId: Int, cantidad: Int, email: String) {
         viewModelScope.launch {

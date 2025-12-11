@@ -6,10 +6,10 @@ data class Producto(
     val nombre: String,
     val precio: Double,
     val descripcion: String? = null,
-    val imagen: String? = null,
+    val imagen: Int? = null, // <--- CORREGIDO: De String? a Int?
     val stock: Int,
     val categoria: String? = null,
-    val destacado: Boolean = false,           // Agregar si no está
-    val codigo: String? = null,               // Agregar si no está
-    val imagenUrl: String? = null             // Agregar si no está
+    val destacado: Boolean = false,
+    val codigo: String? = null,
+    val imagenUrl: String? = null
 )

@@ -4,10 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.levelup_gamer.datastore.UserPreferences
-import com.example.levelup_gamer.model.UsuarioErrores
-import com.example.levelup_gamer.model.UsuarioState
 import com.example.levelup_gamer.repository.UsuarioRepository
-import com.example.levelup_gamer.remote.UsuarioInstance
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,7 +14,7 @@ import kotlinx.coroutines.launch
 class UsuarioViewModel(application: Application) : AndroidViewModel(application) {
 
     private val prefs = UserPreferences(application)
-    private val repository = UsuarioRepository(application)
+    private val repository = UsuarioRepository()
 
     // Estado del usuario
     private val _usuario = MutableStateFlow(UsuarioState())
@@ -34,8 +31,6 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
 
     init {
         cargarDatosGuardados()
-        // Inicializar UsuarioInstance
-        UsuarioInstance.initialize(application)
     }
 
     // ------------------------------
@@ -50,8 +45,9 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
 
             result.onSuccess { authResponse ->
                 _loginSuccess.value = true
+                guardarSesionLocal()
                 // Cargar perfil después del login
-                cargarPerfil()
+                cargarPerfil(authResponse.email)
             }.onFailure { exception ->
                 _errorMessage.value = exception.message ?: "Error desconocido"
                 _loginSuccess.value = false
@@ -70,8 +66,9 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
 
             result.onSuccess { authResponse ->
                 _loginSuccess.value = true
+                guardarSesionLocal()
                 // Cargar perfil después del registro
-                cargarPerfil()
+                cargarPerfil(authResponse.email)
             }.onFailure { exception ->
                 _errorMessage.value = exception.message ?: "Error desconocido"
                 _loginSuccess.value = false
@@ -81,19 +78,17 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    suspend fun cargarPerfil() {
+    fun cargarPerfil(email: String) {
         viewModelScope.launch {
             _isLoading.value = true
 
-            val result = repository.getPerfil()
+            val result = repository.getPerfil(email)
 
             result.onSuccess { usuario ->
                 // Actualizar estado local con datos del perfil
                 _usuario.value = _usuario.value.copy(
-                    nombre = usuario.nombre,
-                    email = usuario.email,
-                    fechaRegistro = usuario.fechaRegistro ?: "",
-                    // Puedes agregar más campos según necesites
+                    nombre = usuario.nombreCompleto,
+                    email = usuario.email
                 )
             }.onFailure { exception ->
                 _errorMessage.value = "Error al cargar perfil: ${exception.message}"
@@ -110,18 +105,12 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch {
             val logged = prefs.isLogged.first()
 
-            if (logged && UsuarioInstance.isAuthenticated()) {
+            if (logged) {
                 val savedUser = prefs.usuario.first()
-                val savedPass = prefs.password.first()
-
-                _usuario.value = usuario.value.copy(
-                    nombre = savedUser,
-                    email = UsuarioInstance.getUserEmail() ?: "",
-                    aceptarTerminos = true
-                )
-
-                // Intentar cargar perfil desde API
-                cargarPerfil()
+                // Si el usuario está logueado, intentamos cargar su perfil
+                if(savedUser.isNotBlank()){
+                    cargarPerfil(savedUser)
+                }
             }
         }
     }
@@ -132,7 +121,6 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
     fun validar(): Boolean {
         val email = usuario.value.email
         val pass = usuario.value.password
-        val acepta = usuario.value.aceptarTerminos
 
         var valido = true
         val errores = UsuarioErrores()
@@ -150,11 +138,6 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
             valido = false
         } else if (pass.length < 6) {
             errores.password = "La contraseña debe tener al menos 6 caracteres."
-            valido = false
-        }
-
-        if (!acepta) {
-            errores.aceptaTerminos = "Debe aceptar los términos."
             valido = false
         }
 
@@ -211,7 +194,7 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
     fun guardarSesionLocal() {
         viewModelScope.launch {
             prefs.saveCredentials(
-                usuario.value.nombre,
+                usuario.value.email,
                 usuario.value.password
             )
         }
@@ -222,8 +205,8 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
     // ------------------------------
     fun cerrarSesion() {
         viewModelScope.launch {
+            repository.logout()
             prefs.logout()
-            UsuarioInstance.logout(getApplication())
             _usuario.value = UsuarioState()
             _loginSuccess.value = false
         }
@@ -233,37 +216,37 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
     // HANDLERS PARA CAMPOS
     // ------------------------------
     fun onChangeNombre(value: String) {
-        _usuario.value = usuario.value.copy(
+        _usuario.value = _usuario.value.copy(
             nombre = value,
-            errores = usuario.value.errores.copy(nombre = null)
+            errores = _usuario.value.errores.copy(nombre = null)
         )
     }
 
     fun onChangeEmail(value: String) {
-        _usuario.value = usuario.value.copy(
+        _usuario.value = _usuario.value.copy(
             email = value,
-            errores = usuario.value.errores.copy(email = null)
+            errores = _usuario.value.errores.copy(email = null)
         )
     }
 
     fun onChangePassword(value: String) {
-        _usuario.value = usuario.value.copy(
+        _usuario.value = _usuario.value.copy(
             password = value,
-            errores = usuario.value.errores.copy(password = null)
+            errores = _usuario.value.errores.copy(password = null)
         )
     }
 
     fun onChangeConfirmPassword(value: String) {
-        _usuario.value = usuario.value.copy(
+        _usuario.value = _usuario.value.copy(
             confirmPassword = value,
-            errores = usuario.value.errores.copy(confirmPassword = null)
+            errores = _usuario.value.errores.copy(confirmPassword = null)
         )
     }
 
     fun onChangeAceptarTerminos(value: Boolean) {
-        _usuario.value = usuario.value.copy(
+        _usuario.value = _usuario.value.copy(
             aceptarTerminos = value,
-            errores = usuario.value.errores.copy(aceptaTerminos = null)
+            errores = _usuario.value.errores.copy(aceptaTerminos = null)
         )
     }
 }

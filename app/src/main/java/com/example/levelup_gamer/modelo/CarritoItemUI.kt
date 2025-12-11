@@ -8,26 +8,28 @@ data class CarritoItemModel(
     val productoNombre: String,
     val productoPrecio: Double,
     val productoDescripcion: String? = null,
-    val productoImagen: String? = null,
+    val productoImagen: Int? = null,
     val productoStock: Int,
     val cantidad: Int,
     val usuarioEmail: String,
     val fechaAgregado: String? = null
 )
 
-
 // Modelo para la UI (lo que usa tu pantalla)
 data class CarritoItemUI(
     val id: Int? = null,
-    val productoId: Int,
-    val nombre: String,  // <-- IMPORTANTE: usa "nombre" no "productoNombre"
-    val precio: Double,  // <-- IMPORTANTE: usa "precio" no "productoPrecio"
-    val descripcion: String? = null,
-    val imagen: String? = null,
-    val stock: Int,
     val cantidad: Int,
+    val producto: Producto,  // <-- Cambia esto
     val usuarioEmail: String,
     val fechaAgregado: String? = null
+)
+
+data class CarritoResumenModel(
+    val items: List<CarritoItemModel>,
+    val subtotal: Double,
+    val descuento: Double,
+    val total: Double,
+    val cantidadTotal: Int
 )
 
 data class CarritoResumenUI(
@@ -49,13 +51,15 @@ data class CarritoRequest(
 fun CarritoItemModel.toCarritoItemUI(): CarritoItemUI {
     return CarritoItemUI(
         id = this.id,
-        productoId = this.productoId,
-        nombre = this.productoNombre,  // Convierte productoNombre → nombre
-        precio = this.productoPrecio,  // Convierte productoPrecio → precio
-        descripcion = this.productoDescripcion,
-        imagen = this.productoImagen,
-        stock = this.productoStock,
         cantidad = this.cantidad,
+        producto = Producto(
+            id = this.productoId,
+            nombre = this.productoNombre,
+            precio = this.productoPrecio,
+            descripcion = this.productoDescripcion,
+            imagen = this.productoImagen,
+            stock = this.productoStock
+        ),
         usuarioEmail = this.usuarioEmail,
         fechaAgregado = this.fechaAgregado
     )
