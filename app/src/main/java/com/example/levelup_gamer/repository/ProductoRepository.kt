@@ -2,32 +2,27 @@ package com.example.levelup_gamer.repository
 
 import android.util.Log
 import com.example.levelup_gamer.modelo.Producto
-import com.example.levelup_gamer.remote.ProductoRetrofitInstance
+import com.example.levelup_gamer.remote.RetrofitInstance
 import kotlinx.coroutines.delay
 
 class ProductoRepository {
 
-    private val apiService = ProductoRetrofitInstance.api
+    private val apiService = RetrofitInstance.productoApiService
 
     // Obtener todos los productos
     suspend fun getProductos(): List<Producto> {
         return try {
-            Log.d("ProductoRepository", "Obteniendo lista de productos")
+            Log.d("ProductoRepository", "Obteniendo productos...")
             val response = apiService.getProductos()
 
             if (response.isSuccessful) {
-                response.body()?.let { productos ->
-                    Log.d("ProductoRepository", "Productos obtenidos: ${productos.size} items")
-                    productos
-                } ?: emptyList()
+                response.body() ?: emptyList()
             } else {
-                Log.e("ProductoRepository", "Error: ${response.code()} - ${response.message()}")
-                // Retornar lista vacía o mock en caso de error
+                Log.e("ProductoRepository", "Error: ${response.code()}")
                 getProductosMock()
             }
         } catch (e: Exception) {
-            Log.e("ProductoRepository", "Excepción: ${e.message}")
-            // En caso de error de red, retornar datos mock
+            Log.e("ProductoRepository", "Error: ${e.message}")
             getProductosMock()
         }
     }
@@ -45,11 +40,10 @@ class ProductoRepository {
                 }
             } else {
                 Log.e("ProductoRepository", "Producto no encontrado: ${response.code()}")
-                // Intentar con mock
                 getProductoMockPorId(id)
             }
         } catch (e: Exception) {
-            Log.e("ProductoRepository", "Excepción: ${e.message}")
+            Log.e("ProductoRepository", "Excepción: ${e.message}", e)
             getProductoMockPorId(id)
         }
     }
@@ -67,21 +61,11 @@ class ProductoRepository {
                 } ?: emptyList()
             } else {
                 Log.e("ProductoRepository", "Error en búsqueda: ${response.code()}")
-                // Filtrar mock por query
-                getProductosMock().filter {
-                    it.nombre.contains(query, ignoreCase = true) ||
-                            it.descripcion.contains(query, ignoreCase = true) ||
-                            it.categoria.contains(query, ignoreCase = true)
-                }
+                filtrarProductosMock(query)
             }
         } catch (e: Exception) {
-            Log.e("ProductoRepository", "Excepción: ${e.message}")
-            // Filtrar mock por query
-            getProductosMock().filter {
-                it.nombre.contains(query, ignoreCase = true) ||
-                        it.descripcion.contains(query, ignoreCase = true) ||
-                        it.categoria.contains(query, ignoreCase = true)
-            }
+            Log.e("ProductoRepository", "Excepción: ${e.message}", e)
+            filtrarProductosMock(query)
         }
     }
 
@@ -98,16 +82,14 @@ class ProductoRepository {
                 } ?: emptyList()
             } else {
                 Log.e("ProductoRepository", "Error categoría: ${response.code()}")
-                // Filtrar mock por categoría
                 getProductosMock().filter {
-                    it.categoria.equals(categoria, ignoreCase = true)
+                    it.categoria?.equals(categoria, ignoreCase = true) == true
                 }
             }
         } catch (e: Exception) {
-            Log.e("ProductoRepository", "Excepción: ${e.message}")
-            // Filtrar mock por categoría
+            Log.e("ProductoRepository", "Excepción: ${e.message}", e)
             getProductosMock().filter {
-                it.categoria.equals(categoria, ignoreCase = true)
+                it.categoria?.equals(categoria, ignoreCase = true) == true
             }
         }
     }
@@ -125,89 +107,99 @@ class ProductoRepository {
                 } ?: emptyList()
             } else {
                 Log.e("ProductoRepository", "Error destacados: ${response.code()}")
-                // Filtrar mock por destacado
                 getProductosMock().filter { it.destacado }
             }
         } catch (e: Exception) {
-            Log.e("ProductoRepository", "Excepción: ${e.message}")
-            // Filtrar mock por destacado
+            Log.e("ProductoRepository", "Excepción: ${e.message}", e)
             getProductosMock().filter { it.destacado }
         }
     }
 
-    // Datos mock para desarrollo/pruebas (similar a tu CarritoRepository)
+    // Función para filtrar productos mock
+    private suspend fun filtrarProductosMock(query: String): List<Producto> {
+        return getProductosMock().filter {
+            it.nombre.contains(query, ignoreCase = true) ||
+                    it.descripcion?.contains(query, ignoreCase = true) == true ||
+                    it.categoria?.contains(query, ignoreCase = true) == true
+        }
+    }
+
+    // Datos mock para desarrollo/pruebas
     private suspend fun getProductosMock(): List<Producto> {
         delay(500) // Simular delay de red
 
         return listOf(
             Producto(
                 id = 1,
-                codigo = "CQ001",
                 nombre = "God of War Ragnarok",
-                descripcion = "La secuela del aclamado God of War (2018). Kratos y Atreus deben viajar a cada uno de los Nueve Reinos en busca de respuestas.",
                 precio = 49990.0,
+                descripcion = "La secuela del aclamado God of War (2018)",
                 stock = 15,
                 imagen = "god_of_war",
-                imagenUrl = "https://ejemplo.com/gow.jpg",
-                categoria = "Acción"
+                categoria = "Acción",
+                destacado = true,
+                codigo = "CQ001",
+                imagenUrl = "https://ejemplo.com/gow.jpg"
             ),
             Producto(
                 id = 2,
-                codigo = "AC001",
                 nombre = "DualSense Controller",
-                descripcion = "Control inalámbrico para PS5 con retroalimentación háptica y gatillos adaptativos.",
                 precio = 54990.0,
+                descripcion = "Control inalámbrico para PS5",
                 stock = 25,
                 imagen = "dualsense",
-                imagenUrl = "https://ejemplo.com/dualsense.jpg",
-                categoria = "Accesorios"
+                categoria = "Accesorios",
+                destacado = false,
+                codigo = "AC001",
+                imagenUrl = "https://ejemplo.com/dualsense.jpg"
             ),
             Producto(
                 id = 3,
-                codigo = "AV001",
                 nombre = "The Last of Us Part I",
-                descripcion = "Remake del clásico de Naughty Dog con gráficos y jugabilidad mejorados.",
                 precio = 39990.0,
+                descripcion = "Remake del clásico de Naughty Dog",
                 stock = 10,
                 imagen = "tlou",
-                imagenUrl = "https://ejemplo.com/tlou.jpg",
                 categoria = "Aventura",
-                destacado = true
+                destacado = true,
+                codigo = "AV001",
+                imagenUrl = "https://ejemplo.com/tlou.jpg"
             ),
             Producto(
                 id = 4,
-                codigo = "CO001",
                 nombre = "Xbox Series X",
-                descripcion = "Consola de nueva generación con 4K nativo y hasta 120 FPS.",
                 precio = 599990.0,
+                descripcion = "Consola de nueva generación",
                 stock = 8,
                 imagen = "xbox",
-                imagenUrl = "https://ejemplo.com/xbox.jpg",
                 categoria = "Consolas",
-                destacado = true
+                destacado = true,
+                codigo = "CO001",
+                imagenUrl = "https://ejemplo.com/xbox.jpg"
             ),
             Producto(
                 id = 5,
-                codigo = "CO002",
                 nombre = "Nintendo Switch OLED",
-                descripcion = "Nintendo Switch con pantalla OLED de 7 pulgadas y mejoras en el audio.",
                 precio = 449990.0,
+                descripcion = "Nintendo Switch con pantalla OLED",
                 stock = 12,
                 imagen = "switch",
-                imagenUrl = "https://ejemplo.com/switch.jpg",
-                categoria = "Consolas"
+                categoria = "Consolas",
+                destacado = false,
+                codigo = "CO002",
+                imagenUrl = "https://ejemplo.com/switch.jpg"
             ),
             Producto(
                 id = 6,
-                codigo = "RP001",
                 nombre = "Elden Ring",
-                descripcion = "Juego de rol de acción de mundo abierto desarrollado por FromSoftware.",
                 precio = 44990.0,
+                descripcion = "Juego de rol de acción de mundo abierto",
                 stock = 18,
                 imagen = "elden_ring",
-                imagenUrl = "https://ejemplo.com/elden.jpg",
                 categoria = "RPG",
-                destacado = true
+                destacado = true,
+                codigo = "RP001",
+                imagenUrl = "https://ejemplo.com/elden.jpg"
             )
         )
     }
@@ -218,13 +210,15 @@ class ProductoRepository {
         return getProductosMock().find { it.id == id }
     }
 
-    // Función adicional para obtener productos filtrados (similar al mock de carrito)
+    // Función adicional para obtener productos filtrados
     suspend fun getProductosFiltrados(filtro: String): List<Producto> {
         delay(400)
 
-        return when (filtro.toLowerCase()) {
+        return when (filtro.lowercase()) {
             "destacados" -> getProductosMock().filter { it.destacado }
-            "consolas" -> getProductosMock().filter { it.categoria.equals("Consolas", ignoreCase = true) }
+            "consolas" -> getProductosMock().filter {
+                it.categoria?.equals("Consolas", ignoreCase = true) == true
+            }
             "oferta" -> getProductosMock().filter { it.precio < 50000 }
             else -> getProductosMock()
         }

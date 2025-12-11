@@ -1,16 +1,19 @@
+// CarritoViewModel.kt (usa el que ya tienes, pero actualiza estas funciones)
 package com.example.levelup_gamer.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.levelup_gamer.modelo.CarritoItemUI
+import com.example.levelup_gamer.modelo.CarritoRequest
 import com.example.levelup_gamer.modelo.CarritoResumenUI
+import com.example.levelup_gamer.modelo.toCarritoResumenUI
 import com.example.levelup_gamer.repository.CarritoRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+// Si ya tienes CarritoUiState, mantenlo igual
 data class CarritoUiState(
     val resumen: CarritoResumenUI = CarritoResumenUI(
         items = emptyList(),
@@ -24,80 +27,84 @@ data class CarritoUiState(
 )
 
 class CarritoViewModel : ViewModel() {
-
     private val repository = CarritoRepository()
 
     private val _uiState = MutableStateFlow(CarritoUiState())
     val uiState: StateFlow<CarritoUiState> = _uiState.asStateFlow()
 
-    // Propiedad de conveniencia para acceder al resumen
-    val resumen: CarritoResumenUI
-        get() = _uiState.value.resumen
-
+    // ACTUALIZA ESTA FUNCIÓN
     fun actualizarResumen(email: String) {
-        _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-
         viewModelScope.launch {
-            try {
-                // Usar API real
-                val carrito = repository.getCarritoUsuario(email)
+            _uiState.value = _uiState.value.copy(isLoading = true)
 
-                carrito?.let {
-                    _uiState.update { state ->
-                        state.copy(
-                            resumen = it,
-                            isLoading = false
-                        )
-                    }
-                }
-            } catch (e: Exception) {
-                _uiState.update { state ->
-                    state.copy(
-                        isLoading = false,
-                        errorMessage = "Error al cargar carrito: ${e.message}"
-                    )
-                }
+            val result = repository.obtenerCarrito(email)
+
+            result.onSuccess { carritoModel ->
+                val carritoUI = carritoModel.toCarritoResumenUI()
+                _uiState.value = _uiState.value.copy(
+                    resumen = carritoUI,
+                    isLoading = false
+                )
+            }.onFailure { error ->
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    errorMessage = "Error: ${error.message}"
+                )
             }
         }
     }
 
+    // ACTUALIZA ESTA FUNCIÓN
     fun onCantidadChange(item: CarritoItemUI, nuevaCantidad: Int, email: String) {
         viewModelScope.launch {
-            try {
-                item.id?.let { itemId ->
-                    val exitoso = repository.actualizarCantidad(itemId, nuevaCantidad)
+            item.id?.let { id ->
+                val result = repository.actualizarCantidad(id, nuevaCantidad, email)
 
-                    if (exitoso) {
-                        actualizarResumen(email)
-                    }
-                }
-            } catch (e: Exception) {
-                _uiState.update { state ->
-                    state.copy(
-                        errorMessage = "Error al actualizar cantidad: ${e.message}"
+                result.onSuccess {
+                    actualizarResumen(email)
+                }.onFailure { error ->
+                    _uiState.value = _uiState.value.copy(
+                        errorMessage = "Error al actualizar: ${error.message}"
                     )
                 }
             }
         }
     }
 
+    // ACTUALIZA ESTA FUNCIÓN
     fun onEliminar(item: CarritoItemUI, email: String) {
         viewModelScope.launch {
-            try {
-                item.id?.let { itemId ->
-                    val exitoso = repository.eliminarDelCarrito(itemId)
+            item.id?.let { id ->
+                val result = repository.eliminarDelCarrito(id, email)
 
-                    if (exitoso) {
-                        actualizarResumen(email)
-                    }
-                }
-            } catch (e: Exception) {
-                _uiState.update { state ->
-                    state.copy(
-                        errorMessage = "Error al eliminar item: ${e.message}"
+                result.onSuccess {
+                    actualizarResumen(email)
+                }.onFailure { error ->
+                    _uiState.value = _uiState.value.copy(
+                        errorMessage = "Error al eliminar: ${error.message}"
                     )
                 }
             }
         }
+    }
+
+    // Nueva función para agregar productos
+    fun agregarProducto(productoId: Int, cantidad: Int, email: String) {
+        viewModelScope.launch {
+            val request = CarritoRequest(productoId, cantidad, email)
+            val result = repository.agregarAlCarrito(request)
+
+            result.onSuccess {
+                actualizarResumen(email)
+            }.onFailure { error ->
+                _uiState.value = _uiState.value.copy(
+                    errorMessage = "Error al agregar: ${error.message}"
+                )
+            }
+        }
+    }
+
+    fun clearError() {
+        _uiState.value = _uiState.value.copy(errorMessage = null)
     }
 }

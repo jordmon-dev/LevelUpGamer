@@ -1,3 +1,4 @@
+// CarritoApiService.kt (en package com.example.levelup_gamer.remote)
 package com.example.levelup_gamer.remote
 
 import com.example.levelup_gamer.modelo.CarritoItemModel
@@ -7,35 +8,26 @@ import retrofit2.Response
 import retrofit2.http.*
 
 interface CarritoApiService {
+    // GET /api/carrito?email=usuario@email.com
+    @GET("carrito")
+    suspend fun obtenerCarrito(@Query("email") email: String): Response<CarritoResumenModel>
 
-    @GET("carrito/{email}")
-    suspend fun getCarritoUsuario(
-        @Path("email") email: String
-    ): Response<CarritoResumenModel>  // ← Devuelve CarritoResumenModel
-
+    // POST /api/carrito/agregar
     @POST("carrito/agregar")
-    suspend fun agregarAlCarrito(
-        @Body request: CarritoRequest
-    ): Response<CarritoItemModel>  // ← Devuelve CarritoItemModel
+    suspend fun agregarAlCarrito(@Body request: CarritoRequest): Response<CarritoItemModel>
 
-    @PUT("carrito/actualizar/{id}")
+    // PUT /api/carrito/actualizar?id=1&cantidad=2&email=usuario@email.com
+    @PUT("carrito/actualizar")
     suspend fun actualizarCantidad(
-        @Path("id") itemId: Int,
-        @Body cantidad: Int
-    ): Response<CarritoItemModel>  // ← Devuelve CarritoItemModel
+        @Query("id") id: Int,
+        @Query("cantidad") cantidad: Int,
+        @Query("email") email: String
+    ): Response<CarritoItemModel>
 
-    @DELETE("carrito/eliminar/{id}")
+    // DELETE /api/carrito/eliminar?id=1&email=usuario@email.com
+    @DELETE("carrito/eliminar")
     suspend fun eliminarDelCarrito(
-        @Path("id") itemId: Int
-    ): Response<Unit>
-
-    @DELETE("carrito/vaciar/{email}")
-    suspend fun vaciarCarrito(
-        @Path("email") email: String
-    ): Response<Unit>
-
-    @GET("carrito/resumen/{email}")
-    suspend fun getResumenCarrito(
-        @Path("email") email: String
-    ): Response<CarritoResumenModel>  // ← Devuelve CarritoResumenModel
+        @Query("id") id: Int,
+        @Query("email") email: String
+    ): Response<Void>
 }
