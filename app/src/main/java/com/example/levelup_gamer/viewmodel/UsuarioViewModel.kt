@@ -6,64 +6,150 @@ import androidx.lifecycle.viewModelScope
 import com.example.levelup_gamer.datastore.UserPreferences
 import com.example.levelup_gamer.model.UsuarioErrores
 import com.example.levelup_gamer.model.UsuarioState
+import com.example.levelup_gamer.repository.UsuarioRepository
+import com.example.levelup_gamer.remote.UsuarioInstance
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class UsuarioViewModel(application: Application) : AndroidViewModel(application) {
 
     private val prefs = UserPreferences(application)
+    private val repository = UsuarioRepository(application)
 
     // Estado del usuario
     private val _usuario = MutableStateFlow(UsuarioState())
-    val usuario: StateFlow<UsuarioState> get() = _usuario
+    val usuario: StateFlow<UsuarioState> = _usuario.asStateFlow()
+
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     private val _errorMessage = MutableStateFlow<String?>(null)
-    val errorMessage: StateFlow<String?> get() = _errorMessage
+    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
+
+    private val _loginSuccess = MutableStateFlow(false)
+    val loginSuccess: StateFlow<Boolean> = _loginSuccess.asStateFlow()
 
     init {
         cargarDatosGuardados()
+        // Inicializar UsuarioInstance
+        UsuarioInstance.initialize(application)
+    }
+
+    // ------------------------------
+    // AUTENTICACIÓN CON API
+    // ------------------------------
+    fun login(email: String, password: String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _errorMessage.value = null
+
+            val result = repository.login(email, password)
+
+            result.onSuccess { authResponse ->
+                _loginSuccess.value = true
+                // Cargar perfil después del login
+                cargarPerfil()
+            }.onFailure { exception ->
+                _errorMessage.value = exception.message ?: "Error desconocido"
+                _loginSuccess.value = false
+            }
+
+            _isLoading.value = false
+        }
+    }
+
+    fun register(nombre: String, email: String, password: String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _errorMessage.value = null
+
+            val result = repository.register(nombre, email, password)
+
+            result.onSuccess { authResponse ->
+                _loginSuccess.value = true
+                // Cargar perfil después del registro
+                cargarPerfil()
+            }.onFailure { exception ->
+                _errorMessage.value = exception.message ?: "Error desconocido"
+                _loginSuccess.value = false
+            }
+
+            _isLoading.value = false
+        }
+    }
+
+    suspend fun cargarPerfil() {
+        viewModelScope.launch {
+            _isLoading.value = true
+
+            val result = repository.getPerfil()
+
+            result.onSuccess { usuario ->
+                // Actualizar estado local con datos del perfil
+                _usuario.value = _usuario.value.copy(
+                    nombre = usuario.nombre,
+                    email = usuario.email,
+                    fechaRegistro = usuario.fechaRegistro ?: "",
+                    // Puedes agregar más campos según necesites
+                )
+            }.onFailure { exception ->
+                _errorMessage.value = "Error al cargar perfil: ${exception.message}"
+            }
+
+            _isLoading.value = false
+        }
     }
 
     // ------------------------------
     // CARGAR DATOS GUARDADOS (AUTOLOGIN)
     // ------------------------------
-    fun cargarDatosGuardados() {
+    private fun cargarDatosGuardados() {
         viewModelScope.launch {
             val logged = prefs.isLogged.first()
 
-            if (logged) {
+            if (logged && UsuarioInstance.isAuthenticated()) {
                 val savedUser = prefs.usuario.first()
                 val savedPass = prefs.password.first()
 
                 _usuario.value = usuario.value.copy(
                     nombre = savedUser,
-                    password = savedPass,
+                    email = UsuarioInstance.getUserEmail() ?: "",
                     aceptarTerminos = true
                 )
+
+                // Intentar cargar perfil desde API
+                cargarPerfil()
             }
         }
     }
 
     // ------------------------------
-    // VALIDAR LOGIN
+    // VALIDAR LOGIN LOCAL
     // ------------------------------
     fun validar(): Boolean {
-        val nombre = usuario.value.nombre
+        val email = usuario.value.email
         val pass = usuario.value.password
         val acepta = usuario.value.aceptarTerminos
 
         var valido = true
         val errores = UsuarioErrores()
 
-        if (nombre.isBlank()) {
-            errores.nombre = "Debe ingresar un usuario."
+        if (email.isBlank()) {
+            errores.email = "Debe ingresar un email."
+            valido = false
+        } else if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            errores.email = "Email inválido."
             valido = false
         }
 
         if (pass.isBlank()) {
             errores.password = "Debe ingresar una contraseña."
+            valido = false
+        } else if (pass.length < 6) {
+            errores.password = "La contraseña debe tener al menos 6 caracteres."
             valido = false
         }
 
@@ -85,17 +171,23 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
         val errores = UsuarioErrores()
 
         if (estado.nombre.isBlank()) {
-            errores.nombre = "Debe ingresar un usuario."
+            errores.nombre = "Debe ingresar un nombre."
             valido = false
         }
 
         if (estado.email.isBlank()) {
             errores.email = "Debe ingresar un correo."
             valido = false
+        } else if (!android.util.Patterns.EMAIL_ADDRESS.matcher(estado.email).matches()) {
+            errores.email = "Email inválido."
+            valido = false
         }
 
         if (estado.password.isBlank()) {
             errores.password = "Debe ingresar una contraseña."
+            valido = false
+        } else if (estado.password.length < 6) {
+            errores.password = "La contraseña debe tener al menos 6 caracteres."
             valido = false
         }
 
@@ -114,9 +206,9 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
     }
 
     // ------------------------------
-    // GUARDAR SESIÓN
+    // GUARDAR SESIÓN LOCAL
     // ------------------------------
-    fun guardarSesion() {
+    fun guardarSesionLocal() {
         viewModelScope.launch {
             prefs.saveCredentials(
                 usuario.value.nombre,
@@ -131,8 +223,10 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
     fun cerrarSesion() {
         viewModelScope.launch {
             prefs.logout()
+            UsuarioInstance.logout(getApplication())
+            _usuario.value = UsuarioState()
+            _loginSuccess.value = false
         }
-        _usuario.value = UsuarioState()
     }
 
     // ------------------------------

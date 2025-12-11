@@ -1,164 +1,103 @@
 package com.example.levelup_gamer.viewmodel
 
 import androidx.lifecycle.ViewModel
-import com.example.levelup_gamer.model.Producto
+import androidx.lifecycle.viewModelScope
+import com.example.levelup_gamer.modelo.CarritoItemUI
+import com.example.levelup_gamer.modelo.CarritoResumenUI
+import com.example.levelup_gamer.repository.CarritoRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
-// Data classes necesarias
-data class CarritoItem(
-    val producto: Producto,
-    val cantidad: Int = 1
-)
-
-data class ResumenCarrito(
-    val items: List<CarritoItem> = emptyList(),
-    val subtotal: Double = 0.0,
-    val descuento: Double = 0.0,
-    val total: Double = 0.0,
-    val porcentajeDescuento: Double = 0.0
+data class CarritoUiState(
+    val resumen: CarritoResumenUI = CarritoResumenUI(
+        items = emptyList(),
+        subtotal = 0.0,
+        descuento = 0.0,
+        total = 0.0,
+        cantidadTotal = 0
+    ),
+    val isLoading: Boolean = false,
+    val errorMessage: String? = null
 )
 
 class CarritoViewModel : ViewModel() {
 
-    // StateFlow para el resumen del carrito
-    private val _resumen = MutableStateFlow(ResumenCarrito())
-    val resumen: StateFlow<ResumenCarrito> = _resumen
+    private val repository = CarritoRepository()
 
-    // Propiedad para acceder a los items del carrito
-    private val itemsCarrito: List<CarritoItem>
-        get() = _resumen.value.items
+    private val _uiState = MutableStateFlow(CarritoUiState())
+    val uiState: StateFlow<CarritoUiState> = _uiState.asStateFlow()
 
-    // Función para agregar producto al carrito
-    fun agregarProducto(producto: Producto, correoUsuario: String = "") {
-        _resumen.update { resumenActual ->
-            val itemsActualizados = resumenActual.items.toMutableList()
+    // Propiedad de conveniencia para acceder al resumen
+    val resumen: CarritoResumenUI
+        get() = _uiState.value.resumen
 
-            // Verificar si el producto ya está en el carrito
-            val itemExistente = itemsActualizados.find { it.producto.codigo == producto.codigo }
+    fun actualizarResumen(email: String) {
+        _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
-            if (itemExistente != null) {
-                // Si ya existe, aumentar la cantidad
-                val nuevoItem = itemExistente.copy(cantidad = itemExistente.cantidad + 1)
-                itemsActualizados[itemsActualizados.indexOf(itemExistente)] = nuevoItem
-            } else {
-                // Si no existe, agregar nuevo item
-                itemsActualizados.add(CarritoItem(producto = producto, cantidad = 1))
-            }
+        viewModelScope.launch {
+            try {
+                // Usar API real
+                val carrito = repository.getCarritoUsuario(email)
 
-            // Calcular nuevos totales con el descuento correcto
-            val porcentajeDescuento = obtenerPorcentajeDescuento(correoUsuario)
-            val nuevoSubtotal = calcularSubtotal(itemsActualizados)
-            val nuevoDescuento = nuevoSubtotal * porcentajeDescuento
-            val nuevoTotal = nuevoSubtotal - nuevoDescuento
-
-            resumenActual.copy(
-                items = itemsActualizados,
-                subtotal = nuevoSubtotal,
-                descuento = nuevoDescuento,
-                total = nuevoTotal,
-                porcentajeDescuento = porcentajeDescuento
-            )
-        }
-    }
-
-    // Función para cambiar cantidad de un producto
-    fun onCantidadChange(item: CarritoItem, nuevaCantidad: Int, correoUsuario: String = "") {
-        _resumen.update { resumenActual ->
-            val itemsActualizados = resumenActual.items.toMutableList()
-            val itemIndex = itemsActualizados.indexOfFirst { it.producto.codigo == item.producto.codigo }
-
-            if (itemIndex != -1) {
-                if (nuevaCantidad > 0) {
-                    itemsActualizados[itemIndex] = item.copy(cantidad = nuevaCantidad)
-                } else {
-                    itemsActualizados.removeAt(itemIndex)
+                carrito?.let {
+                    _uiState.update { state ->
+                        state.copy(
+                            resumen = it,
+                            isLoading = false
+                        )
+                    }
                 }
-
-                // Recalcular totales con el descuento correcto
-                val porcentajeDescuento = obtenerPorcentajeDescuento(correoUsuario)
-                val nuevoSubtotal = calcularSubtotal(itemsActualizados)
-                val nuevoDescuento = nuevoSubtotal * porcentajeDescuento
-                val nuevoTotal = nuevoSubtotal - nuevoDescuento
-
-                resumenActual.copy(
-                    items = itemsActualizados,
-                    subtotal = nuevoSubtotal,
-                    descuento = nuevoDescuento,
-                    total = nuevoTotal,
-                    porcentajeDescuento = porcentajeDescuento
-                )
-            } else {
-                resumenActual
+            } catch (e: Exception) {
+                _uiState.update { state ->
+                    state.copy(
+                        isLoading = false,
+                        errorMessage = "Error al cargar carrito: ${e.message}"
+                    )
+                }
             }
         }
     }
 
-    // Función para eliminar producto del carrito
-    fun onEliminar(item: CarritoItem, correoUsuario: String = "") {
-        _resumen.update { resumenActual ->
-            val itemsActualizados = resumenActual.items.toMutableList()
-            itemsActualizados.removeAll { it.producto.codigo == item.producto.codigo }
+    fun onCantidadChange(item: CarritoItemUI, nuevaCantidad: Int, email: String) {
+        viewModelScope.launch {
+            try {
+                item.id?.let { itemId ->
+                    val exitoso = repository.actualizarCantidad(itemId, nuevaCantidad)
 
-            // Recalcular totales con el descuento correcto
-            val porcentajeDescuento = obtenerPorcentajeDescuento(correoUsuario)
-            val nuevoSubtotal = calcularSubtotal(itemsActualizados)
-            val nuevoDescuento = nuevoSubtotal * porcentajeDescuento
-            val nuevoTotal = nuevoSubtotal - nuevoDescuento
-
-            resumenActual.copy(
-                items = itemsActualizados,
-                subtotal = nuevoSubtotal,
-                descuento = nuevoDescuento,
-                total = nuevoTotal,
-                porcentajeDescuento = porcentajeDescuento
-            )
+                    if (exitoso) {
+                        actualizarResumen(email)
+                    }
+                }
+            } catch (e: Exception) {
+                _uiState.update { state ->
+                    state.copy(
+                        errorMessage = "Error al actualizar cantidad: ${e.message}"
+                    )
+                }
+            }
         }
     }
 
-    // Función para limpiar el carrito
-    fun limpiarCarrito() {
-        _resumen.value = ResumenCarrito()
-    }
+    fun onEliminar(item: CarritoItemUI, email: String) {
+        viewModelScope.launch {
+            try {
+                item.id?.let { itemId ->
+                    val exitoso = repository.eliminarDelCarrito(itemId)
 
-    // Función para calcular subtotal
-    private fun calcularSubtotal(items: List<CarritoItem>): Double {
-        return items.sumOf { it.producto.precio * it.cantidad }
-    }
-
-    // Función para obtener el porcentaje de descuento basado en el correo
-    private fun obtenerPorcentajeDescuento(correoUsuario: String): Double {
-        return if (correoUsuario.endsWith("@duocuc.cl")) {
-            0.20 // 20% de descuento para estudiantes Duoc
-        } else {
-            0.10 // 10% de descuento para usuarios regulares
-        }
-    }
-
-    // Función para actualizar resumen con el correo del usuario
-    fun actualizarResumen(correoUsuario: String) {
-        _resumen.update { resumenActual ->
-            val porcentajeDescuento = obtenerPorcentajeDescuento(correoUsuario)
-            val nuevoSubtotal = calcularSubtotal(resumenActual.items)
-            val nuevoDescuento = nuevoSubtotal * porcentajeDescuento
-            val nuevoTotal = nuevoSubtotal - nuevoDescuento
-
-            resumenActual.copy(
-                subtotal = nuevoSubtotal,
-                descuento = nuevoDescuento,
-                total = nuevoTotal,
-                porcentajeDescuento = porcentajeDescuento
-            )
-        }
-    }
-
-    // Función para obtener el texto del descuento
-    fun obtenerTextoDescuento(porcentajeDescuento: Double): String {
-        return when (porcentajeDescuento) {
-            0.20 -> "Descto 20%:"
-            0.10 -> "Descto 10%:"
-            else -> "Descuento:"
+                    if (exitoso) {
+                        actualizarResumen(email)
+                    }
+                }
+            } catch (e: Exception) {
+                _uiState.update { state ->
+                    state.copy(
+                        errorMessage = "Error al eliminar item: ${e.message}"
+                    )
+                }
+            }
         }
     }
 }

@@ -3,7 +3,7 @@ package com.example.levelup_gamer.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.levelup_gamer.model.Producto
+import com.example.levelup_gamer.modelo.Producto
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import com.example.levelup_gamer.R // ⬅️ FIX 1: Importar la clase R para acceder a los recursos
+import kotlinx.coroutines.launch
 
 // 1. Definición del Estado de la UI para el Catálogo
 data class CatalogoUiState(
@@ -23,14 +24,76 @@ class ProductoViewModel : ViewModel() {
 
     // Lista de productos base (Hardcodeado con IMÁGENES)
     private val productosBase = listOf(
-        // Aquí se usará R.drawable.game_X. Asegúrate de que las imágenes game_1.png a game_7.png estén en /res/drawable
-        Producto("CQ001", "PlayStation 5", 549990.0, "Consolas", "Consola de última generación", R.drawable.game_1),
-        Producto("AC001", "Controlador Xbox Series X", 59990.0, "Accesorios", "Control inalámbrico", R.drawable.game_2),
-        Producto("JM001", "Catan", 29990.0, "Juegos de Mesa", "Juego de estrategia", R.drawable.game_3),
-        Producto("CG001", "PC Gamer ASUS ROG", 1299990.0, "Computadores", "Alto rendimiento", R.drawable.game_4), // ⬅️ Producto visible en tu captura
-        Producto("SG001", "Silla Gamer SecretLab", 349990.0, "Sillas", "Máximo confort", R.drawable.game_5),
-        Producto("MS001", "Mouse Logitech G502", 49990.0, "Mouse", "Alta precisión", R.drawable.game_6),
-        Producto("PP001", "Polera Gamer Personalizada", 14990.0, "Poleras", "Personalizable", R.drawable.game_7)
+        Producto(
+            id = 1,
+            codigo = "CQ001",
+            nombre = "PlayStation 5",
+            descripcion = "Consola de última generación",
+            precio = 549990.0,
+            stock = 54,
+            imagen = R.drawable.game_1,
+            categoria = "Consolas"
+        ),
+        Producto(
+            id = 2,
+            codigo = "AC001",
+            nombre = "Controlador Xbox Series X",
+            descripcion = "Control inalámbrico",
+            precio = 59990.0,
+            stock = 30,
+            imagen = R.drawable.game_2,
+            categoria = "Accesorios"
+        ),
+        Producto(
+            id = 3,
+            codigo = "JM001",
+            nombre = "Catan",
+            descripcion = "Juego de estrategia",
+            precio = 29990.0,
+            stock = 25,
+            imagen = R.drawable.game_3,
+            categoria = "Juegos de Mesa"
+        ),
+        Producto(
+            id = 4,
+            codigo = "CG001",
+            nombre = "PC Gamer ASUS ROG",
+            descripcion = "Alto rendimiento",
+            precio = 1299990.0,
+            stock = 10,
+            imagen = R.drawable.game_4,
+            categoria = "Computadores"
+        ),
+        Producto(
+            id = 5,
+            codigo = "SG001",
+            nombre = "Silla Gamer SecretLab",
+            descripcion = "Máximo confort",
+            precio = 349990.0,
+            stock = 15,
+            imagen = R.drawable.game_5,
+            categoria = "Sillas"
+        ),
+        Producto(
+            id = 6,
+            codigo = "MS001",
+            nombre = "Mouse Logitech G502",
+            descripcion = "Alta precisión",
+            precio = 49990.0,
+            stock = 50,
+            imagen = R.drawable.game_6,
+            categoria = "Mouse"
+        ),
+        Producto(
+            id = 7,
+            codigo = "PP001",
+            nombre = "Polera Gamer Personalizada",
+            descripcion = "Personalizable",
+            precio = 14990.0,
+            stock = 100,
+            imagen = R.drawable.game_7,
+            categoria = "Poleras"
+        )
     )
 
     // Lista de todas las categorías disponibles
@@ -60,5 +123,11 @@ class ProductoViewModel : ViewModel() {
 
     fun onCategoriaSeleccionada(categoria: String) {
         _uiState.update { it.copy(categoriaSeleccionada = categoria) }
+    }
+
+    fun agregarAlCarrito(productoId: Int, cantidad: Int, email: String, carritoViewModel: CarritoViewModel) {
+        viewModelScope.launch {
+            carritoViewModel.agregarProductoAlCarrito(productoId, cantidad, email)
+        }
     }
 }

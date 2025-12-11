@@ -7,7 +7,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.ShoppingCart
@@ -16,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -24,26 +24,38 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.levelup_gamer.viewmodel.CarritoItem
+import com.example.levelup_gamer.modelo.CarritoItemUI
 import com.example.levelup_gamer.viewmodel.CarritoViewModel
-import com.example.levelup_gamer.viewmodel.ProductoViewModel
 import com.example.levelup_gamer.viewmodel.UsuarioViewModel
 import kotlin.math.roundToInt
+
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CarritoScreen(
     navController: NavController,
     viewModel: CarritoViewModel = viewModel(),
-    usuarioViewModel: UsuarioViewModel = viewModel(),   // 👈 AHORA SÍ: UsuarioViewModel
+    usuarioViewModel: UsuarioViewModel = viewModel(),
 ) {
-    val resumen by viewModel.resumen.collectAsState()
-    val usuario by usuarioViewModel.usuario.collectAsState()   // 👈 usamos el StateFlow<UsuarioState>
+    val uiState by viewModel.uiState.collectAsState()
+    val resumen = uiState.resumen
+    val usuario by usuarioViewModel.usuario.collectAsState()
     val itemsCarrito = resumen.items
 
-    // Actualizar resumen cuando cambia usuario o items
-    LaunchedEffect(usuario.email, itemsCarrito.size) {
-        if (usuario.email.isNotEmpty()) {             // 👈 YA NO UsuarioState.email
+    // Mostrar mensaje de error si existe
+    LaunchedEffect(uiState.errorMessage) {
+        uiState.errorMessage?.let { error ->
+            // Puedes usar un Snackbar aquí
+            println("Error: $error")
+        }
+    }
+
+    // Actualizar resumen cuando cambia usuario o cuando se monta la pantalla
+    LaunchedEffect(usuario.email) {
+        if (usuario.email.isNotEmpty()) {
             viewModel.actualizarResumen(usuario.email)
         }
     }
@@ -64,8 +76,7 @@ fun CarritoScreen(
         )
     )
 
-    // Color para la top bar que coincida con el fondo
-    val topBarColor = Color(0xFF0A0A0A) // Usamos el color más oscuro del gradiente
+    val topBarColor = Color(0xFF0A0A0A)
 
     Scaffold(
         topBar = {
@@ -87,7 +98,7 @@ fun CarritoScreen(
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = topBarColor // Cambiar a color sólido que coincida
+                    containerColor = topBarColor
                 )
             )
         },
@@ -168,7 +179,11 @@ fun CarritoScreen(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Button(
-                        onClick = { navController.navigate("pago") },
+                        onClick = {
+                            if (itemsCarrito.isNotEmpty()) {
+                                navController.navigate("pago")
+                            }
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(50.dp),
@@ -194,7 +209,24 @@ fun CarritoScreen(
                 .fillMaxSize()
                 .background(fondo)
         ) {
-            if (itemsCarrito.isEmpty()) {
+            if (uiState.isLoading) {
+                // Mostrar loading
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(24.dp),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    CircularProgressIndicator(color = Color(0xFF00FF88))
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        "Cargando carrito...",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.White
+                    )
+                }
+            } else if (itemsCarrito.isEmpty()) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -303,7 +335,7 @@ fun CarritoScreen(
 
 @Composable
 fun ItemCarrito(
-    item: CarritoItem,
+    item: CarritoItemUI,
     onCantidadChange: (Int) -> Unit,
     onEliminar: () -> Unit
 ) {
@@ -321,24 +353,25 @@ fun ItemCarrito(
                 modifier = Modifier.weight(1f)
             ) {
                 Text(
-                    item.producto.nombre,
+                    item.nombre, // Usa la propiedad computada
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Bold,
                     color = Color.White
                 )
+                // Nota: No tenemos categoría desde la API, puedes ajustar esto
                 Text(
-                    item.producto.categoria,
+                    "Precio unitario: $${item.precio.roundToInt()} CLP",
                     style = MaterialTheme.typography.bodySmall,
                     color = Color(0xFFA0A0A0)
                 )
                 Text(
-                    "$${(item.producto.precio * item.cantidad).roundToInt()} CLP",
+                    "$${(item.precio * item.cantidad).roundToInt()} CLP",
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color(0xFF00FF88),
                     modifier = Modifier.padding(top = 4.dp)
                 )
                 Text(
-                    "$${item.producto.precio.roundToInt()} CLP c/u",
+                    "Cantidad: ${item.cantidad}",
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.LightGray
                 )
