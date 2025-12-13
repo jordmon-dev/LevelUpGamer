@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.levelup_gamer.modelo.Usuario
 import com.example.levelup_gamer.viewmodel.UsuarioViewModel
 import com.example.levelup_gamer.viewmodel.CarritoViewModel
 import com.example.levelup_gamer.viewmodel.ProductoViewModel
@@ -46,9 +47,12 @@ fun HomeScreen(
     viewModel: UsuarioViewModel = viewModel()
 ) {
     // SOLUCIÓN: Intentar obtener usuario, si falla usar uno por defecto
-    val usuario = com.example.levelup_gamer.modelo.Usuario(
-        email = "jugador@duocuc.cl",
-        nombre= "Carlos Gamer"
+    val usuario = Usuario(                        // Requerido
+        Nombre = "Carlos Gamer",       // Requerido
+        Email = "jugador@duocuc.cl",   // Requerido
+        Password = "password123",      // Requerido
+        Telefono = 12345678,           // Requerido
+        Direccion = "Dirección ejemplo" // Requerido
     )
 
 
@@ -116,7 +120,7 @@ fun HomeScreen(
                         Column {
                             // CORRECCIÓN: Usar nombreCompleto en lugar de nombre
                             Text(
-                                if (usuario.nombre.isNotEmpty()) "¡Hola, ${usuario.nombre.split(" ").firstOrNull() ?: "Jugador"}!"
+                                if (usuario.Nombre.isNotEmpty()) "¡Hola, ${usuario.Nombre.split(" ").firstOrNull() ?: "Jugador"}!"
                                 else "¡Bienvenido!",
                                 style = MaterialTheme.typography.headlineSmall,
                                 color = Color.White,
@@ -145,7 +149,7 @@ fun HomeScreen(
                     }
 
                     // Badge de descuento estudiante
-                    if (usuario.email.endsWith("@duocuc.cl")) {
+                    if (usuario.Email.endsWith("@duocuc.cl")) {
                         Spacer(modifier = Modifier.height(12.dp))
                         Card(
                             colors = CardDefaults.cardColors(

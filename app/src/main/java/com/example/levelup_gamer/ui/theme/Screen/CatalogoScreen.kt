@@ -39,10 +39,20 @@ fun CatalogoScreen(
     navController: NavController,
     productoViewModel: ProductoViewModel,
     carritoViewModel: CarritoViewModel,
-    usuarioEmail: String = "test@duocuc.cl" // Email por defecto para testing
+    usuarioEmail: String? = null // Email por defecto para testing
 ) {
     val uiState by productoViewModel.uiState.collectAsState()
     val productos by productoViewModel.productosFiltrados.collectAsState()
+
+    val email = usuarioEmail ?: run {
+        // Redirigir al login si no hay email
+        LaunchedEffect(Unit) {
+            navController.navigate("login") {
+                popUpTo("catalogo") { inclusive = true }
+            }
+        }
+        return
+    }
 
     val fondo = Brush.verticalGradient(
         listOf(

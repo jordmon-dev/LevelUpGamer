@@ -48,8 +48,9 @@ fun BottomBar( // ✅ Nombre de función corregido
     )
 
     // 🛒 Cantidad de productos en carrito
-    val resumen by carritoViewModel.resumen.collectAsState()
-    val totalItems = resumen.items.sumOf { it.cantidad }
+    // CORREGIDO: Se observa uiState en lugar de una propiedad inexistente 'resumen'
+    val uiState by carritoViewModel.uiState.collectAsState()
+    val totalItems = uiState.resumen.items.sumOf { it.cantidad }
 
     // ❤️ Animación para cuando cambia la cantidad del carrito
     var animateBadge by remember { mutableStateOf(false) }

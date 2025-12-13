@@ -64,6 +64,8 @@ dependencies {
 // ViewModel
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2")
 
+    implementation("androidx.activity:activity-compose:1.9.0")
+
     //Dependencias para Geolocalización
 
     // ... otras dependencias ...

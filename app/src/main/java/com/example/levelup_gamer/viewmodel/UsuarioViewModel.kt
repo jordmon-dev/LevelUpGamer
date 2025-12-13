@@ -16,7 +16,9 @@ import kotlinx.coroutines.launch
 class UsuarioViewModel(application: Application) : AndroidViewModel(application) {
 
     private val prefs = UserPreferences(application)
-    private val repository = UsuarioRepository()
+
+    // CORREGIDO: Pasa la Application al Repository
+    private val repository = UsuarioRepository(application)
 
     // Estado del usuario
     private val _usuarioState = MutableStateFlow(UsuarioState())
@@ -49,14 +51,12 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
                 _loginSuccess.value = true
                 // Actualizar estado con datos del usuario
                 _usuarioState.value = _usuarioState.value.copy(
-                    nombre = usuario.nombre,
-                    email = usuario.email,
-                    fechaRegistro = usuario.fechaRegistro,
-                    puntosFidelidad = usuario.puntosFidelidad
+                    nombre = usuario.Nombre,
+                    email = usuario.Email
                 )
 
                 // Guardar sesión local
-                guardarSesionLocal(usuario.nombre, password)
+                guardarSesionLocal(usuario.Nombre, password)
             }.onFailure { exception ->
                 _errorMessage.value = exception.message ?: "Error desconocido"
                 _loginSuccess.value = false
@@ -77,14 +77,12 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
                 _loginSuccess.value = true
                 // Actualizar estado con datos del usuario
                 _usuarioState.value = _usuarioState.value.copy(
-                    nombre = usuario.nombre,
-                    email = usuario.email,
-                    fechaRegistro = usuario.fechaRegistro,
-                    puntosFidelidad = usuario.puntosFidelidad
+                    nombre = usuario.Nombre,
+                    email = usuario.Email
                 )
 
                 // Guardar sesión local
-                guardarSesionLocal(usuario.nombre, password)
+                guardarSesionLocal(usuario.Nombre, password)
             }.onFailure { exception ->
                 _errorMessage.value = exception.message ?: "Error desconocido"
                 _loginSuccess.value = false
@@ -103,10 +101,8 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
             result.onSuccess { usuario ->
                 // Actualizar estado con datos del perfil
                 _usuarioState.value = _usuarioState.value.copy(
-                    nombre = usuario.nombre,
-                    email = usuario.email,
-                    fechaRegistro = usuario.fechaRegistro,
-                    puntosFidelidad = usuario.puntosFidelidad
+                    nombre = usuario.Nombre,
+                    email = usuario.Email
                 )
             }.onFailure { exception ->
                 _errorMessage.value = "Error al cargar perfil: ${exception.message}"
