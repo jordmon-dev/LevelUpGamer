@@ -1,6 +1,5 @@
 package com.example.levelup_gamer.repository
 
-<<<<<<< HEAD
 import android.app.Application
 import android.content.Context
 import android.util.Log
@@ -23,14 +22,13 @@ class UsuarioRepository(private val application: Application) {
     }
 
     // ------------------------------
-    // AUTENTICACIÓN (ajustado a tu UsuarioApiService)
+    // LOGIN
     // ------------------------------
     suspend fun login(email: String, password: String): Result<Usuario> {
         return withContext(Dispatchers.IO) {
             try {
                 Log.d("UsuarioRepository", "Intentando login para: $email")
 
-                // Tu API espera un Map, no un objeto LoginRequest
                 val loginData = mapOf(
                     "email" to email,
                     "password" to password
@@ -41,7 +39,6 @@ class UsuarioRepository(private val application: Application) {
                 if (response.isSuccessful) {
                     val usuario = response.body()
                     if (usuario != null) {
-                        // Guardar token si existe
                         usuario.token?.let { token ->
                             saveToken(token)
                             saveUserEmail(email)
@@ -72,35 +69,21 @@ class UsuarioRepository(private val application: Application) {
                 Log.e("UsuarioRepository", "Error inesperado: ${e.message}")
                 Result.failure(e)
             }
-=======
-import com.example.levelup_gamer.modelo.Usuario
-import com.example.levelup_gamer.remote.RetrofitInstance
-import com.example.levelup_gamer.remote.UsuarioApiService
-
-class UsuarioRepository {
-    private val usuarioApiService: UsuarioApiService = RetrofitInstance.usuarioApiService
-
-    suspend fun login(email: String, password: String): Result<Usuario> {
-        return try {
-            val response = usuarioApiService.login(mapOf("email" to email, "password" to password))
-            if (response.isSuccessful && response.body() != null) {
-                Result.success(response.body()!!)
-            } else {
-                Result.failure(Exception(response.errorBody()?.string() ?: "Error en el login"))
-            }
-        } catch (e: Exception) {
-            Result.failure(e)
->>>>>>> 26325cd399d3b00d6b44ae2d699d36192856a8d0
         }
     }
 
-    suspend fun register(nombre: String, email: String, password: String): Result<Usuario> {
-<<<<<<< HEAD
+    // ------------------------------
+    // REGISTRO
+    // ------------------------------
+    suspend fun register(
+        nombre: String,
+        email: String,
+        password: String
+    ): Result<Usuario> {
         return withContext(Dispatchers.IO) {
             try {
                 Log.d("UsuarioRepository", "Intentando registro para: $email")
 
-                // Crear objeto Usuario para registro
                 val usuarioRegistro = Usuario(
                     nombre = nombre,
                     email = email,
@@ -112,7 +95,6 @@ class UsuarioRepository {
                 if (response.isSuccessful) {
                     val usuario = response.body()
                     if (usuario != null) {
-                        // Guardar token si existe
                         usuario.token?.let { token ->
                             saveToken(token)
                             saveUserEmail(email)
@@ -149,20 +131,18 @@ class UsuarioRepository {
     // ------------------------------
     // OBTENER PERFIL
     // ------------------------------
-    suspend fun getPerfil(): Result<Usuario> {
+    suspend fun getPerfil(email: String): Result<Usuario> {
         return withContext(Dispatchers.IO) {
             try {
                 val token = getToken()
-                val email = getUserEmail()
+                val userEmail = email
 
-                if (token.isNullOrEmpty() || email.isNullOrEmpty()) {
+                if (token.isNullOrEmpty() || userEmail.isNullOrEmpty()) {
                     return@withContext Result.failure(Exception("No autenticado"))
                 }
 
-                Log.d("UsuarioRepository", "Obteniendo perfil para: $email")
-
-                // Según tu UsuarioApiService, necesitas el email
-                val response = usuarioApiService.getUsuarioPorEmail(email)
+                Log.d("UsuarioRepository", "Obteniendo perfil para: $userEmail")
+                val response = usuarioApiService.getUsuarioPorEmail(userEmail)
 
                 if (response.isSuccessful) {
                     val usuario = response.body()
@@ -175,7 +155,6 @@ class UsuarioRepository {
                 } else {
                     when (response.code()) {
                         401 -> {
-                            // Token inválido o expirado
                             clearToken()
                             Result.failure(Exception("Sesión expirada. Vuelve a iniciar sesión."))
                         }
@@ -190,6 +169,27 @@ class UsuarioRepository {
                 Log.e("UsuarioRepository", "Error al obtener perfil: ${e.message}")
                 Result.failure(e)
             }
+        }
+    }
+
+    // ------------------------------
+    // LOGOUT
+    // ------------------------------
+    suspend fun logout(): Result<Unit> {
+        return try {
+            val response = usuarioApiService.logout()
+            if (response.isSuccessful) {
+                clearToken()
+                Result.success(Unit)
+            } else {
+                Result.failure(
+                    Exception(
+                        response.errorBody()?.string() ?: "Error al cerrar sesión"
+                    )
+                )
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 
@@ -216,7 +216,7 @@ class UsuarioRepository {
         sharedPreferences.edit().remove("auth_token").apply()
     }
 
-    fun logout() {
+    fun clearSession() {
         sharedPreferences.edit().clear().apply()
     }
 
@@ -224,44 +224,3 @@ class UsuarioRepository {
         return !getToken().isNullOrEmpty()
     }
 }
-=======
-        return try {
-            val usuario = Usuario(nombreCompleto = nombre, email = email, password = password)
-            val response = usuarioApiService.register(usuario)
-            if (response.isSuccessful && response.body() != null) {
-                Result.success(response.body()!!)
-            } else {
-                Result.failure(Exception(response.errorBody()?.string() ?: "Error en el registro"))
-            }
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    suspend fun getPerfil(email: String): Result<Usuario> {
-        return try {
-            val response = usuarioApiService.getUsuarioPorEmail(email)
-            if (response.isSuccessful && response.body() != null) {
-                Result.success(response.body()!!)
-            } else {
-                Result.failure(Exception(response.errorBody()?.string() ?: "Error al obtener perfil"))
-            }
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    suspend fun logout(): Result<Unit> {
-        return try {
-            val response = usuarioApiService.logout()
-            if (response.isSuccessful) {
-                Result.success(Unit)
-            } else {
-                Result.failure(Exception(response.errorBody()?.string() ?: "Error al cerrar sesión"))
-            }
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-}
->>>>>>> 26325cd399d3b00d6b44ae2d699d36192856a8d0

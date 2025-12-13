@@ -11,9 +11,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState // Asegúrate de tener este import
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -22,7 +20,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.levelup_gamer.viewmodel.UsuarioViewModel
-import androidx.compose.runtime.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -30,13 +27,15 @@ fun PerfilScreen(
     navController: NavController,
     usuarioViewModel: UsuarioViewModel
 ) {
-    // Asegúrate de tener el import correcto para collectAsState
     val usuarioState by usuarioViewModel.usuarioState.collectAsState()
     val isLoading by usuarioViewModel.isLoading.collectAsState()
 
     // Cargar perfil al iniciar la pantalla
     LaunchedEffect(Unit) {
-        usuarioViewModel.cargarPerfil()
+        val email = usuarioState.email
+        if (email.isNotEmpty()) {
+            usuarioViewModel.cargarPerfil(email)
+        }
     }
 
     val fondo = Brush.verticalGradient(
@@ -101,7 +100,6 @@ fun PerfilScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
 
-<<<<<<< HEAD
                     Spacer(Modifier.height(16.dp))
 
                     // AVATAR
@@ -116,29 +114,6 @@ fun PerfilScreen(
                             contentDescription = null,
                             tint = verdeNeon,
                             modifier = Modifier.size(70.dp)
-=======
-                        Text(
-                            "Miembro desde: ${usuario.fechaRegistro}",
-                            color = cianNeon
-                        )
-                        Spacer(Modifier.height(10.dp)) // Añadido para espaciar el nuevo campo
-
-                        // NUEVA INFORMACIÓN: Estado de Cuenta / Descuento
-                        Text(
-                            "Estado de Cuenta:",
-                            color = Color.White,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(Modifier.height(4.dp))
-                        Text(
-                            text = if (usuario.email.endsWith("@duocuc.cl")) {
-                                "✅ Estudiante DUOCUC (20% Descuento)"
-                            } else {
-                                "👤 Usuario Regular (10% Descuento)"
-                            },
-                            color = if (usuario.email.endsWith("@duocuc.cl")) verdeNeon else cianNeon,
-                            style = MaterialTheme.typography.bodyMedium
->>>>>>> 26325cd399d3b00d6b44ae2d699d36192856a8d0
                         )
                     }
 

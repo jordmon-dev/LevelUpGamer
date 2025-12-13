@@ -1,5 +1,6 @@
 package com.example.levelup_gamer.ui.theme.Screen
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectableGroup
@@ -15,40 +16,36 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.levelup_gamer.viewmodel.CarritoViewModel
-
-// O alternativamente:
-
-import androidx.compose.runtime.LaunchedEffect
-import com.example.levelup_gamer.modelo.CarritoItemUI
-
+import com.example.levelup_gamer.viewmodel.UsuarioViewModel
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PagoScreen(
     navController: NavController,
-    carritoViewModel: CarritoViewModel = viewModel()
+    carritoViewModel: CarritoViewModel = viewModel(),
+    usuarioViewModel: UsuarioViewModel = viewModel()
 ) {
-<<<<<<< HEAD
-    // SOLUCIÓN: Usar el uiState del ViewModel en lugar de resumen directo
+    // Obtener estado del ViewModel
     val uiState by carritoViewModel.uiState.collectAsState()
+    val usuarioState by usuarioViewModel.usuarioState.collectAsState()
     val resumen = uiState.resumen
 
-=======
-    val resumenState = carritoViewModel.actualizarResumen(email = usuario.email)
-    val uiState by carritoViewModel.uiState.collectAsStateWithLifecycle()
-
-    LaunchedEffect(usuario.email) {
-        carritoViewModel.actualizarResumen(usuario.email)
-    }
-
-    val resumen = uiState.resumen
->>>>>>> 26325cd399d3b00d6b44ae2d699d36192856a8d0
     var metodoPagoSeleccionado by remember { mutableStateOf("") }
     var mostrarFormularioTarjeta by remember { mutableStateOf(false) }
+
+    // Obtener email del usuario (usar valor por defecto si no está disponible)
+    val usuarioEmail = usuarioState.email.ifEmpty { "usuario@duocuc.cl" }
+
+    // Actualizar resumen al cargar la pantalla
+    LaunchedEffect(usuarioEmail) {
+        if (usuarioEmail.isNotEmpty()) {
+            carritoViewModel.actualizarResumen(usuarioEmail)
+        }
+    }
 
     // Muestra loading si es necesario
     if (uiState.isLoading) {
@@ -61,23 +58,27 @@ fun PagoScreen(
         return
     }
 
-    // Muestra error si existe
-    uiState.errorMessage?.let { error ->
-        LaunchedEffect(error) {
-            // Puedes mostrar un snackbar o manejar el error
-            println("Error: $error")
-        }
-    }
-
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Método de Pago") },
+                title = {
+                    Text(
+                        "Método de Pago",
+                        color = Color.White
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
+                        Icon(
+                            Icons.Default.ArrowBack,
+                            contentDescription = "Volver",
+                            tint = Color.White
+                        )
                     }
-                }
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = Color(0xFF1A1A1A)
+                )
             )
         }
     ) { innerPadding ->
@@ -87,6 +88,7 @@ fun PagoScreen(
                 .padding(16.dp)
                 .verticalScroll(rememberScrollState())
                 .fillMaxSize()
+                .background(Color(0xFF0A0A0A))
         ) {
             // Resumen del pedido
             Card(
@@ -105,8 +107,7 @@ fun PagoScreen(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-<<<<<<< HEAD
-                    // Productos en el carrito - SOLUCIÓN: Usar items de resumen
+                    // Productos en el carrito
                     resumen.items.forEach { item ->
                         Row(
                             modifier = Modifier
@@ -114,23 +115,18 @@ fun PagoScreen(
                                 .padding(vertical = 4.dp),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            // CORRECCIÓN: item.nombre en lugar de item.producto.nombre
                             Text(
-                                "${item.cantidad}x ${item.nombre}",
+                                "${item.cantidad}x ${item.producto.nombre}",
                                 color = Color.LightGray,
                                 style = MaterialTheme.typography.bodyMedium
                             )
-                            // CORRECCIÓN: item.precio en lugar de item.producto.precio
                             Text(
-                                "$${(item.precio * item.cantidad).toInt()} CLP",
+                                "$${(item.producto.precio * item.cantidad).roundToInt()} CLP",
                                 color = Color.LightGray,
                                 style = MaterialTheme.typography.bodyMedium
                             )
                         }
                     }
-=======
-                    ProductosResumen(resumen.items)
->>>>>>> 26325cd399d3b00d6b44ae2d699d36192856a8d0
 
                     Spacer(modifier = Modifier.height(8.dp))
                     Divider(color = Color.Gray)
@@ -142,7 +138,7 @@ fun PagoScreen(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text("Subtotal:", color = Color.White)
-                        Text("$${resumen.subtotal.toInt()} CLP", color = Color.White)
+                        Text("$${resumen.subtotal.roundToInt()} CLP", color = Color.White)
                     }
 
                     if (resumen.descuento > 0) {
@@ -152,7 +148,7 @@ fun PagoScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text("Descuento:", color = Color(0xFF39FF14))
-                            Text("-$${resumen.descuento.toInt()} CLP", color = Color(0xFF39FF14))
+                            Text("-$${resumen.descuento.roundToInt()} CLP", color = Color(0xFF39FF14))
                         }
                     }
 
@@ -163,7 +159,7 @@ fun PagoScreen(
                     ) {
                         Text("Total:", color = Color.White, fontWeight = FontWeight.Bold)
                         Text(
-                            "$${resumen.total.toInt()} CLP",
+                            "$${resumen.total.roundToInt()} CLP",
                             color = Color(0xFF1E90FF),
                             fontWeight = FontWeight.Bold
                         )
@@ -236,32 +232,31 @@ fun PagoScreen(
             // BOTÓN DE CONFIRMAR PAGO
             Button(
                 onClick = {
-<<<<<<< HEAD
-                    // 1. Navega a la pantalla de confirmación primero
-=======
-                    // 1. Limpia el carrito
-                    carritoViewModel.limpiarCarrito(usuario.email)
-                    // 2. Navega a la pantalla de confirmación
->>>>>>> 26325cd399d3b00d6b44ae2d699d36192856a8d0
+                    // 1. Limpiar el carrito
+                    if (usuarioEmail.isNotEmpty()) {
+                        carritoViewModel.limpiarCarrito(usuarioEmail)
+                    }
+                    // 2. Navegar a la pantalla de confirmación
                     navController.navigate("confirmacion") {
                         popUpTo("home") { inclusive = false }
                     }
-                    // 2. Luego limpia el carrito (esto se podría hacer después de confirmación)
-                    // carritoViewModel.limpiarCarrito()
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
                 enabled = metodoPagoSeleccionado.isNotEmpty(),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF1E90FF)
+                    containerColor = Color(0xFF00FF88),
+                    contentColor = Color.Black,
+                    disabledContainerColor = Color(0xFF505050)
                 )
             ) {
                 Icon(Icons.Default.Payment, contentDescription = "Pagar")
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    "Pagar $${resumen.total.toInt()} CLP",
-                    style = MaterialTheme.typography.bodyLarge
+                    "Pagar $${resumen.total.roundToInt()} CLP",
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Bold
                 )
             }
         }
@@ -352,10 +347,17 @@ fun FormularioTarjeta(esCredito: Boolean) {
                         numeroTarjeta = filtered
                     }
                 },
-                label = { Text("Número de tarjeta") },
-                placeholder = { Text("1234567890123456") },
+                label = { Text("Número de tarjeta", color = Color.White) },
+                placeholder = { Text("1234567890123456", color = Color.Gray) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White,
+                    cursorColor = Color(0xFF00FF88)
+                )
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -364,8 +366,15 @@ fun FormularioTarjeta(esCredito: Boolean) {
             OutlinedTextField(
                 value = nombreTitular,
                 onValueChange = { nombreTitular = it },
-                label = { Text("Nombre del titular") },
-                modifier = Modifier.fillMaxWidth()
+                label = { Text("Nombre del titular", color = Color.White) },
+                modifier = Modifier.fillMaxWidth(),
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White,
+                    cursorColor = Color(0xFF00FF88)
+                )
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -385,10 +394,17 @@ fun FormularioTarjeta(esCredito: Boolean) {
                             else -> filtered
                         }
                     },
-                    label = { Text("MM/AA") },
-                    placeholder = { Text("12/25") },
+                    label = { Text("MM/AA", color = Color.White) },
+                    placeholder = { Text("12/25", color = Color.Gray) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White,
+                        cursorColor = Color(0xFF00FF88)
+                    )
                 )
 
                 OutlinedTextField(
@@ -398,49 +414,19 @@ fun FormularioTarjeta(esCredito: Boolean) {
                             cvv = it
                         }
                     },
-                    label = { Text("CVV") },
-                    placeholder = { Text("123") },
+                    label = { Text("CVV", color = Color.White) },
+                    placeholder = { Text("123", color = Color.Gray) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White,
+                        cursorColor = Color(0xFF00FF88)
+                    )
                 )
             }
         }
-    }
-}
-
-@Composable
-fun ProductosResumen(items: List<CarritoItemUI?>) {
-    val itemsSeguros = items.filterNotNull()
-
-    if (itemsSeguros.isNotEmpty()) {
-        itemsSeguros.forEach { item ->
-            item.producto?.let { producto ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        "${item.cantidad}x ${producto.nombre}",
-                        color = Color.LightGray,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    Text(
-                        "$${(producto.precio * item.cantidad).roundToInt()} CLP",
-                        color = Color.LightGray,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-            }
-        }
-    } else {
-        Text(
-            "No hay productos en el carrito",
-            color = Color.Gray,
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.fillMaxWidth(),
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center
-        )
     }
 }

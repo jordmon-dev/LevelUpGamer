@@ -95,7 +95,7 @@ class ProductoRepository {
         }
     }
 
-    // Obtener productos destacados - MODIFICADO porque no hay campo "destacado"
+    // Obtener productos destacados
     suspend fun getProductosDestacados(): List<Producto> {
         return try {
             Log.d("ProductoRepository", "Obteniendo productos destacados")
@@ -108,7 +108,6 @@ class ProductoRepository {
                 } ?: emptyList()
             } else {
                 Log.e("ProductoRepository", "Error destacados: ${response.code()}")
-                // Devuelve productos con precio > 40000 como "destacados"
                 getProductosMock().filter { it.precio > 40000 }
             }
         } catch (e: Exception) {
@@ -117,7 +116,7 @@ class ProductoRepository {
         }
     }
 
-    // Función para filtrar productos mock - CORREGIDO
+    // Función para filtrar productos mock
     private suspend fun filtrarProductosMock(query: String): List<Producto> {
         return getProductosMock().filter {
             it.nombre.contains(query, ignoreCase = true) ||
@@ -126,22 +125,13 @@ class ProductoRepository {
         }
     }
 
-    // Datos mock para desarrollo/pruebas - ACTUALIZADO para coincidir con tu modelo
+    // Datos mock para desarrollo/pruebas
     private suspend fun getProductosMock(): List<Producto> {
         delay(500)
 
         return listOf(
             Producto(
                 id = 1,
-<<<<<<< HEAD
-=======
-                nombre = "God of War Ragnarok",
-                precio = 49990.0,
-                descripcion = "La secuela del aclamado God of War (2018)",
-                stock = 15,
-                categoria = "Acción",
-                destacado = true,
->>>>>>> 26325cd399d3b00d6b44ae2d699d36192856a8d0
                 codigo = "CQ001",
                 nombre = "God of War Ragnarok",
                 descripcion = "La secuela del aclamado God of War (2018)",
@@ -152,15 +142,6 @@ class ProductoRepository {
             ),
             Producto(
                 id = 2,
-<<<<<<< HEAD
-=======
-                nombre = "DualSense Controller",
-                precio = 54990.0,
-                descripcion = "Control inalámbrico para PS5",
-                stock = 25,
-                categoria = "Accesorios",
-                destacado = false,
->>>>>>> 26325cd399d3b00d6b44ae2d699d36192856a8d0
                 codigo = "AC001",
                 nombre = "DualSense Controller",
                 descripcion = "Control inalámbrico para PS5",
@@ -171,15 +152,6 @@ class ProductoRepository {
             ),
             Producto(
                 id = 3,
-<<<<<<< HEAD
-=======
-                nombre = "The Last of Us Part I",
-                precio = 39990.0,
-                descripcion = "Remake del clásico de Naughty Dog",
-                stock = 10,
-                categoria = "Aventura",
-                destacado = true,
->>>>>>> 26325cd399d3b00d6b44ae2d699d36192856a8d0
                 codigo = "AV001",
                 nombre = "The Last of Us Part I",
                 descripcion = "Remake del clásico de Naughty Dog",
@@ -190,15 +162,6 @@ class ProductoRepository {
             ),
             Producto(
                 id = 4,
-<<<<<<< HEAD
-=======
-                nombre = "Xbox Series X",
-                precio = 599990.0,
-                descripcion = "Consola de nueva generación",
-                stock = 8,
-                categoria = "Consolas",
-                destacado = true,
->>>>>>> 26325cd399d3b00d6b44ae2d699d36192856a8d0
                 codigo = "CO001",
                 nombre = "Xbox Series X",
                 descripcion = "Consola de nueva generación",
@@ -209,15 +172,6 @@ class ProductoRepository {
             ),
             Producto(
                 id = 5,
-<<<<<<< HEAD
-=======
-                nombre = "Nintendo Switch OLED",
-                precio = 449990.0,
-                descripcion = "Nintendo Switch con pantalla OLED",
-                stock = 12,
-                categoria = "Consolas",
-                destacado = false,
->>>>>>> 26325cd399d3b00d6b44ae2d699d36192856a8d0
                 codigo = "CO002",
                 nombre = "Nintendo Switch OLED",
                 descripcion = "Nintendo Switch con pantalla OLED",
@@ -228,15 +182,6 @@ class ProductoRepository {
             ),
             Producto(
                 id = 6,
-<<<<<<< HEAD
-=======
-                nombre = "Elden Ring",
-                precio = 44990.0,
-                descripcion = "Juego de rol de acción de mundo abierto",
-                stock = 18,
-                categoria = "RPG",
-                destacado = true,
->>>>>>> 26325cd399d3b00d6b44ae2d699d36192856a8d0
                 codigo = "RP001",
                 nombre = "Elden Ring",
                 descripcion = "Juego de rol de acción de mundo abierto",
@@ -264,12 +209,12 @@ class ProductoRepository {
         return getProductosMock().find { it.id == id }
     }
 
-    // Función adicional para obtener productos filtrados - CORREGIDO
+    // Función adicional para obtener productos filtrados
     suspend fun getProductosFiltrados(filtro: String): List<Producto> {
         delay(400)
 
         return when (filtro.lowercase()) {
-            "destacados" -> getProductosMock().filter { it.precio > 40000 } // Sin campo destacado
+            "destacados" -> getProductosMock().filter { it.precio > 40000 }
             "consolas" -> getProductosMock().filter {
                 it.categoria.equals("Consolas", ignoreCase = true)
             }

@@ -1,4 +1,4 @@
-package com.example.levelup_gamer.ui.theme.screen // <--- CORREGIDO: en minúsculas
+package com.example.levelup_gamer.ui.theme.screen
 
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -22,20 +22,11 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-<<<<<<< HEAD
-import androidx.compose.ui.platform.LocalContext
-=======
->>>>>>> 26325cd399d3b00d6b44ae2d699d36192856a8d0
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-<<<<<<< HEAD
-import coil.compose.rememberAsyncImagePainter
-import coil.request.ImageRequest
-=======
 import com.example.levelup_gamer.R
->>>>>>> 26325cd399d3b00d6b44ae2d699d36192856a8d0
 import com.example.levelup_gamer.modelo.Producto
 import com.example.levelup_gamer.viewmodel.CarritoViewModel
 import com.example.levelup_gamer.viewmodel.ProductoViewModel
@@ -46,14 +37,9 @@ import kotlinx.coroutines.launch
 @Composable
 fun CatalogoScreen(
     navController: NavController,
-<<<<<<< HEAD
     productoViewModel: ProductoViewModel,
-    carritoViewModel: CarritoViewModel
-=======
-    viewModel: ProductoViewModel,
     carritoViewModel: CarritoViewModel,
-    usuarioEmail: String // <-- AÑADIDO: Recibe el email del usuario
->>>>>>> 26325cd399d3b00d6b44ae2d699d36192856a8d0
+    usuarioEmail: String = "test@duocuc.cl" // Email por defecto para testing
 ) {
     val uiState by productoViewModel.uiState.collectAsState()
     val productos by productoViewModel.productosFiltrados.collectAsState()
@@ -151,24 +137,14 @@ fun CatalogoScreen(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp)
-            ) { 
+            ) {
                 items(productos) { producto ->
                     ProductoCard(
                         producto = producto,
-<<<<<<< HEAD
                         onAgregar = {
-                            // Para testing, usa un email fijo o pasa el email real
-                            val usuarioEmail = "usuario@ejemplo.com" // Cambia esto
                             carritoViewModel.agregarProducto(
                                 productoId = producto.id,
                                 cantidad = 1,
-=======
-                        // 👇 CORREGIDO: Pasa los parámetros correctos
-                        onAgregar = { 
-                            carritoViewModel.agregarProducto(
-                                productoId = producto.id,
-                                cantidad = 1, // Por defecto se agrega 1
->>>>>>> 26325cd399d3b00d6b44ae2d699d36192856a8d0
                                 email = usuarioEmail
                             )
                         }
@@ -209,17 +185,10 @@ fun ProductoCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
 
-<<<<<<< HEAD
-            // SOLUCIÓN CORREGIDA: Como producto.imagen es Int (resource ID)
+            // Imagen del producto
             Image(
                 painter = painterResource(id = producto.imagen),
                 contentDescription = producto.nombre,
-=======
-            Image(
-                // ✅ CORREGIDO: Ahora `producto.imagen` es un Int?
-                painter = painterResource(id = producto.imagen ?: R.drawable.banner_game), 
-                contentDescription = "Producto",
->>>>>>> 26325cd399d3b00d6b44ae2d699d36192856a8d0
                 modifier = Modifier
                     .size(90.dp)
                     .clip(RoundedCornerShape(16.dp)),
@@ -261,6 +230,27 @@ fun ProductoCard(
                         "Stock: ${producto.stock}",
                         color = Color(0xFF00FF88),
                         style = MaterialTheme.typography.labelSmall
+                    )
+                }
+
+                // Mostrar código si existe
+                if (producto.codigo.isNotEmpty()) {
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        "Código: ${producto.codigo}",
+                        color = Color(0xFF777777),
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                }
+
+                // Mostrar descripción si es corta
+                if (producto.descripcion.isNotEmpty() && producto.descripcion.length < 40) {
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        producto.descripcion,
+                        color = Color(0xFFA0A0A0),
+                        style = MaterialTheme.typography.bodySmall,
+                        maxLines = 1
                     )
                 }
             }

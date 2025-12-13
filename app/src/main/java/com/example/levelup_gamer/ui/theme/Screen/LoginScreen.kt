@@ -12,11 +12,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,15 +38,15 @@ fun LoginScreen(
     viewModel: UsuarioViewModel = viewModel()
 ) {
     val contexto = LocalContext.current
+    val uiState by viewModel.usuarioState.collectAsState()
+    val loginSuccess by viewModel.loginSuccess.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+    val errorMessage by viewModel.errorMessage.collectAsState()
 
-    // SOLUCIÓN: Usar variables de estado locales en lugar de ViewModel
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var aceptarTerminos by remember { mutableStateOf(false) }
     var passwordVisible by remember { mutableStateOf(false) }
-    var emailError by remember { mutableStateOf<String?>(null) }
-    var passwordError by remember { mutableStateOf<String?>(null) }
-    var terminosError by remember { mutableStateOf<String?>(null) }
 
     // Gradiente para el fondo
     val gradient = Brush.verticalGradient(
@@ -60,6 +56,24 @@ fun LoginScreen(
             Color(0xFF16213E)
         )
     )
+
+    // Efecto para navegar cuando el login es exitoso
+    LaunchedEffect(loginSuccess) {
+        if (loginSuccess) {
+            Toast.makeText(contexto, "¡Inicio de sesión exitoso!", Toast.LENGTH_SHORT).show()
+            navController.navigate("home") {
+                popUpTo("login") { inclusive = true }
+            }
+        }
+    }
+
+    // Efecto para mostrar errores
+    LaunchedEffect(errorMessage) {
+        errorMessage?.let { error ->
+            Toast.makeText(contexto, "Error: $error", Toast.LENGTH_LONG).show()
+
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -128,7 +142,7 @@ fun LoginScreen(
                         value = email,
                         onValueChange = {
                             email = it
-                            emailError = null
+                            viewModel.onChangeEmail(it)
                         },
                         label = {
                             Text("Email")
@@ -140,11 +154,11 @@ fun LoginScreen(
                                 tint = Color(0xFF00FF88)
                             )
                         },
-                        isError = emailError != null,
+                        isError = uiState.errores.email.isNotEmpty(),
                         supportingText = {
-                            emailError?.let {
+                            if (uiState.errores.email.isNotEmpty()) {
                                 Text(
-                                    it,
+                                    uiState.errores.email,
                                     color = MaterialTheme.colorScheme.error,
                                     style = MaterialTheme.typography.bodySmall
                                 )
@@ -175,7 +189,7 @@ fun LoginScreen(
                         value = password,
                         onValueChange = {
                             password = it
-                            passwordError = null
+                            viewModel.onChangePassword(it)
                         },
                         label = {
                             Text("Contraseña")
@@ -201,15 +215,15 @@ fun LoginScreen(
                                 )
                             }
                         },
-                        isError = passwordError != null,
+                        isError = uiState.errores.password.isNotEmpty(),
                         visualTransformation = if (passwordVisible)
                             VisualTransformation.None
                         else
                             PasswordVisualTransformation(),
                         supportingText = {
-                            passwordError?.let {
+                            if (uiState.errores.password.isNotEmpty()) {
                                 Text(
-                                    it,
+                                    uiState.errores.password,
                                     color = MaterialTheme.colorScheme.error,
                                     style = MaterialTheme.typography.bodySmall
                                 )
@@ -244,7 +258,7 @@ fun LoginScreen(
                             checked = aceptarTerminos,
                             onCheckedChange = {
                                 aceptarTerminos = it
-                                terminosError = null
+                                viewModel.onChangeAceptarTerminos(it)
                             },
                             colors = CheckboxDefaults.colors(
                                 checkedColor = Color(0xFF00FF88),
@@ -259,15 +273,15 @@ fun LoginScreen(
                                 .padding(start = 8.dp)
                                 .clickable {
                                     aceptarTerminos = !aceptarTerminos
-                                    terminosError = null
+                                    viewModel.onChangeAceptarTerminos(!aceptarTerminos)
                                 }
                         )
                     }
 
                     // Mostrar error de términos si existe
-                    terminosError?.let { error ->
+                    if (uiState.errores.aceptaTerminos.isNotEmpty()) {
                         Text(
-                            error,
+                            uiState.errores.aceptaTerminos,
                             color = Color(0xFFFF6B6B),
                             style = MaterialTheme.typography.bodySmall,
                             modifier = Modifier.padding(vertical = 4.dp)
@@ -279,45 +293,9 @@ fun LoginScreen(
                     // Botón de Login
                     Button(
                         onClick = {
-<<<<<<< HEAD
-                            // Validación simple
-                            var isValid = true
-=======
+                            // Validar usando el ViewModel
                             if (viewModel.validar()) {
-                                viewModel.guardarSesionLocal()  // NUEVO
->>>>>>> 26325cd399d3b00d6b44ae2d699d36192856a8d0
-
-                            if (email.isEmpty()) {
-                                emailError = "El email es requerido"
-                                isValid = false
-                            } else if (!email.contains("@")) {
-                                emailError = "Email inválido"
-                                isValid = false
-                            }
-
-                            if (password.isEmpty()) {
-                                passwordError = "La contraseña es requerida"
-                                isValid = false
-                            } else if (password.length < 6) {
-                                passwordError = "Mínimo 6 caracteres"
-                                isValid = false
-                            }
-
-                            if (!aceptarTerminos) {
-                                terminosError = "Debes aceptar los términos"
-                                isValid = false
-                            }
-
-                            if (isValid) {
-                                // Aquí iría la lógica real de login
-                                Toast.makeText(contexto, "¡Inicio de sesión exitoso!", Toast.LENGTH_SHORT).show()
-
-                                // Navegar a home
-                                navController.navigate("home") {
-                                    popUpTo("login") { inclusive = true }
-                                }
-                            } else {
-                                Toast.makeText(contexto, "Error: revise los campos.", Toast.LENGTH_LONG).show()
+                                viewModel.login(email, password)
                             }
                         },
                         modifier = Modifier
@@ -331,14 +309,23 @@ fun LoginScreen(
                         elevation = ButtonDefaults.buttonElevation(
                             defaultElevation = 8.dp,
                             pressedElevation = 4.dp
-                        )
+                        ),
+                        enabled = !isLoading
                     ) {
-                        Text(
-                            "Iniciar Sesión",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 16.sp
-                        )
+                        if (isLoading) {
+                            CircularProgressIndicator(
+                                color = Color.Black,
+                                strokeWidth = 2.dp,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        } else {
+                            Text(
+                                "Iniciar Sesión",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp
+                            )
+                        }
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))

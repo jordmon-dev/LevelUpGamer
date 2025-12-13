@@ -1,7 +1,7 @@
 // Este archivo se ha vaciado para evitar la redeclaración de clases.
 // Todo el código relacionado con el carrito se ha consolidado en CarritoItemUI.kt
 package com.example.levelup_gamer.modelo
-<<<<<<< HEAD
+
 
 // Modelo para items individuales del carrito desde la API
 data class CarritoItemModel(
@@ -27,5 +27,4 @@ data class CarritoResumenModel(
 )
 
 // Request para agregar/actualizar items en la API
-=======
->>>>>>> 26325cd399d3b00d6b44ae2d699d36192856a8d0
+

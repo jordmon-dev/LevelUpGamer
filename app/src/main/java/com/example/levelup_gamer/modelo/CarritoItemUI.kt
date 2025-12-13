@@ -1,4 +1,3 @@
-// CarritoItem.kt (SOLO ESTE CÓDIGO, reemplaza todo)
 package com.example.levelup_gamer.modelo
 
 // Modelo para la API de Spring Boot
@@ -19,12 +18,12 @@ data class CarritoItemModel(
 data class CarritoItemUI(
     val id: Int? = null,
     val cantidad: Int,
-    val producto: Producto,  // <-- Cambia esto
+    val producto: Producto,
     val usuarioEmail: String,
     val fechaAgregado: String? = null
 )
 
-data class CarritoResumenModel(
+data class CarritoResumen(
     val items: List<CarritoItemModel>,
     val subtotal: Double,
     val descuento: Double,
@@ -54,11 +53,13 @@ fun CarritoItemModel.toCarritoItemUI(): CarritoItemUI {
         cantidad = this.cantidad,
         producto = Producto(
             id = this.productoId,
+            codigo = "", // Se necesita pero no viene del modelo API
             nombre = this.productoNombre,
+            descripcion = this.productoDescripcion ?: "",
             precio = this.productoPrecio,
-            descripcion = this.productoDescripcion,
-            imagen = this.productoImagen,
-            stock = this.productoStock
+            stock = this.productoStock,
+            imagen = this.productoImagen ?: 0,
+            categoria = "" // Se necesita pero no viene del modelo API
         ),
         usuarioEmail = this.usuarioEmail,
         fechaAgregado = this.fechaAgregado

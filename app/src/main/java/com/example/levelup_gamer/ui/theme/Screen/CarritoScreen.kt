@@ -60,7 +60,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.levelup_gamer.R
 import com.example.levelup_gamer.modelo.CarritoItemUI
-import com.example.levelup_gamer.modelo.Usuario
 import com.example.levelup_gamer.viewmodel.CarritoViewModel
 import com.example.levelup_gamer.viewmodel.UsuarioViewModel
 import kotlinx.coroutines.launch
@@ -73,14 +72,7 @@ fun CarritoScreen(
     viewModel: CarritoViewModel = viewModel(),
     usuarioViewModel: UsuarioViewModel = viewModel(),
 ) {
-    // SOLUCIÓN 1: Si el ViewModel tiene una propiedad llamada 'usuario' que es un StateFlow
-    // val usuarioState by usuarioViewModel.usuario.collectAsState()
-
-    // SOLUCIÓN 2: Si el ViewModel tiene un estado que contiene el usuario
-    // val usuarioUiState by usuarioViewModel.uiState.collectAsState()
-    // val usuario = usuarioUiState.usuario
-
-    // SOLUCIÓN 3: Obtener el email desde una fuente fija (para testing)
+    // Obtener email del usuario desde el ViewModel o usar uno temporal
     val usuarioEmail = remember { "test@duocuc.cl" } // Cambia esto según tu lógica
 
     val uiState by viewModel.uiState.collectAsState()
@@ -508,81 +500,52 @@ fun ItemCarrito(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-<<<<<<< HEAD
-            // Información del producto
-=======
-            // --- IMAGEN AÑADIDA ---
+            // Imagen del producto
             Image(
-                painter = painterResource(id = item.imagen ?: R.drawable.banner_game),
-                contentDescription = item.nombre,
+                painter = painterResource(id = item.producto.imagen),
+                contentDescription = item.producto.nombre,
                 modifier = Modifier
                     .size(64.dp)
                     .clip(RoundedCornerShape(8.dp)),
                 contentScale = ContentScale.Crop
             )
-            
+
             Spacer(Modifier.width(16.dp))
 
->>>>>>> 26325cd399d3b00d6b44ae2d699d36192856a8d0
             Column(
                 modifier = Modifier.weight(1f)
             ) {
                 Text(
-                    item.nombre,
+                    item.producto.nombre,
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.SemiBold,
                     color = Color.White,
                     maxLines = 2
                 )
-<<<<<<< HEAD
 
-                Spacer(modifier = Modifier.height(4.dp))
-
-=======
->>>>>>> 26325cd399d3b00d6b44ae2d699d36192856a8d0
                 Text(
-                    "$${item.precio.roundToInt()} CLP c/u",
+                    "$${item.producto.precio.roundToInt()} CLP c/u",
                     style = MaterialTheme.typography.bodySmall,
                     color = Color(0xFFA0A0A0)
                 )
-<<<<<<< HEAD
 
-                if (item.descripcion?.isNotEmpty() == true) {
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Text(
-                        item.descripcion.take(60) + if (item.descripcion.length > 60) "..." else "",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Color(0xFF707070),
-                        maxLines = 1
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Total por este item
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        "Total: ",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Color.LightGray
-                    )
-                    Text(
-                        "$${(item.precio * item.cantidad).roundToInt()} CLP",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color(0xFF00FF88),
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
-=======
                 Text(
-                    "$${(item.precio * item.cantidad).roundToInt()} CLP",
+                    "$${(item.producto.precio * item.cantidad).roundToInt()} CLP",
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color(0xFF00FF88),
                     modifier = Modifier.padding(top = 4.dp)
                 )
->>>>>>> 26325cd399d3b00d6b44ae2d699d36192856a8d0
+
+                // Agregar descripción si existe
+                if (item.producto.descripcion.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        item.producto.descripcion.take(50) + if (item.producto.descripcion.length > 50) "..." else "",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color(0xFFA0A0A0),
+                        maxLines = 1
+                    )
+                }
             }
 
             // Controles de cantidad y eliminar
@@ -640,28 +603,28 @@ fun ItemCarrito(
                     IconButton(
                         onClick = {
                             val nuevaCantidad = item.cantidad + 1
-                            if (nuevaCantidad <= item.stock) {
+                            if (nuevaCantidad <= item.producto.stock) {
                                 onCantidadChange(nuevaCantidad)
                             }
                         },
                         modifier = Modifier.size(36.dp),
-                        enabled = item.cantidad < item.stock
+                        enabled = item.cantidad < item.producto.stock
                     ) {
                         Icon(
                             Icons.Default.Add,
                             contentDescription = "Aumentar cantidad",
-                            tint = if (item.cantidad < item.stock) Color.White else Color(0xFF505050)
+                            tint = if (item.cantidad < item.producto.stock) Color.White else Color(0xFF505050)
                         )
                     }
                 }
 
                 // Indicador de stock
-                if (item.stock > 0) {
+                if (item.producto.stock > 0) {
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        "Stock: ${item.stock}",
+                        "Stock: ${item.producto.stock}",
                         style = MaterialTheme.typography.labelSmall,
-                        color = if (item.cantidad < item.stock) Color(0xFF00FF88) else Color(0xFFFF6B6B)
+                        color = if (item.cantidad < item.producto.stock) Color(0xFF00FF88) else Color(0xFFFF6B6B)
                     )
                 }
             }

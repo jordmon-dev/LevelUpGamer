@@ -1,6 +1,5 @@
 package com.example.levelup_gamer.viewmodel
 
-
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.levelup_gamer.modelo.Producto
@@ -106,7 +105,7 @@ class ProductoViewModel : ViewModel() {
         productosBase.filter { producto ->
             (state.categoriaSeleccionada == "Todas" || producto.categoria == state.categoriaSeleccionada) &&
                     (producto.nombre.contains(state.busqueda, ignoreCase = true) ||
-                            (producto.descripcion ?: "").contains(state.busqueda, ignoreCase = true)) // <-- CORREGIDO
+                            producto.descripcion.contains(state.busqueda, ignoreCase = true))
         }
     }.stateIn(
         scope = viewModelScope,
@@ -122,13 +121,4 @@ class ProductoViewModel : ViewModel() {
     fun onCategoriaSeleccionada(categoria: String) {
         _uiState.update { it.copy(categoriaSeleccionada = categoria) }
     }
-<<<<<<< HEAD
-
-    fun agregarAlCarrito(productoId: Int, cantidad: Int, email: String, carritoViewModel: CarritoViewModel) {
-        viewModelScope.launch {
-            carritoViewModel.agregarProducto(productoId, cantidad, email)
-        }
-    }
-=======
->>>>>>> 26325cd399d3b00d6b44ae2d699d36192856a8d0
 }
