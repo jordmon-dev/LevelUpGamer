@@ -279,8 +279,13 @@ fun LoginScreen(
                     // Botón de Login
                     Button(
                         onClick = {
+<<<<<<< HEAD
                             // Validación simple
                             var isValid = true
+=======
+                            if (viewModel.validar()) {
+                                viewModel.guardarSesionLocal()  // NUEVO
+>>>>>>> 26325cd399d3b00d6b44ae2d699d36192856a8d0
 
                             if (email.isEmpty()) {
                                 emailError = "El email es requerido"

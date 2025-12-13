@@ -1,9 +1,3 @@
+// Este archivo se ha vaciado para evitar la redeclaración de clases.
+// Todo el código relacionado con el carrito se ha consolidado en CarritoItemUI.kt
 package com.example.levelup_gamer.modelo
-
-data class CarritoResumenUI(
-    val items: List<CarritoItemUI>,
-    val subtotal: Double,
-    val descuento: Double,
-    val total: Double,
-    val cantidadTotal: Int
-)

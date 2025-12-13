@@ -15,9 +15,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.levelup_gamer.viewmodel.CarritoViewModel
+
+// O alternativamente:
+
+import androidx.compose.runtime.LaunchedEffect
+import com.example.levelup_gamer.modelo.CarritoItemUI
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -25,12 +32,42 @@ fun PagoScreen(
     navController: NavController,
     carritoViewModel: CarritoViewModel = viewModel()
 ) {
+<<<<<<< HEAD
     // SOLUCIÓN: Usar el uiState del ViewModel en lugar de resumen directo
     val uiState by carritoViewModel.uiState.collectAsState()
     val resumen = uiState.resumen
 
+=======
+    val resumenState = carritoViewModel.actualizarResumen(email = usuario.email)
+    val uiState by carritoViewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(usuario.email) {
+        carritoViewModel.actualizarResumen(usuario.email)
+    }
+
+    val resumen = uiState.resumen
+>>>>>>> 26325cd399d3b00d6b44ae2d699d36192856a8d0
     var metodoPagoSeleccionado by remember { mutableStateOf("") }
     var mostrarFormularioTarjeta by remember { mutableStateOf(false) }
+
+    // Muestra loading si es necesario
+    if (uiState.isLoading) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
+        return
+    }
+
+    // Muestra error si existe
+    uiState.errorMessage?.let { error ->
+        LaunchedEffect(error) {
+            // Puedes mostrar un snackbar o manejar el error
+            println("Error: $error")
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -68,6 +105,7 @@ fun PagoScreen(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
+<<<<<<< HEAD
                     // Productos en el carrito - SOLUCIÓN: Usar items de resumen
                     resumen.items.forEach { item ->
                         Row(
@@ -90,6 +128,9 @@ fun PagoScreen(
                             )
                         }
                     }
+=======
+                    ProductosResumen(resumen.items)
+>>>>>>> 26325cd399d3b00d6b44ae2d699d36192856a8d0
 
                     Spacer(modifier = Modifier.height(8.dp))
                     Divider(color = Color.Gray)
@@ -195,7 +236,13 @@ fun PagoScreen(
             // BOTÓN DE CONFIRMAR PAGO
             Button(
                 onClick = {
+<<<<<<< HEAD
                     // 1. Navega a la pantalla de confirmación primero
+=======
+                    // 1. Limpia el carrito
+                    carritoViewModel.limpiarCarrito(usuario.email)
+                    // 2. Navega a la pantalla de confirmación
+>>>>>>> 26325cd399d3b00d6b44ae2d699d36192856a8d0
                     navController.navigate("confirmacion") {
                         popUpTo("home") { inclusive = false }
                     }
@@ -358,5 +405,42 @@ fun FormularioTarjeta(esCredito: Boolean) {
                 )
             }
         }
+    }
+}
+
+@Composable
+fun ProductosResumen(items: List<CarritoItemUI?>) {
+    val itemsSeguros = items.filterNotNull()
+
+    if (itemsSeguros.isNotEmpty()) {
+        itemsSeguros.forEach { item ->
+            item.producto?.let { producto ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        "${item.cantidad}x ${producto.nombre}",
+                        color = Color.LightGray,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        "$${(producto.precio * item.cantidad).roundToInt()} CLP",
+                        color = Color.LightGray,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
+        }
+    } else {
+        Text(
+            "No hay productos en el carrito",
+            color = Color.Gray,
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+        )
     }
 }

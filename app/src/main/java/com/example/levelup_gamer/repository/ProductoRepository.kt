@@ -133,6 +133,15 @@ class ProductoRepository {
         return listOf(
             Producto(
                 id = 1,
+<<<<<<< HEAD
+=======
+                nombre = "God of War Ragnarok",
+                precio = 49990.0,
+                descripcion = "La secuela del aclamado God of War (2018)",
+                stock = 15,
+                categoria = "Acción",
+                destacado = true,
+>>>>>>> 26325cd399d3b00d6b44ae2d699d36192856a8d0
                 codigo = "CQ001",
                 nombre = "God of War Ragnarok",
                 descripcion = "La secuela del aclamado God of War (2018)",
@@ -143,6 +152,15 @@ class ProductoRepository {
             ),
             Producto(
                 id = 2,
+<<<<<<< HEAD
+=======
+                nombre = "DualSense Controller",
+                precio = 54990.0,
+                descripcion = "Control inalámbrico para PS5",
+                stock = 25,
+                categoria = "Accesorios",
+                destacado = false,
+>>>>>>> 26325cd399d3b00d6b44ae2d699d36192856a8d0
                 codigo = "AC001",
                 nombre = "DualSense Controller",
                 descripcion = "Control inalámbrico para PS5",
@@ -153,6 +171,15 @@ class ProductoRepository {
             ),
             Producto(
                 id = 3,
+<<<<<<< HEAD
+=======
+                nombre = "The Last of Us Part I",
+                precio = 39990.0,
+                descripcion = "Remake del clásico de Naughty Dog",
+                stock = 10,
+                categoria = "Aventura",
+                destacado = true,
+>>>>>>> 26325cd399d3b00d6b44ae2d699d36192856a8d0
                 codigo = "AV001",
                 nombre = "The Last of Us Part I",
                 descripcion = "Remake del clásico de Naughty Dog",
@@ -163,6 +190,15 @@ class ProductoRepository {
             ),
             Producto(
                 id = 4,
+<<<<<<< HEAD
+=======
+                nombre = "Xbox Series X",
+                precio = 599990.0,
+                descripcion = "Consola de nueva generación",
+                stock = 8,
+                categoria = "Consolas",
+                destacado = true,
+>>>>>>> 26325cd399d3b00d6b44ae2d699d36192856a8d0
                 codigo = "CO001",
                 nombre = "Xbox Series X",
                 descripcion = "Consola de nueva generación",
@@ -173,6 +209,15 @@ class ProductoRepository {
             ),
             Producto(
                 id = 5,
+<<<<<<< HEAD
+=======
+                nombre = "Nintendo Switch OLED",
+                precio = 449990.0,
+                descripcion = "Nintendo Switch con pantalla OLED",
+                stock = 12,
+                categoria = "Consolas",
+                destacado = false,
+>>>>>>> 26325cd399d3b00d6b44ae2d699d36192856a8d0
                 codigo = "CO002",
                 nombre = "Nintendo Switch OLED",
                 descripcion = "Nintendo Switch con pantalla OLED",
@@ -183,6 +228,15 @@ class ProductoRepository {
             ),
             Producto(
                 id = 6,
+<<<<<<< HEAD
+=======
+                nombre = "Elden Ring",
+                precio = 44990.0,
+                descripcion = "Juego de rol de acción de mundo abierto",
+                stock = 18,
+                categoria = "RPG",
+                destacado = true,
+>>>>>>> 26325cd399d3b00d6b44ae2d699d36192856a8d0
                 codigo = "RP001",
                 nombre = "Elden Ring",
                 descripcion = "Juego de rol de acción de mundo abierto",
