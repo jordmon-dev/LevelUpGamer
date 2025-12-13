@@ -127,7 +127,7 @@ class ProductoViewModel : ViewModel() {
 
     fun agregarAlCarrito(productoId: Int, cantidad: Int, email: String, carritoViewModel: CarritoViewModel) {
         viewModelScope.launch {
-            carritoViewModel.agregarProductoAlCarrito(productoId, cantidad, email)
+            carritoViewModel.agregarProducto(productoId, cantidad, email)
         }
     }
 }

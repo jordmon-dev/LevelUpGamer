@@ -18,7 +18,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.levelup_gamer.viewmodel.CarritoViewModel
-import kotlin.math.roundToInt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -26,7 +25,10 @@ fun PagoScreen(
     navController: NavController,
     carritoViewModel: CarritoViewModel = viewModel()
 ) {
-    val resumen by carritoViewModel.resumen.collectAsState()
+    // SOLUCIÓN: Usar el uiState del ViewModel en lugar de resumen directo
+    val uiState by carritoViewModel.uiState.collectAsState()
+    val resumen = uiState.resumen
+
     var metodoPagoSeleccionado by remember { mutableStateOf("") }
     var mostrarFormularioTarjeta by remember { mutableStateOf(false) }
 
@@ -66,7 +68,7 @@ fun PagoScreen(
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    // Productos en el carrito
+                    // Productos en el carrito - SOLUCIÓN: Usar items de resumen
                     resumen.items.forEach { item ->
                         Row(
                             modifier = Modifier
@@ -74,13 +76,15 @@ fun PagoScreen(
                                 .padding(vertical = 4.dp),
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
+                            // CORRECCIÓN: item.nombre en lugar de item.producto.nombre
                             Text(
-                                "${item.cantidad}x ${item.producto.nombre}",
+                                "${item.cantidad}x ${item.nombre}",
                                 color = Color.LightGray,
                                 style = MaterialTheme.typography.bodyMedium
                             )
+                            // CORRECCIÓN: item.precio en lugar de item.producto.precio
                             Text(
-                                "$${(item.producto.precio * item.cantidad).roundToInt()} CLP",
+                                "$${(item.precio * item.cantidad).toInt()} CLP",
                                 color = Color.LightGray,
                                 style = MaterialTheme.typography.bodyMedium
                             )
@@ -97,7 +101,7 @@ fun PagoScreen(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text("Subtotal:", color = Color.White)
-                        Text("$${resumen.subtotal.roundToInt()} CLP", color = Color.White)
+                        Text("$${resumen.subtotal.toInt()} CLP", color = Color.White)
                     }
 
                     if (resumen.descuento > 0) {
@@ -107,7 +111,7 @@ fun PagoScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text("Descuento:", color = Color(0xFF39FF14))
-                            Text("-$${resumen.descuento.roundToInt()} CLP", color = Color(0xFF39FF14))
+                            Text("-$${resumen.descuento.toInt()} CLP", color = Color(0xFF39FF14))
                         }
                     }
 
@@ -118,7 +122,7 @@ fun PagoScreen(
                     ) {
                         Text("Total:", color = Color.White, fontWeight = FontWeight.Bold)
                         Text(
-                            "$${resumen.total.roundToInt()} CLP",
+                            "$${resumen.total.toInt()} CLP",
                             color = Color(0xFF1E90FF),
                             fontWeight = FontWeight.Bold
                         )
@@ -188,20 +192,20 @@ fun PagoScreen(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            // BOTÓN DE CONFIRMAR PAGO (MODIFICADO)
+            // BOTÓN DE CONFIRMAR PAGO
             Button(
                 onClick = {
-                    // 1. Limpia el carrito
-                    carritoViewModel.limpiarCarrito()
-                    // 2. Navega a la pantalla de confirmación
+                    // 1. Navega a la pantalla de confirmación primero
                     navController.navigate("confirmacion") {
                         popUpTo("home") { inclusive = false }
                     }
+                    // 2. Luego limpia el carrito (esto se podría hacer después de confirmación)
+                    // carritoViewModel.limpiarCarrito()
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                enabled = metodoPagoSeleccionado.isNotEmpty(), // ⬅️ FIX: Habilitado si se selecciona CUALQUIER método.
+                enabled = metodoPagoSeleccionado.isNotEmpty(),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF1E90FF)
                 )
@@ -209,7 +213,7 @@ fun PagoScreen(
                 Icon(Icons.Default.Payment, contentDescription = "Pagar")
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    "Pagar $${resumen.total.roundToInt()} CLP",
+                    "Pagar $${resumen.total.toInt()} CLP",
                     style = MaterialTheme.typography.bodyLarge
                 )
             }
@@ -296,7 +300,6 @@ fun FormularioTarjeta(esCredito: Boolean) {
             OutlinedTextField(
                 value = numeroTarjeta,
                 onValueChange = { input ->
-                    // Permite solo dígitos y limita a 16 caracteres
                     val filtered = input.filter { it.isDigit() }
                     if (filtered.length <= 16) {
                         numeroTarjeta = filtered
@@ -325,16 +328,14 @@ fun FormularioTarjeta(esCredito: Boolean) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Fecha de Vencimiento (MM/AA) - UX Mejorada
                 OutlinedTextField(
                     value = fechaVencimiento,
                     onValueChange = { input ->
                         val filtered = input.filter { it.isDigit() }
-                        // Aceptar máximo 4 dígitos e insertar el "/" automáticamente
                         fechaVencimiento = when {
-                            filtered.length > 4 -> fechaVencimiento // Si excede 4 dígitos, no hacer nada
-                            filtered.length > 2 -> "${filtered.substring(0, 2)}/${filtered.substring(2)}" // Inserta / después del mes
-                            else -> filtered // Mes sin /
+                            filtered.length > 4 -> fechaVencimiento
+                            filtered.length > 2 -> "${filtered.substring(0, 2)}/${filtered.substring(2)}"
+                            else -> filtered
                         }
                     },
                     label = { Text("MM/AA") },

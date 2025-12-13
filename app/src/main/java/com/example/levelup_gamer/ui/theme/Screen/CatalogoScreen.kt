@@ -22,12 +22,14 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource // ⬅️ Import necesario
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.example.levelup_gamer.R
-import com.example.levelup_gamer.model.Producto
+import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
+import com.example.levelup_gamer.modelo.Producto
 import com.example.levelup_gamer.viewmodel.CarritoViewModel
 import com.example.levelup_gamer.viewmodel.ProductoViewModel
 import kotlinx.coroutines.delay
@@ -37,11 +39,11 @@ import kotlinx.coroutines.launch
 @Composable
 fun CatalogoScreen(
     navController: NavController,
-    viewModel: ProductoViewModel,
+    productoViewModel: ProductoViewModel,
     carritoViewModel: CarritoViewModel
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-    val productos by viewModel.productosFiltrados.collectAsState()
+    val uiState by productoViewModel.uiState.collectAsState()
+    val productos by productoViewModel.productosFiltrados.collectAsState()
 
     val fondo = Brush.verticalGradient(
         listOf(
@@ -90,7 +92,7 @@ fun CatalogoScreen(
             // Buscador
             OutlinedTextField(
                 value = uiState.busqueda,
-                onValueChange = viewModel::onBusquedaChange,
+                onValueChange = productoViewModel::onBusquedaChange,
                 placeholder = { Text("Buscar productos...", color = Color(0xFFA0A0A0)) },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -110,10 +112,10 @@ fun CatalogoScreen(
                 modifier = Modifier.padding(start = 16.dp, bottom = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(viewModel.categorias) { categoria ->
+                items(productoViewModel.categorias) { categoria ->
                     FilterChip(
                         selected = uiState.categoriaSeleccionada == categoria,
-                        onClick = { viewModel.onCategoriaSeleccionada(categoria) },
+                        onClick = { productoViewModel.onCategoriaSeleccionada(categoria) },
                         label = {
                             Text(
                                 categoria,
@@ -141,7 +143,15 @@ fun CatalogoScreen(
 
                     ProductoCard(
                         producto = producto,
-                        onAgregar = { carritoViewModel.agregarProducto(producto) }
+                        onAgregar = {
+                            // Para testing, usa un email fijo o pasa el email real
+                            val usuarioEmail = "usuario@ejemplo.com" // Cambia esto
+                            carritoViewModel.agregarProducto(
+                                productoId = producto.id,
+                                cantidad = 1,
+                                email = usuarioEmail
+                            )
+                        }
                     )
                 }
             }
@@ -179,10 +189,10 @@ fun ProductoCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
 
-            // ✅ Usar painterResource con el ID de la imagen del producto
+            // SOLUCIÓN CORREGIDA: Como producto.imagen es Int (resource ID)
             Image(
-                painter = painterResource(id = producto.imagen ?: R.drawable.banner_game), // Usa la imagen del producto o un placeholder
-                contentDescription = "Producto",
+                painter = painterResource(id = producto.imagen),
+                contentDescription = producto.nombre,
                 modifier = Modifier
                     .size(90.dp)
                     .clip(RoundedCornerShape(16.dp)),
@@ -206,6 +216,26 @@ fun ProductoCard(
                     color = Color(0xFF00FF88),
                     style = MaterialTheme.typography.bodyLarge
                 )
+
+                // Mostrar categoría si existe
+                if (producto.categoria.isNotEmpty()) {
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        producto.categoria,
+                        color = Color(0xFFA0A0A0),
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                }
+
+                // Mostrar stock si existe
+                if (producto.stock > 0) {
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        "Stock: ${producto.stock}",
+                        color = Color(0xFF00FF88),
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                }
             }
 
             FilledTonalButton(
@@ -224,7 +254,8 @@ fun ProductoCard(
                     containerColor = if (isAdded) Color(0xFF39FF14) else Color(0xFF00FF88),
                     contentColor = Color.Black
                 ),
-                modifier = Modifier.scale(if (isAdded) scale else 1f)
+                modifier = Modifier.scale(if (isAdded) scale else 1f),
+                enabled = producto.stock > 0
             ) {
                 Row(
                     horizontalArrangement = Arrangement.Center,

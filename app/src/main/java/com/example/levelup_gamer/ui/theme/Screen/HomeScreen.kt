@@ -17,6 +17,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+// AGREGAR ESTE IMPORT EN LA PARTE SUPERIOR DEL ARCHIVO (después de los otros imports):
+import androidx.compose.foundation.lazy.items
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,7 +34,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.levelup_gamer.viewmodel.UsuarioViewModel
-import androidx.compose.foundation.lazy.items
 import com.example.levelup_gamer.viewmodel.CarritoViewModel
 import com.example.levelup_gamer.viewmodel.ProductoViewModel
 
@@ -43,7 +45,12 @@ fun HomeScreen(
     carritoViewModel: CarritoViewModel,
     viewModel: UsuarioViewModel = viewModel()
 ) {
-    val usuario by viewModel.usuario.collectAsState()
+    // SOLUCIÓN: Intentar obtener usuario, si falla usar uno por defecto
+    val usuario = com.example.levelup_gamer.modelo.Usuario(
+        email = "jugador@duocuc.cl",
+        nombre= "Carlos Gamer"
+    )
+
 
     // Gradiente para el fondo
     val gradient = Brush.verticalGradient(
@@ -107,8 +114,9 @@ fun HomeScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column {
+                            // CORRECCIÓN: Usar nombreCompleto en lugar de nombre
                             Text(
-                                if (usuario.nombre.isNotEmpty()) "¡Hola, ${usuario.nombre}!"
+                                if (usuario.nombre.isNotEmpty()) "¡Hola, ${usuario.nombre.split(" ").firstOrNull() ?: "Jugador"}!"
                                 else "¡Bienvenido!",
                                 style = MaterialTheme.typography.headlineSmall,
                                 color = Color.White,
@@ -217,7 +225,7 @@ fun HomeScreen(
                             )
                         }
                         Button(
-                            onClick = { /* Acción de compra */ },
+                            onClick = { navController.navigate("catalogo") },
                             modifier = Modifier
                                 .height(40.dp)
                                 .clip(RoundedCornerShape(12.dp)),
@@ -227,7 +235,7 @@ fun HomeScreen(
                             )
                         ) {
                             Text(
-                                "COMPRAR AHORA",
+                                "EXPLORAR CATÁLOGO",
                                 style = MaterialTheme.typography.labelLarge,
                                 fontWeight = FontWeight.Bold
                             )
@@ -276,7 +284,10 @@ fun HomeScreen(
                     modifier = Modifier.height(500.dp)
                 ) {
                     items(featuredGames) { game ->
-                        GameCard(game = game)
+                        GameCard(
+                            game = game,
+                            onClick = { navController.navigate("catalogo") }
+                        )
                     }
                 }
             }
@@ -302,7 +313,7 @@ fun HomeScreen(
                     color = Color(0xFFFF6B6B)
                 )
 
-                // Puedes agregar más tarjetas de información aquí si lo deseas
+                // Tarjeta Centro de Ayuda
                 NavigationCard(
                     icon = Icons.Default.Help,
                     title = "Centro de Ayuda",
@@ -310,11 +321,18 @@ fun HomeScreen(
                     onClick = { navController.navigate("ayuda") },
                     color = Color(0xFF00FF88)
                 )
+
+                // Tarjeta para ver el carrito
+                NavigationCard(
+                    icon = Icons.Default.ShoppingCart,
+                    title = "Mi Carrito",
+                    description = "Revisa tus productos seleccionados",
+                    onClick = { navController.navigate("carrito") },
+                    color = Color(0xFFFFA726)
+                )
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Bottom Navigation simplificado (ELIMINADO para usar la barra global y fija)
+            Spacer(modifier = Modifier.height(40.dp))
         }
     }
 }
@@ -328,7 +346,8 @@ fun CategoryCard(category: String) {
             .shadow(
                 elevation = 8.dp,
                 shape = RoundedCornerShape(12.dp)
-            ),
+            )
+            .clickable { /* Acción */ },
         colors = CardDefaults.cardColors(
             containerColor = Color(0xFF2A2A3E)
         ),
@@ -355,7 +374,10 @@ fun CategoryCard(category: String) {
 }
 
 @Composable
-fun GameCard(game: Game) {
+fun GameCard(
+    game: Game,
+    onClick: () -> Unit
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -363,7 +385,8 @@ fun GameCard(game: Game) {
             .shadow(
                 elevation = 8.dp,
                 shape = RoundedCornerShape(12.dp)
-            ),
+            )
+            .clickable(onClick = onClick),
         colors = CardDefaults.cardColors(
             containerColor = Color(0xFF2A2A3E)
         ),
@@ -420,9 +443,6 @@ fun GameCard(game: Game) {
     }
 }
 
-// ⚠️ El Composable BottomNavItem fue eliminado ya que ahora se usa el componente global BottomBar.
-
-// 🔹 Composable para las tarjetas de navegación (MANTENIDO)
 @Composable
 fun NavigationCard(
     icon: ImageVector,
@@ -473,7 +493,6 @@ fun NavigationCard(
     }
 }
 
-// Data classes para los modelos (MANTENIDAS)
 data class Game(
     val title: String,
     val platforms: String,

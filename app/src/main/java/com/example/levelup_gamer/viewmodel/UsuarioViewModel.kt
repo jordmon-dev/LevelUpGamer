@@ -4,8 +4,8 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.levelup_gamer.datastore.UserPreferences
-import com.example.levelup_gamer.model.UsuarioErrores
-import com.example.levelup_gamer.model.UsuarioState
+import com.example.levelup_gamer.modelo.UsuarioErrores
+import com.example.levelup_gamer.modelo.UsuarioState
 import com.example.levelup_gamer.repository.UsuarioRepository
 import com.example.levelup_gamer.remote.UsuarioInstance
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,8 +20,8 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
     private val repository = UsuarioRepository(application)
 
     // Estado del usuario
-    private val _usuario = MutableStateFlow(UsuarioState())
-    val usuario: StateFlow<UsuarioState> = _usuario.asStateFlow()
+    private val _usuarioState = MutableStateFlow(UsuarioState())
+    val usuarioState: StateFlow<UsuarioState> = _usuarioState.asStateFlow()
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
@@ -34,7 +34,6 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
 
     init {
         cargarDatosGuardados()
-        // Inicializar UsuarioInstance
         UsuarioInstance.initialize(application)
     }
 
@@ -48,10 +47,18 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
 
             val result = repository.login(email, password)
 
-            result.onSuccess { authResponse ->
+            result.onSuccess { usuario ->
                 _loginSuccess.value = true
-                // Cargar perfil después del login
-                cargarPerfil()
+                // Actualizar estado con datos del usuario
+                _usuarioState.value = _usuarioState.value.copy(
+                    nombre = usuario.nombre,
+                    email = usuario.email,
+                    fechaRegistro = usuario.fechaRegistro,
+                    puntosFidelidad = usuario.puntosFidelidad
+                )
+
+                // Guardar sesión local
+                guardarSesionLocal(usuario.nombre, password)
             }.onFailure { exception ->
                 _errorMessage.value = exception.message ?: "Error desconocido"
                 _loginSuccess.value = false
@@ -68,10 +75,18 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
 
             val result = repository.register(nombre, email, password)
 
-            result.onSuccess { authResponse ->
+            result.onSuccess { usuario ->
                 _loginSuccess.value = true
-                // Cargar perfil después del registro
-                cargarPerfil()
+                // Actualizar estado con datos del usuario
+                _usuarioState.value = _usuarioState.value.copy(
+                    nombre = usuario.nombre,
+                    email = usuario.email,
+                    fechaRegistro = usuario.fechaRegistro,
+                    puntosFidelidad = usuario.puntosFidelidad
+                )
+
+                // Guardar sesión local
+                guardarSesionLocal(usuario.nombre, password)
             }.onFailure { exception ->
                 _errorMessage.value = exception.message ?: "Error desconocido"
                 _loginSuccess.value = false
@@ -81,19 +96,19 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    suspend fun cargarPerfil() {
+    fun cargarPerfil() {
         viewModelScope.launch {
             _isLoading.value = true
 
             val result = repository.getPerfil()
 
             result.onSuccess { usuario ->
-                // Actualizar estado local con datos del perfil
-                _usuario.value = _usuario.value.copy(
+                // Actualizar estado con datos del perfil
+                _usuarioState.value = _usuarioState.value.copy(
                     nombre = usuario.nombre,
                     email = usuario.email,
-                    fechaRegistro = usuario.fechaRegistro ?: "",
-                    // Puedes agregar más campos según necesites
+                    fechaRegistro = usuario.fechaRegistro,
+                    puntosFidelidad = usuario.puntosFidelidad
                 )
             }.onFailure { exception ->
                 _errorMessage.value = "Error al cargar perfil: ${exception.message}"
@@ -114,14 +129,14 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
                 val savedUser = prefs.usuario.first()
                 val savedPass = prefs.password.first()
 
-                _usuario.value = usuario.value.copy(
+                _usuarioState.value = _usuarioState.value.copy(
                     nombre = savedUser,
                     email = UsuarioInstance.getUserEmail() ?: "",
                     aceptarTerminos = true
                 )
 
-                // Intentar cargar perfil desde API
-                cargarPerfil()
+                // Intentar auto-login
+                login(savedUser, savedPass)
             }
         }
     }
@@ -130,9 +145,9 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
     // VALIDAR LOGIN LOCAL
     // ------------------------------
     fun validar(): Boolean {
-        val email = usuario.value.email
-        val pass = usuario.value.password
-        val acepta = usuario.value.aceptarTerminos
+        val email = _usuarioState.value.email
+        val pass = _usuarioState.value.password
+        val acepta = _usuarioState.value.aceptarTerminos
 
         var valido = true
         val errores = UsuarioErrores()
@@ -158,7 +173,7 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
             valido = false
         }
 
-        _usuario.value = usuario.value.copy(errores = errores)
+        _usuarioState.value = _usuarioState.value.copy(errores = errores)
         return valido
     }
 
@@ -166,7 +181,7 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
     // VALIDAR REGISTRO
     // ------------------------------
     fun validarRegistro(): Boolean {
-        val estado = usuario.value
+        val estado = _usuarioState.value
         var valido = true
         val errores = UsuarioErrores()
 
@@ -201,19 +216,16 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
             valido = false
         }
 
-        _usuario.value = usuario.value.copy(errores = errores)
+        _usuarioState.value = _usuarioState.value.copy(errores = errores)
         return valido
     }
 
     // ------------------------------
-    // GUARDAR SESIÓN LOCAL
+    // GUARDAR SESIÓN LOCAL (actualizada)
     // ------------------------------
-    fun guardarSesionLocal() {
+    private fun guardarSesionLocal(nombre: String, password: String) {
         viewModelScope.launch {
-            prefs.saveCredentials(
-                usuario.value.nombre,
-                usuario.value.password
-            )
+            prefs.saveCredentials(nombre, password)
         }
     }
 
@@ -223,47 +235,48 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
     fun cerrarSesion() {
         viewModelScope.launch {
             prefs.logout()
+            repository.logout()
             UsuarioInstance.logout(getApplication())
-            _usuario.value = UsuarioState()
+            _usuarioState.value = UsuarioState()
             _loginSuccess.value = false
         }
     }
 
     // ------------------------------
-    // HANDLERS PARA CAMPOS
+    // HANDLERS PARA CAMPOS (mantener igual)
     // ------------------------------
     fun onChangeNombre(value: String) {
-        _usuario.value = usuario.value.copy(
+        _usuarioState.value = _usuarioState.value.copy(
             nombre = value,
-            errores = usuario.value.errores.copy(nombre = null)
+            errores = _usuarioState.value.errores.copy(nombre = "") // Cadena vacía, no null
         )
     }
 
     fun onChangeEmail(value: String) {
-        _usuario.value = usuario.value.copy(
+        _usuarioState.value = _usuarioState.value.copy(
             email = value,
-            errores = usuario.value.errores.copy(email = null)
+            errores = _usuarioState.value.errores.copy(email = "") // Cadena vacía, no null
         )
     }
 
     fun onChangePassword(value: String) {
-        _usuario.value = usuario.value.copy(
+        _usuarioState.value = _usuarioState.value.copy(
             password = value,
-            errores = usuario.value.errores.copy(password = null)
+            errores = _usuarioState.value.errores.copy(password = "") // Cadena vacía, no null
         )
     }
 
     fun onChangeConfirmPassword(value: String) {
-        _usuario.value = usuario.value.copy(
+        _usuarioState.value = _usuarioState.value.copy(
             confirmPassword = value,
-            errores = usuario.value.errores.copy(confirmPassword = null)
+            errores = _usuarioState.value.errores.copy(confirmPassword = "") // Cadena vacía, no null
         )
     }
 
     fun onChangeAceptarTerminos(value: Boolean) {
-        _usuario.value = usuario.value.copy(
+        _usuarioState.value = _usuarioState.value.copy(
             aceptarTerminos = value,
-            errores = usuario.value.errores.copy(aceptaTerminos = null)
+            errores = _usuarioState.value.errores.copy(aceptaTerminos = "") // Cadena vacía, no null
         )
     }
 }

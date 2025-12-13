@@ -25,8 +25,3 @@ data class CarritoResumenModel(
 )
 
 // Request para agregar/actualizar items en la API
-data class CarritoRequest(
-    val productoId: Int,
-    val cantidad: Int,
-    val usuarioEmail: String
-)

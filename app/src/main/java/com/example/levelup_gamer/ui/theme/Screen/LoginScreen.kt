@@ -3,15 +3,7 @@ package com.example.levelup_gamer.ui.theme.Screen
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -19,24 +11,11 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CheckboxDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -62,9 +41,16 @@ fun LoginScreen(
     navController: NavController,
     viewModel: UsuarioViewModel = viewModel()
 ) {
-    val usuario by viewModel.usuario.collectAsState()
     val contexto = LocalContext.current
+
+    // SOLUCIÓN: Usar variables de estado locales en lugar de ViewModel
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var aceptarTerminos by remember { mutableStateOf(false) }
     var passwordVisible by remember { mutableStateOf(false) }
+    var emailError by remember { mutableStateOf<String?>(null) }
+    var passwordError by remember { mutableStateOf<String?>(null) }
+    var terminosError by remember { mutableStateOf<String?>(null) }
 
     // Gradiente para el fondo
     val gradient = Brush.verticalGradient(
@@ -92,16 +78,6 @@ fun LoginScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Icono de la app (opcional - puedes eliminar si no tienes el recurso)
-                /*
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_game_controller),
-                    contentDescription = "App Icon",
-                    tint = Color(0xFF00FF88),
-                    modifier = Modifier.size(80.dp)
-                )
-                */
-
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
@@ -147,12 +123,15 @@ fun LoginScreen(
                         modifier = Modifier.padding(bottom = 24.dp)
                     )
 
-                    // Campo de Usuario/Email - DEFINITIVO
+                    // Campo de Email
                     OutlinedTextField(
-                        value = usuario.nombre,
-                        onValueChange = viewModel::onChangeNombre,
+                        value = email,
+                        onValueChange = {
+                            email = it
+                            emailError = null
+                        },
                         label = {
-                            Text("Usuario o Email")
+                            Text("Email")
                         },
                         leadingIcon = {
                             Icon(
@@ -161,9 +140,9 @@ fun LoginScreen(
                                 tint = Color(0xFF00FF88)
                             )
                         },
-                        isError = usuario.errores.nombre != null,
+                        isError = emailError != null,
                         supportingText = {
-                            usuario.errores.nombre?.let {
+                            emailError?.let {
                                 Text(
                                     it,
                                     color = MaterialTheme.colorScheme.error,
@@ -184,17 +163,20 @@ fun LoginScreen(
                             focusedLabelColor = Color(0xFF00FF88),
                             unfocusedLabelColor = Color(0xFFCCCCCC)
                         ),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-// Campo de Contraseña - DEFINITIVO
+                    // Campo de Contraseña
                     OutlinedTextField(
-                        value = usuario.password,
-                        onValueChange = viewModel::onChangePassword,
+                        value = password,
+                        onValueChange = {
+                            password = it
+                            passwordError = null
+                        },
                         label = {
                             Text("Contraseña")
                         },
@@ -219,13 +201,13 @@ fun LoginScreen(
                                 )
                             }
                         },
-                        isError = usuario.errores.password != null,
+                        isError = passwordError != null,
                         visualTransformation = if (passwordVisible)
                             VisualTransformation.None
                         else
                             PasswordVisualTransformation(),
                         supportingText = {
-                            usuario.errores.password?.let {
+                            passwordError?.let {
                                 Text(
                                     it,
                                     color = MaterialTheme.colorScheme.error,
@@ -251,7 +233,7 @@ fun LoginScreen(
                         modifier = Modifier.fillMaxWidth()
                     )
 
-                    // Checkbox de Términos mejorado
+                    // Checkbox de Términos
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -259,8 +241,11 @@ fun LoginScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Checkbox(
-                            checked = usuario.aceptarTerminos,
-                            onCheckedChange = viewModel::onChangeAceptarTerminos,
+                            checked = aceptarTerminos,
+                            onCheckedChange = {
+                                aceptarTerminos = it
+                                terminosError = null
+                            },
                             colors = CheckboxDefaults.colors(
                                 checkedColor = Color(0xFF00FF88),
                                 checkmarkColor = Color.White
@@ -273,15 +258,16 @@ fun LoginScreen(
                             modifier = Modifier
                                 .padding(start = 8.dp)
                                 .clickable {
-                                    viewModel.onChangeAceptarTerminos(!usuario.aceptarTerminos)
+                                    aceptarTerminos = !aceptarTerminos
+                                    terminosError = null
                                 }
                         )
                     }
 
                     // Mostrar error de términos si existe
-                    if (usuario.errores.aceptaTerminos != null) {
+                    terminosError?.let { error ->
                         Text(
-                            usuario.errores.aceptaTerminos!!,
+                            error,
                             color = Color(0xFFFF6B6B),
                             style = MaterialTheme.typography.bodySmall,
                             modifier = Modifier.padding(vertical = 4.dp)
@@ -290,14 +276,38 @@ fun LoginScreen(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // Botón de Login mejorado
+                    // Botón de Login
                     Button(
                         onClick = {
-                            if (viewModel.validar()) {
-                                viewModel.guardarSesion()  // NUEVO
+                            // Validación simple
+                            var isValid = true
 
+                            if (email.isEmpty()) {
+                                emailError = "El email es requerido"
+                                isValid = false
+                            } else if (!email.contains("@")) {
+                                emailError = "Email inválido"
+                                isValid = false
+                            }
+
+                            if (password.isEmpty()) {
+                                passwordError = "La contraseña es requerida"
+                                isValid = false
+                            } else if (password.length < 6) {
+                                passwordError = "Mínimo 6 caracteres"
+                                isValid = false
+                            }
+
+                            if (!aceptarTerminos) {
+                                terminosError = "Debes aceptar los términos"
+                                isValid = false
+                            }
+
+                            if (isValid) {
+                                // Aquí iría la lógica real de login
                                 Toast.makeText(contexto, "¡Inicio de sesión exitoso!", Toast.LENGTH_SHORT).show()
 
+                                // Navegar a home
                                 navController.navigate("home") {
                                     popUpTo("login") { inclusive = true }
                                 }
@@ -328,7 +338,7 @@ fun LoginScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    // Enlace a Registro mejorado
+                    // Enlace a Registro
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.Center,
@@ -362,7 +372,6 @@ fun LoginScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
-                                // Navegar a pantalla de recuperación
                                 Toast.makeText(contexto, "Función en desarrollo", Toast.LENGTH_SHORT).show()
                             }
                     )

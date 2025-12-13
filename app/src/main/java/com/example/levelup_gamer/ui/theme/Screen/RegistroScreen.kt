@@ -5,19 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CenterAlignedTopAppBar
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
@@ -35,7 +23,7 @@ fun RegistroScreen(
     navController: NavController,
     usuarioViewModel: UsuarioViewModel
 ) {
-    val usuario = usuarioViewModel.usuario.collectAsState().value
+    val usuarioState = usuarioViewModel.usuarioState.collectAsState().value
 
     val fondo = Brush.verticalGradient(
         colors = listOf(
@@ -90,13 +78,13 @@ fun RegistroScreen(
 
                 // ------------------- NOMBRE -------------------
                 OutlinedTextField(
-                    value = usuario.nombre,
+                    value = usuarioState.nombre,
                     onValueChange = usuarioViewModel::onChangeNombre,
                     label = { Text("Nombre de usuario") },
-                    isError = usuario.errores.nombre != null,
+                    isError = usuarioState.errores.nombre.isNotEmpty(),
                     supportingText = {
-                        usuario.errores.nombre?.let {
-                            Text(text = it, color = Color.Red)
+                        if (usuarioState.errores.nombre.isNotEmpty()) {
+                            Text(text = usuarioState.errores.nombre, color = Color.Red)
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
@@ -105,13 +93,13 @@ fun RegistroScreen(
 
                 // ------------------- EMAIL -------------------
                 OutlinedTextField(
-                    value = usuario.email,
+                    value = usuarioState.email,
                     onValueChange = usuarioViewModel::onChangeEmail,
                     label = { Text("Correo electrónico") },
-                    isError = usuario.errores.email != null,
+                    isError = usuarioState.errores.email.isNotEmpty(),
                     supportingText = {
-                        usuario.errores.email?.let {
-                            Text(text = it, color = Color.Red)
+                        if (usuarioState.errores.email.isNotEmpty()) {
+                            Text(text = usuarioState.errores.email, color = Color.Red)
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
@@ -120,13 +108,28 @@ fun RegistroScreen(
 
                 // ------------------- PASSWORD -------------------
                 OutlinedTextField(
-                    value = usuario.password,
+                    value = usuarioState.password,
                     onValueChange = usuarioViewModel::onChangePassword,
                     label = { Text("Contraseña") },
-                    isError = usuario.errores.password != null,
+                    isError = usuarioState.errores.password.isNotEmpty(),
                     supportingText = {
-                        usuario.errores.password?.let {
-                            Text(text = it, color = Color.Red)
+                        if (usuarioState.errores.password.isNotEmpty()) {
+                            Text(text = usuarioState.errores.password, color = Color.Red)
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                )
+
+                // ------------------- CONFIRMAR PASSWORD -------------------
+                OutlinedTextField(
+                    value = usuarioState.confirmPassword,
+                    onValueChange = usuarioViewModel::onChangeConfirmPassword,
+                    label = { Text("Confirmar Contraseña") },
+                    isError = usuarioState.errores.confirmPassword.isNotEmpty(),
+                    supportingText = {
+                        if (usuarioState.errores.confirmPassword.isNotEmpty()) {
+                            Text(text = usuarioState.errores.confirmPassword, color = Color.Red)
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
@@ -138,8 +141,14 @@ fun RegistroScreen(
                 // ------------------- BOTÓN REGISTRAR -------------------
                 Button(
                     onClick = {
-                        // Aquí luego puedes agregar validación extra si quieres
-                        navController.navigate("login")
+                        if (usuarioViewModel.validarRegistro()) {
+                            usuarioViewModel.register(
+                                usuarioState.nombre,
+                                usuarioState.email,
+                                usuarioState.password
+                            )
+                            navController.navigate("login")
+                        }
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -151,6 +160,16 @@ fun RegistroScreen(
                     shape = RoundedCornerShape(16.dp)
                 ) {
                     Text("Registrarme", fontWeight = FontWeight.Bold)
+                }
+
+                // Mostrar error general si existe
+                val errorMessage = usuarioViewModel.errorMessage.collectAsState().value
+                errorMessage?.let { error ->
+                    Text(
+                        text = error,
+                        color = Color.Red,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
                 }
             }
         }
