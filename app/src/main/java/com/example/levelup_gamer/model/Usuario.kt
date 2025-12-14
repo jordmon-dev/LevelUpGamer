@@ -1,4 +1,4 @@
-package com.example.levelup_gamer.modelo
+package com.example.levelup_gamer.model
 
 data class Usuario(
     val nombre: String,
