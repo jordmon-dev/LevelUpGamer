@@ -1,43 +1,31 @@
 package com.example.levelup_gamer.repository
 
-import android.util.Log
-import com.example.levelup_gamer.model.Usuario
+import com.example.levelup_gamer.model.AuthResponse
+import com.example.levelup_gamer.model.LoginDto
+import com.example.levelup_gamer.model.RegistroDto
 import com.example.levelup_gamer.remote.RetrofitInstance
+import retrofit2.Response
 
 class UsuarioRepository {
-    private val ApiService = RetrofitInstance.api
 
-    suspend fun mostrarTodosLosUsuarios(): List<Usuario>? {
-        val response = ApiService.getAllUsuarios()
-        Log.d("UsuarioRepository", "Response: $response")
-        return if (response.isSuccessful) {
-            return response.body()
-        } else {
-            emptyList()
-        }
+    // Conectamos con la instancia corregida
+    private val api = RetrofitInstance.api
+
+    suspend fun login(email: String, pass: String): Response<AuthResponse> {
+        return api.login(LoginDto(email, pass))
     }
 
-    suspend fun agregarUsuario(usuario: Usuario): Boolean {
-        val response = ApiService.saveUsuario(usuario)
-        if (response.isSuccessful) {
-            return true
-        } else {
-            return false
-        }
+    suspend fun register(nombre: String, email: String, pass: String): Response<Any> {
+        // Creamos el DTO que espera el backend
+        val registroDto = RegistroDto(
+            nombre = nombre,
+            apellidos = "", // Campos requeridos por backend pero no por UI
+            email = email,
+            password = pass,
+            direccion = "Sin dirección",
+            region = "RM",
+            comuna = "Santiago"
+        )
+        return api.registrar(registroDto)
     }
-
-    suspend fun buscarUsuarioPorId(id: Int): Usuario? {
-        val response = ApiService.getUsuarioById(id)
-        return if (response.isSuccessful) {
-            response.body()
-        } else {
-            emptyList()
-        }
-    }
-
-    suspend fun eliminarUsuario(id: Int): Boolean {
-        val response = ApiService.deleteUsuario(id)
-        return response.isSuccessful
-    }
-})
 }
