@@ -4,8 +4,8 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.levelup_gamer.datastore.UserPreferences
-import com.example.levelup_gamer.modelo.UsuarioErrores
-import com.example.levelup_gamer.modelo.UsuarioState
+import com.example.levelup_gamer.model.UsuarioErrores
+import com.example.levelup_gamer.model.UsuarioState
 import com.example.levelup_gamer.repository.UsuarioRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,10 +17,12 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
 
     private val prefs = UserPreferences(application)
 
-    // CORREGIDO: Pasa la Application al Repository
-    private val repository = UsuarioRepository(application)
+    // 🔴 CORRECCIÓN CLAVE:
+    // Antes: private val repository = UsuarioRepository(application) -> ERROR
+    // Ahora: Lo iniciamos vacío porque ya usa Retrofit por dentro.
+    private val repository = UsuarioRepository()
 
-    // Estado del usuario
+    // Estados de UI
     private val _usuarioState = MutableStateFlow(UsuarioState())
     val usuarioState: StateFlow<UsuarioState> = _usuarioState.asStateFlow()
 
@@ -38,238 +40,150 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
     }
 
     // ------------------------------
-    // AUTENTICACIÓN CON API
+    // LOGIN (Conectado al Backend)
     // ------------------------------
-    fun login(email: String, password: String) {
+    fun login(email: String, pass: String) {
         viewModelScope.launch {
             _isLoading.value = true
             _errorMessage.value = null
 
-            val result = repository.login(email, password)
+            try {
+                // Llamada a la API
+                val response = repository.login(email, pass)
 
-            result.onSuccess { usuario ->
-                _loginSuccess.value = true
-                // Actualizar estado con datos del usuario
-                _usuarioState.value = _usuarioState.value.copy(
-                    nombre = usuario.Nombre,
-                    email = usuario.Email
-                )
+                if (response.isSuccessful && response.body() != null) {
+                    val authResponse = response.body()!!
+                    val token = authResponse.token
+                    val usuario = authResponse.usuario
 
-                // Guardar sesión local
-                guardarSesionLocal(usuario.Nombre, password)
-            }.onFailure { exception ->
-                _errorMessage.value = exception.message ?: "Error desconocido"
+                    _loginSuccess.value = true
+
+                    // Actualizamos la UI con los datos que llegaron
+                    _usuarioState.value = _usuarioState.value.copy(
+                        nombre = usuario?.nombre ?: email, // Si el backend no manda nombre, usamos email
+                        email = usuario?.email ?: email,
+                        password = pass // Guardamos la pass para autologin futuro
+                    )
+
+                    // Guardamos la sesión en el celular
+                    guardarSesionLocal(usuario?.nombre ?: email, pass)
+
+                } else {
+                    // Si el backend dice 401 (No autorizado)
+                    _errorMessage.value = "Login fallido: Revisa tu correo o contraseña."
+                    _loginSuccess.value = false
+                }
+            } catch (e: Exception) {
+                // Si el servidor está apagado
+                _errorMessage.value = "Error de conexión: Verifica que el backend esté corriendo."
                 _loginSuccess.value = false
+            } finally {
+                _isLoading.value = false
             }
-
-            _isLoading.value = false
         }
     }
 
-    fun register(nombre: String, email: String, password: String) {
+    // ------------------------------
+    // REGISTRO (Conectado al Backend)
+    // ------------------------------
+    fun register(nombre: String, email: String, pass: String) {
         viewModelScope.launch {
             _isLoading.value = true
             _errorMessage.value = null
 
-            val result = repository.register(nombre, email, password)
+            try {
+                // Llamada a la API
+                val response = repository.registrar(nombre, email, pass)
 
-            result.onSuccess { usuario ->
-                _loginSuccess.value = true
-                // Actualizar estado con datos del usuario
-                _usuarioState.value = _usuarioState.value.copy(
-                    nombre = usuario.Nombre,
-                    email = usuario.Email
-                )
-
-                // Guardar sesión local
-                guardarSesionLocal(usuario.Nombre, password)
-            }.onFailure { exception ->
-                _errorMessage.value = exception.message ?: "Error desconocido"
+                if (response.isSuccessful) {
+                    // Registro OK -> Intentamos loguear automáticamente
+                    _errorMessage.value = "¡Cuenta creada! Iniciando sesión..."
+                    login(email, pass)
+                } else {
+                    _errorMessage.value = "Error al registrar. El correo podría estar usado."
+                    _loginSuccess.value = false
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = "No se pudo conectar con el servidor."
                 _loginSuccess.value = false
+            } finally {
+                _isLoading.value = false
             }
-
-            _isLoading.value = false
         }
     }
 
-    fun cargarPerfil(email: String) {
+    // ------------------------------
+    // DATOS LOCALES (DataStore)
+    // ------------------------------
+    private fun guardarSesionLocal(nombre: String, pass: String) {
         viewModelScope.launch {
-            _isLoading.value = true
-
-            val result = repository.getPerfil(email)
-
-            result.onSuccess { usuario ->
-                // Actualizar estado con datos del perfil
-                _usuarioState.value = _usuarioState.value.copy(
-                    nombre = usuario.Nombre,
-                    email = usuario.Email
-                )
-            }.onFailure { exception ->
-                _errorMessage.value = "Error al cargar perfil: ${exception.message}"
-            }
-
-            _isLoading.value = false
+            prefs.saveCredentials(nombre, pass)
         }
     }
 
-    // ------------------------------
-    // CARGAR DATOS GUARDADOS (AUTOLOGIN)
-    // ------------------------------
     private fun cargarDatosGuardados() {
         viewModelScope.launch {
             val logged = prefs.isLogged.first()
-
             if (logged) {
                 val savedUser = prefs.usuario.first()
                 val savedPass = prefs.password.first()
 
                 _usuarioState.value = _usuarioState.value.copy(
                     nombre = savedUser,
-                    email = savedUser, // O usa el email si está disponible
+                    email = savedUser, // Asumimos que el usuario guardado es el email/nombre
+                    password = savedPass,
                     aceptarTerminos = true
                 )
-
-                // Intentar auto-login
-                login(savedUser, savedPass)
             }
         }
     }
 
-    // ------------------------------
-    // VALIDAR LOGIN LOCAL
-    // ------------------------------
-    fun validar(): Boolean {
-        val estado = _usuarioState.value
-        val email = estado.email
-        val pass = estado.password
-        val acepta = estado.aceptarTerminos
-
-        var valido = true
-        val errores = UsuarioErrores()
-
-        if (email.isBlank()) {
-            errores.email = "Debe ingresar un email."
-            valido = false
-        } else if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            errores.email = "Email inválido."
-            valido = false
-        }
-
-        if (pass.isBlank()) {
-            errores.password = "Debe ingresar una contraseña."
-            valido = false
-        } else if (pass.length < 6) {
-            errores.password = "La contraseña debe tener al menos 6 caracteres."
-            valido = false
-        }
-
-        if (!acepta) {
-            errores.aceptaTerminos = "Debe aceptar los términos."
-            valido = false
-        }
-
-        _usuarioState.value = estado.copy(errores = errores)
-        return valido
-    }
-
-    // ------------------------------
-    // VALIDAR REGISTRO
-    // ------------------------------
-    fun validarRegistro(): Boolean {
-        val estado = _usuarioState.value
-        var valido = true
-        val errores = UsuarioErrores()
-
-        if (estado.nombre.isBlank()) {
-            errores.nombre = "Debe ingresar un nombre."
-            valido = false
-        }
-
-        if (estado.email.isBlank()) {
-            errores.email = "Debe ingresar un correo."
-            valido = false
-        } else if (!android.util.Patterns.EMAIL_ADDRESS.matcher(estado.email).matches()) {
-            errores.email = "Email inválido."
-            valido = false
-        }
-
-        if (estado.password.isBlank()) {
-            errores.password = "Debe ingresar una contraseña."
-            valido = false
-        } else if (estado.password.length < 6) {
-            errores.password = "La contraseña debe tener al menos 6 caracteres."
-            valido = false
-        }
-
-        if (estado.password != estado.confirmPassword) {
-            errores.confirmPassword = "Las contraseñas no coinciden."
-            valido = false
-        }
-
-        if (!estado.aceptarTerminos) {
-            errores.aceptaTerminos = "Debe aceptar los términos."
-            valido = false
-        }
-
-        _usuarioState.value = estado.copy(errores = errores)
-        return valido
-    }
-
-    // ------------------------------
-    // GUARDAR SESIÓN LOCAL (actualizada)
-    // ------------------------------
-    private fun guardarSesionLocal(nombre: String, password: String) {
-        viewModelScope.launch {
-            prefs.saveCredentials(nombre, password)
-        }
-    }
-
-    // ------------------------------
-    // LOGOUT
-    // ------------------------------
     fun cerrarSesion() {
         viewModelScope.launch {
             prefs.logout()
-            _usuarioState.value = UsuarioState()
+            _usuarioState.value = UsuarioState() // Reseteamos UI
             _loginSuccess.value = false
         }
     }
 
     // ------------------------------
-    // HANDLERS PARA CAMPOS (mantener tu versión con cadenas vacías)
+    // VALIDACIONES Y HANDLERS (Igual que antes)
     // ------------------------------
-    fun onChangeNombre(value: String) {
-        _usuarioState.value = _usuarioState.value.copy(
-            nombre = value,
-            errores = _usuarioState.value.errores.copy(nombre = "")
-        )
+
+    // Handlers para actualizar el estado mientras escribes
+    fun onChangeNombre(v: String) { _usuarioState.value = _usuarioState.value.copy(nombre = v, errores = _usuarioState.value.errores.copy(nombre = "")) }
+    fun onChangeEmail(v: String) { _usuarioState.value = _usuarioState.value.copy(email = v, errores = _usuarioState.value.errores.copy(email = "")) }
+    fun onChangePassword(v: String) { _usuarioState.value = _usuarioState.value.copy(password = v, errores = _usuarioState.value.errores.copy(password = "")) }
+    fun onChangeConfirmPassword(v: String) { _usuarioState.value = _usuarioState.value.copy(confirmPassword = v, errores = _usuarioState.value.errores.copy(confirmPassword = "")) }
+    fun onChangeAceptarTerminos(v: Boolean) { _usuarioState.value = _usuarioState.value.copy(aceptarTerminos = v, errores = _usuarioState.value.errores.copy(aceptaTerminos = "")) }
+
+    // Validación Login
+    fun validar(): Boolean {
+        val s = _usuarioState.value
+        var valido = true
+        val err = UsuarioErrores()
+
+        if (s.email.isBlank()) { err.email = "Ingresa tu email"; valido = false }
+        if (s.password.isBlank()) { err.password = "Ingresa tu contraseña"; valido = false }
+        if (!s.aceptarTerminos) { err.aceptaTerminos = "Debes aceptar los términos"; valido = false }
+
+        _usuarioState.value = s.copy(errores = err)
+        return valido
     }
 
-    fun onChangeEmail(value: String) {
-        _usuarioState.value = _usuarioState.value.copy(
-            email = value,
-            errores = _usuarioState.value.errores.copy(email = "")
-        )
-    }
+    // Validación Registro
+    fun validarRegistro(): Boolean {
+        val s = _usuarioState.value
+        var valido = true
+        val err = UsuarioErrores()
 
-    fun onChangePassword(value: String) {
-        _usuarioState.value = _usuarioState.value.copy(
-            password = value,
-            errores = _usuarioState.value.errores.copy(password = "")
-        )
-    }
+        if (s.nombre.isBlank()) { err.nombre = "Nombre requerido"; valido = false }
+        if (s.email.isBlank()) { err.email = "Email requerido"; valido = false }
+        if (s.password.length < 6) { err.password = "Mínimo 6 caracteres"; valido = false }
+        if (s.password != s.confirmPassword) { err.confirmPassword = "No coinciden"; valido = false }
+        if (!s.aceptarTerminos) { err.aceptaTerminos = "Requerido"; valido = false }
 
-    fun onChangeConfirmPassword(value: String) {
-        _usuarioState.value = _usuarioState.value.copy(
-            confirmPassword = value,
-            errores = _usuarioState.value.errores.copy(confirmPassword = "")
-        )
-    }
-
-    fun onChangeAceptarTerminos(value: Boolean) {
-        _usuarioState.value = _usuarioState.value.copy(
-            aceptarTerminos = value,
-            errores = _usuarioState.value.errores.copy(aceptaTerminos = "")
-        )
+        _usuarioState.value = s.copy(errores = err)
+        return valido
     }
 }

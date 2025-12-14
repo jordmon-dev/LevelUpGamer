@@ -8,22 +8,26 @@ import retrofit2.Response
 
 class UsuarioRepository {
 
-    // Conectamos con la instancia corregida
+    // Instancia de Retrofit (La conexión a Spring Boot)
+    // Asegúrate de que RetrofitInstance.api devuelva LevelUpApiService
     private val api = RetrofitInstance.api
 
+    // --- LOGIN ---
     suspend fun login(email: String, pass: String): Response<AuthResponse> {
-        return api.login(LoginDto(email, pass))
+        val loginDto = LoginDto(email = email, password = pass)
+        return api.login(loginDto)
     }
 
-    suspend fun register(nombre: String, email: String, pass: String): Response<Any> {
-        // Creamos el DTO que espera el backend
+    // --- REGISTRO ---
+    suspend fun registrar(nombre: String, email: String, pass: String): Response<Any> {
+        // Creamos el DTO exacto que tu Backend Java espera
         val registroDto = RegistroDto(
             nombre = nombre,
-            apellidos = "", // Campos requeridos por backend pero no por UI
+            apellidos = "", // Enviamos vacío porque la UI no lo pide
             email = email,
             password = pass,
-            direccion = "Sin dirección",
-            region = "RM",
+            direccion = "Sin dirección", // Valores por defecto
+            region = "Metropolitana",
             comuna = "Santiago"
         )
         return api.registrar(registroDto)
