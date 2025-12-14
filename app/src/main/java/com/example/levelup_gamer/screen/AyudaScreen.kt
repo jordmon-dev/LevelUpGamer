@@ -50,7 +50,7 @@ fun AyudaScreen(navController: NavController) {
             Button(onClick = {
                 try {
                     val intent = Intent(Intent.ACTION_SENDTO).apply {
-                        Intent.setData = Uri.parse("mailto:soporte@levelupgamer.cl")
+                        data = Uri.parse("mailto:soporte@levelupgamer.cl")
                         putExtra(Intent.EXTRA_SUBJECT, "Consulta desde Level-Up Gamer")
                     }
                     contexto.startActivity(intent)

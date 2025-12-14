@@ -49,7 +49,7 @@ fun NotificacionScreen(navController: NavController) {
                 .padding(innerPadding)
                 .padding(16.dp)
         ) {
-            LazyListScope.items(listaNotificaciones) { noti ->
+            items(listaNotificaciones) { noti ->
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
