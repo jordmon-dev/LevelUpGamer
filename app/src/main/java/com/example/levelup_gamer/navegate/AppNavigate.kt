@@ -20,8 +20,12 @@ import com.example.levelup_gamer.viewmodel.OfertasViewModel
 import com.example.levelup_gamer.viewmodel.ReclamoViewModel // ¡IMPORTANTE!
 
 @Composable
-fun AppNavigate() {
-    val navController = rememberNavController()
+fun AppNavigate(
+    navController: androidx.navigation.NavHostController = androidx.navigation.compose.rememberNavController()
+    ) {
+
+
+    //val navController = rememberNavController()
 
     // --- INSTANCIAS DE VIEWMODELS ---
     // (Necesarias para que funcionen tus pantallas nuevas)
@@ -106,12 +110,12 @@ fun AppNavigate() {
         composable("confirmacionReclamo") {
             ConfirmacionReclamoScreen(navController, reclamoViewModel)
         }
-        /*
-        // Pantalla de Admin (Si la llegaste a crear para agregar productos)
+
+        // Pantalla de Admin
         composable("admin_agregar_producto") {
             // Si no tienes este archivo, comenta estas 3 líneas para que no de error
             AdminAgregarProductoScreen(navController, productoViewModel)
-        }*/
+        }
 
         // Placeholder para Notificaciones (Para que no crashee si le das click en perfil)
         composable("notificaciones") {
