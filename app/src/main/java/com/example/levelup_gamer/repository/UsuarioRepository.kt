@@ -1,7 +1,7 @@
 package com.example.levelup_gamer.repository
 
 import android.util.Log
-import com.example.levelup_gamer.modelo.Usuario
+import com.example.levelup_gamer.model.Usuario
 import com.example.levelup_gamer.remote.RetrofitInstance
 
 class UsuarioRepository {

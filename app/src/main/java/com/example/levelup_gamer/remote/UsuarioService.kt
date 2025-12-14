@@ -1,22 +1,27 @@
 package com.example.levelup_gamer.remote
 
+import com.example.levelup_gamer.modelo.ApiResponse
+import com.example.levelup_gamer.modelo.PasswordChangeRequest
 import com.example.levelup_gamer.modelo.Usuario
-import okhttp3.Response
-import retrofit2.http.Body
-import retrofit2.http.DELETE
-import retrofit2.http.GET
-import retrofit2.http.POST
+import retrofit2.Response
+import retrofit2.http.*
 
 interface UsuarioService {
-    @GET("/usuarios")
-    suspend fun getAllUsuarios(): Response<List<Usuario>>
 
-    @GET("/usuarios/{id}")
-    suspend fun getUsuarioById(id: Int): Response<Usuario>
+    @GET("api/usuarios/perfil")
+    suspend fun getPerfil(
+        @Header("Authorization") token: String
+    ): Response<ApiResponse<Usuario>>
 
-    @POST("/usuarios")
-    suspend fun saveUsuario(@Body usuario: Usuario): Response<Usuario>
+    @PUT("api/usuarios/perfil")
+    suspend fun updatePerfil(
+        @Header("Authorization") token: String,
+        @Body usuario: Usuario
+    ): Response<ApiResponse<Usuario>>
 
-    @DELETE("/usuarios/{id}")
-    suspend fun deleteUsuario(id: Int): Response<Unit>
+    @PUT("api/usuarios/cambiar-password")
+    suspend fun changePassword(
+        @Header("Authorization") token: String,
+        @Body passwordRequest: PasswordChangeRequest
+    ): Response<ApiResponse<String>>
 }
