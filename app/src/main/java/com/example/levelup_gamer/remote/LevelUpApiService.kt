@@ -3,23 +3,50 @@ package com.example.levelup_gamer.remote
 import com.example.levelup_gamer.model.AuthResponse
 import com.example.levelup_gamer.model.LoginDto
 import com.example.levelup_gamer.model.Producto
-import com.example.levelup_gamer.model.RegistroDto // Asegúrate de tener este modelo
+import com.example.levelup_gamer.model.RegistroDto
+import okhttp3.ResponseBody
 import retrofit2.Response
-import retrofit2.http.Body
-import retrofit2.http.GET
-import retrofit2.http.POST
+import retrofit2.http.*
 
 interface LevelUpApiService {
 
-    // --- AUTH ---
+    // ==========================================
+    // 🔐 AUTENTICACIÓN (AuthController)
+    // ==========================================
+
     @POST("auth/login")
     suspend fun login(@Body loginDto: LoginDto): Response<AuthResponse>
 
-    // Nota: Tu backend espera RegistroDto, no Usuario directo
     @POST("auth/register")
     suspend fun registrar(@Body registroDto: RegistroDto): Response<Any>
 
-    // --- PRODUCTOS ---
+
+    // ==========================================
+    // 🎮 PRODUCTOS (ProductoController)
+    // ==========================================
+
+    // 1. LISTAR TODOS (GET)
+    // Backend: @GetMapping (Lista completa)
     @GET("productos")
     suspend fun obtenerProductos(): Response<List<Producto>>
+
+    // 2. OBTENER UNO SOLO (GET con ID)
+    // Backend: @GetMapping("/{id}")
+    @GET("productos/{id}")
+    suspend fun obtenerProductoPorId(@Path("id") id: Long): Response<Producto>
+
+    // 3. CREAR PRODUCTO (POST) - ¡Para tu panel Admin!
+    // Backend: @PostMapping
+    @POST("productos")
+    suspend fun crearProducto(@Body producto: Producto): Response<Producto>
+
+    // 4. ELIMINAR PRODUCTO (DELETE)
+    // Backend: @DeleteMapping("/{id}")
+    @DELETE("productos/{id}")
+    suspend fun eliminarProducto(@Path("id") id: Long): Response<Void>
+
+    // 5. ACTUALIZAR PRODUCTO (PUT) - Opcional, pero completa el CRUD
+    // Backend: @PutMapping("/{id}")
+    @PUT("productos/{id}")
+    suspend fun actualizarProducto(@Path("id") id: Long, @Body producto: Producto): Response<Producto>
 }
