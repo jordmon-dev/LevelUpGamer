@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items // Import necesario para LazyRow
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -17,9 +18,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-// AGREGAR ESTE IMPORT EN LA PARTE SUPERIOR DEL ARCHIVO (después de los otros imports):
-import androidx.compose.foundation.lazy.items
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,7 +31,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.example.levelup_gamer.model.Usuario
 import com.example.levelup_gamer.viewmodel.UsuarioViewModel
 import com.example.levelup_gamer.viewmodel.CarritoViewModel
 import com.example.levelup_gamer.viewmodel.ProductoViewModel
@@ -46,15 +43,9 @@ fun HomeScreen(
     carritoViewModel: CarritoViewModel,
     viewModel: UsuarioViewModel = viewModel()
 ) {
-    // SOLUCIÓN: Intentar obtener usuario, si falla usar uno por defecto
-    val usuario = Usuario(                        // Requerido
-        Nombre = "Carlos Gamer",       // Requerido
-        Email = "jugador@duocuc.cl",   // Requerido
-        Password = "password123",      // Requerido
-        Telefono = 12345678,           // Requerido
-        Direccion = "Dirección ejemplo" // Requerido
-    )
-
+    // 1. OBTENER DATOS REALES DEL VIEWMODEL (LOGIN)
+    // Esto hace que si te logueaste, aparezca tu nombre real
+    val usuarioState by viewModel.usuarioState.collectAsState()
 
     // Gradiente para el fondo
     val gradient = Brush.verticalGradient(
@@ -65,7 +56,7 @@ fun HomeScreen(
         )
     )
 
-    // Datos de ejemplo para los juegos (SIN recursos de imagen)
+    // Datos de ejemplo para los juegos (Visualización)
     val featuredGames = listOf(
         Game("Cyberpunk 2077", "PS5, Xbox, PC", 49990),
         Game("The Witcher 3", "PC, Switch", 29990),
@@ -75,14 +66,7 @@ fun HomeScreen(
         Game("GTA V", "PS4, Xbox, PC", 22990)
     )
 
-    val categorias = listOf(
-        "PlayStation",
-        "Xbox",
-        "Nintendo Switch",
-        "PC",
-        "VR",
-        "Mobile"
-    )
+    val categorias = listOf("PlayStation", "Xbox", "Nintendo Switch", "PC", "VR", "Mobile")
 
     Box(
         modifier = Modifier
@@ -99,29 +83,28 @@ fun HomeScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp)
-                    .shadow(
-                        elevation = 16.dp,
-                        shape = RoundedCornerShape(20.dp),
-                        clip = true
-                    ),
+                    .shadow(16.dp, RoundedCornerShape(20.dp), clip = true),
                 colors = CardDefaults.cardColors(
                     containerColor = Color(0xFF1E1E2E).copy(alpha = 0.9f)
                 ),
                 shape = RoundedCornerShape(20.dp)
             ) {
-                Column(
-                    modifier = Modifier.padding(20.dp)
-                ) {
+                Column(modifier = Modifier.padding(20.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column {
-                            // CORRECCIÓN: Usar nombreCompleto en lugar de nombre
+                            // USAR DATOS DEL STATE
+                            val nombreMostrar = if (usuarioState.nombre.isNotEmpty()) {
+                                usuarioState.nombre.split(" ").firstOrNull() ?: "Gamer"
+                            } else {
+                                "Invitado"
+                            }
+
                             Text(
-                                if (usuario.Nombre.isNotEmpty()) "¡Hola, ${usuario.Nombre.split(" ").firstOrNull() ?: "Jugador"}!"
-                                else "¡Bienvenido!",
+                                "¡Hola, $nombreMostrar!",
                                 style = MaterialTheme.typography.headlineSmall,
                                 color = Color.White,
                                 fontWeight = FontWeight.Bold
@@ -132,7 +115,6 @@ fun HomeScreen(
                                 color = Color(0xFFA0A0A0)
                             )
                         }
-                        // Icono de perfil
                         IconButton(
                             onClick = { navController.navigate("perfil") },
                             modifier = Modifier
@@ -140,32 +122,23 @@ fun HomeScreen(
                                 .clip(CircleShape)
                                 .background(Color(0xFF00FF88))
                         ) {
-                            Icon(
-                                Icons.Default.Person,
-                                contentDescription = "Perfil",
-                                tint = Color.Black
-                            )
+                            Icon(Icons.Default.Person, contentDescription = "Perfil", tint = Color.Black)
                         }
                     }
 
                     // Badge de descuento estudiante
-                    if (usuario.Email.endsWith("@duocuc.cl")) {
+                    // Verificamos el email del estado
+                    if (usuarioState.email.endsWith("@duocuc.cl")) {
                         Spacer(modifier = Modifier.height(12.dp))
                         Card(
-                            colors = CardDefaults.cardColors(
-                                containerColor = Color(0xFF00FF88).copy(alpha = 0.2f)
-                            ),
+                            colors = CardDefaults.cardColors(containerColor = Color(0xFF00FF88).copy(alpha = 0.2f)),
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Row(
                                 modifier = Modifier.padding(12.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Icon(
-                                    Icons.Default.School,
-                                    contentDescription = "Estudiante",
-                                    tint = Color(0xFF00FF88)
-                                )
+                                Icon(Icons.Default.School, contentDescription = "Estudiante", tint = Color(0xFF00FF88))
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
                                     "20% descuento estudiante Duoc activo",
@@ -179,33 +152,20 @@ fun HomeScreen(
                 }
             }
 
-            // Banner de nuevo lanzamiento (SIN imagen)
+            // Banner Nuevo Lanzamiento
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
                     .height(160.dp)
-                    .shadow(
-                        elevation = 16.dp,
-                        shape = RoundedCornerShape(20.dp),
-                        clip = true
-                    ),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFF2D1B69)
-                ),
+                    .shadow(16.dp, RoundedCornerShape(20.dp), clip = true),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF2D1B69)),
                 shape = RoundedCornerShape(20.dp)
             ) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(
-                            Brush.verticalGradient(
-                                colors = listOf(
-                                    Color(0xFF4A1E8C),
-                                    Color(0xFF2D1B69)
-                                )
-                            )
-                        )
+                        .background(Brush.verticalGradient(listOf(Color(0xFF4A1E8C), Color(0xFF2D1B69))))
                 ) {
                     Column(
                         modifier = Modifier
@@ -214,35 +174,17 @@ fun HomeScreen(
                         verticalArrangement = Arrangement.SpaceBetween
                     ) {
                         Column {
-                            Text(
-                                "NUEVO LANZAMIENTO EXCLUSIVO",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = Color(0xFF00FF88),
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                "Descubre la nueva era\nde los juegos de acción",
-                                style = MaterialTheme.typography.headlineSmall,
-                                color = Color.White,
-                                fontWeight = FontWeight.Bold,
-                                lineHeight = 24.sp
-                            )
+                            Text("NUEVO LANZAMIENTO EXCLUSIVO", style = MaterialTheme.typography.labelSmall, color = Color(0xFF00FF88), fontWeight = FontWeight.Bold)
+                            Text("Descubre la nueva era\nde los juegos de acción", style = MaterialTheme.typography.headlineSmall, color = Color.White, fontWeight = FontWeight.Bold, lineHeight = 24.sp)
                         }
                         Button(
                             onClick = { navController.navigate("catalogo") },
                             modifier = Modifier
                                 .height(40.dp)
                                 .clip(RoundedCornerShape(12.dp)),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF00FF88),
-                                contentColor = Color.Black
-                            )
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00FF88), contentColor = Color.Black)
                         ) {
-                            Text(
-                                "EXPLORAR CATÁLOGO",
-                                style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.Bold
-                            )
+                            Text("EXPLORAR CATÁLOGO", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -250,37 +192,21 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Sección de categorías destacadas
+            // Categorías
             Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-                Text(
-                    "Categorías Destacadas",
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(categorias) { category ->
-                        CategoryCard(category = category)
-                    }
+                Text("Categorías Destacadas", style = MaterialTheme.typography.headlineSmall, color = Color.White, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 16.dp))
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    items(categorias) { category -> CategoryCard(category = category) }
                 }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Sección de más vendidos
+            // Más Vendidos
             Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-                Text(
-                    "Más Vendidos",
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
+                Text("Más Vendidos", style = MaterialTheme.typography.headlineSmall, color = Color.White, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 16.dp))
 
+                // Nota: Usamos altura fija para evitar conflicto de scroll anidado
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(2),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -288,58 +214,26 @@ fun HomeScreen(
                     modifier = Modifier.height(500.dp)
                 ) {
                     items(featuredGames) { game ->
-                        GameCard(
-                            game = game,
-                            onClick = { navController.navigate("catalogo") }
-                        )
+                        GameCard(game = game, onClick = { navController.navigate("catalogo") })
                     }
                 }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // 🔹 NUEVA SECCIÓN: Información y Ayuda
+            // Soporte
             Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-                Text(
-                    "Información y Soporte",
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-
-                // Tarjeta Acerca de
-                NavigationCard(
-                    icon = Icons.Default.Info,
-                    title = "Acerca de",
-                    description = "Conoce más sobre Level-Up Gamer",
-                    onClick = { navController.navigate("about") },
-                    color = Color(0xFFFF6B6B)
-                )
-
-                // Tarjeta Centro de Ayuda
-                NavigationCard(
-                    icon = Icons.Default.Help,
-                    title = "Centro de Ayuda",
-                    description = "Soporte técnico y preguntas frecuentes",
-                    onClick = { navController.navigate("ayuda") },
-                    color = Color(0xFF00FF88)
-                )
-
-                // Tarjeta para ver el carrito
-                NavigationCard(
-                    icon = Icons.Default.ShoppingCart,
-                    title = "Mi Carrito",
-                    description = "Revisa tus productos seleccionados",
-                    onClick = { navController.navigate("carrito") },
-                    color = Color(0xFFFFA726)
-                )
+                Text("Información y Soporte", style = MaterialTheme.typography.headlineSmall, color = Color.White, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 16.dp))
+                NavigationCard(Icons.Default.Info, "Acerca de", "Conoce más sobre Level-Up Gamer", { navController.navigate("about") }, Color(0xFFFF6B6B))
+                NavigationCard(Icons.Default.Help, "Centro de Ayuda", "Soporte técnico y preguntas frecuentes", { navController.navigate("ayuda") }, Color(0xFF00FF88))
+                NavigationCard(Icons.Default.ShoppingCart, "Mi Carrito", "Revisa tus productos seleccionados", { navController.navigate("carrito") }, Color(0xFFFFA726))
             }
-
             Spacer(modifier = Modifier.height(40.dp))
         }
     }
 }
+
+// COMPONENTES AUXILIARES
 
 @Composable
 fun CategoryCard(category: String) {
@@ -347,114 +241,49 @@ fun CategoryCard(category: String) {
         modifier = Modifier
             .width(120.dp)
             .height(80.dp)
-            .shadow(
-                elevation = 8.dp,
-                shape = RoundedCornerShape(12.dp)
-            )
+            .shadow(8.dp, RoundedCornerShape(12.dp))
             .clickable { /* Acción */ },
-        colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF2A2A3E)
-        ),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF2A2A3E)),
         shape = RoundedCornerShape(12.dp)
     ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    category,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.White,
-                    fontWeight = FontWeight.Medium,
-                    textAlign = TextAlign.Center
-                )
-            }
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text(category, style = MaterialTheme.typography.bodyMedium, color = Color.White, fontWeight = FontWeight.Medium, textAlign = TextAlign.Center)
         }
     }
 }
 
 @Composable
-fun GameCard(
-    game: Game,
-    onClick: () -> Unit
-) {
+fun GameCard(game: Game, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .height(180.dp)
-            .shadow(
-                elevation = 8.dp,
-                shape = RoundedCornerShape(12.dp)
-            )
+            .shadow(8.dp, RoundedCornerShape(12.dp))
             .clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF2A2A3E)
-        ),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF2A2A3E)),
         shape = RoundedCornerShape(12.dp)
     ) {
-        Column(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            // Placeholder de imagen con color
+        Column(modifier = Modifier.fillMaxSize()) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(100.dp)
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                Color(0xFF333366),
-                                Color(0xFF222244)
-                            )
-                        )
-                    ),
+                    .background(Brush.verticalGradient(listOf(Color(0xFF333366), Color(0xFF222244)))),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    "🎮",
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = Color.White
-                )
+                Text("🎮", style = MaterialTheme.typography.headlineMedium, color = Color.White)
             }
-            Spacer(modifier = Modifier.height(8.dp))
-            Column(
-                modifier = Modifier.padding(12.dp)
-            ) {
-                Text(
-                    game.title,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    game.platforms,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFFA0A0A0)
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    "$${game.price}",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = Color(0xFF00FF88),
-                    fontWeight = FontWeight.Bold
-                )
+            Column(modifier = Modifier.padding(12.dp)) {
+                Text(game.title, style = MaterialTheme.typography.bodyLarge, color = Color.White, fontWeight = FontWeight.Bold)
+                Text(game.platforms, style = MaterialTheme.typography.bodySmall, color = Color(0xFFA0A0A0))
+                Text("$${game.price}", style = MaterialTheme.typography.bodyLarge, color = Color(0xFF00FF88), fontWeight = FontWeight.Bold)
             }
         }
     }
 }
 
 @Composable
-fun NavigationCard(
-    icon: ImageVector,
-    title: String,
-    description: String,
-    onClick: () -> Unit,
-    color: Color
-) {
+fun NavigationCard(icon: ImageVector, title: String, description: String, onClick: () -> Unit, color: Color) {
     Card(
         onClick = onClick,
         modifier = Modifier
@@ -467,36 +296,18 @@ fun NavigationCard(
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = color,
-                modifier = Modifier.size(32.dp)
-            )
+            Icon(imageVector = icon, contentDescription = null, tint = color, modifier = Modifier.size(32.dp))
             Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    title,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = Color.White,
-                    fontWeight = FontWeight.Medium
-                )
-                Text(
-                    description,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray
-                )
+                Text(title, style = MaterialTheme.typography.bodyLarge, color = Color.White, fontWeight = FontWeight.Medium)
+                Text(description, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
             }
-            Icon(
-                Icons.Default.ChevronRight,
-                contentDescription = "Ir",
-                tint = Color.Gray,
-                modifier = Modifier.size(20.dp)
-            )
+            Icon(Icons.Default.ChevronRight, contentDescription = "Ir", tint = Color.Gray, modifier = Modifier.size(20.dp))
         }
     }
 }
 
+// MODELO LOCAL PARA LA UI
 data class Game(
     val title: String,
     val platforms: String,
