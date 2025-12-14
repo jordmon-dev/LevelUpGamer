@@ -1,5 +1,6 @@
-package com.example.levelup_gamer.ui.theme.screen
+package com.example.levelup_gamer.ui.theme.Screen // CORREGIDO: Screen con mayúscula
 
+import android.widget.Toast
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -13,6 +14,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,143 +25,105 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.levelup_gamer.R
-import com.example.levelup_gamer.modelo.Producto
+import com.example.levelup_gamer.model.Producto
 import com.example.levelup_gamer.viewmodel.CarritoViewModel
 import com.example.levelup_gamer.viewmodel.ProductoViewModel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CatalogoScreen(
     navController: NavController,
     productoViewModel: ProductoViewModel,
-    carritoViewModel: CarritoViewModel,
-    usuarioEmail: String? = null // Email por defecto para testing
+    carritoViewModel: CarritoViewModel
 ) {
-    val uiState by productoViewModel.uiState.collectAsState()
     val productos by productoViewModel.productosFiltrados.collectAsState()
+    val uiState by productoViewModel.uiState.collectAsState()
+    val context = LocalContext.current
 
-    val email = usuarioEmail ?: run {
-        // Redirigir al login si no hay email
-        LaunchedEffect(Unit) {
-            navController.navigate("login") {
-                popUpTo("catalogo") { inclusive = true }
-            }
-        }
-        return
-    }
-
-    val fondo = Brush.verticalGradient(
-        listOf(
-            Color(0xFF0A0A0A),
-            Color(0xFF1A1A2E),
-            Color(0xFF16213E)
-        )
+    val brush = Brush.verticalGradient(
+        colors = listOf(Color(0xFF0A0A0A), Color(0xFF1A1A2E), Color(0xFF16213E))
     )
-
-    val topBarColor = Color(0xFF0A0A0A)
 
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        "Catálogo Gamer",
-                        fontWeight = FontWeight.SemiBold,
-                        color = Color.White
-                    )
-                },
+                title = { Text("Catálogo", color = Color.White, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Volver",
-                            tint = Color.White
-                        )
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Volver", tint = Color.White)
                     }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = topBarColor
-                )
+                actions = {
+                    IconButton(onClick = { navController.navigate("carrito") }) {
+                        Icon(Icons.Default.ShoppingCart, "Carrito", tint = Color(0xFF00FF88))
+                    }
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent)
             )
         },
         containerColor = Color.Transparent
     ) { padding ->
-
-        Column(
-            modifier = Modifier
-                .padding(padding)
-                .fillMaxSize()
-                .background(fondo)
-        ) {
-
-            // Buscador
-            OutlinedTextField(
-                value = uiState.busqueda,
-                onValueChange = productoViewModel::onBusquedaChange,
-                placeholder = { Text("Buscar productos...", color = Color(0xFFA0A0A0)) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                shape = RoundedCornerShape(14.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = Color(0xFF00FF88),
-                    unfocusedBorderColor = Color(0xFF444466),
-                    cursorColor = Color(0xFF00FF88),
-                    focusedTextColor = Color.White,
-                    unfocusedTextColor = Color.White
+        Box(modifier = Modifier.fillMaxSize().background(brush).padding(padding)) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                // Buscador
+                OutlinedTextField(
+                    value = uiState.busqueda,
+                    onValueChange = { productoViewModel.onBusquedaChange(it) },
+                    placeholder = { Text("Buscar...", color = Color.Gray) },
+                    leadingIcon = { Icon(Icons.Default.Search, null, tint = Color(0xFF00FF88)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color(0xFF1E1E2E),
+                        unfocusedContainerColor = Color(0xFF1E1E2E),
+                        focusedTextColor = Color.White,
+                        focusedIndicatorColor = Color(0xFF00FF88)
+                    ),
+                    shape = RoundedCornerShape(12.dp)
                 )
-            )
 
-            // Filtros por categoría
-            LazyRow(
-                modifier = Modifier.padding(start = 16.dp, bottom = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(productoViewModel.categorias) { categoria ->
-                    FilterChip(
-                        selected = uiState.categoriaSeleccionada == categoria,
-                        onClick = { productoViewModel.onCategoriaSeleccionada(categoria) },
-                        label = {
-                            Text(
-                                categoria,
-                                color = if (uiState.categoriaSeleccionada == categoria)
-                                    Color.Black
-                                else
-                                    Color.White
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Categorías
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    items(productoViewModel.categorias) { categoria ->
+                        FilterChip(
+                            selected = uiState.categoriaSeleccionada == categoria,
+                            onClick = { productoViewModel.onCategoriaSeleccionada(categoria) },
+                            label = { Text(categoria) },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = Color(0xFF00FF88),
+                                containerColor = Color(0xFF2A2A3E),
+                                labelColor = Color.White
                             )
-                        },
-                        colors = FilterChipDefaults.filterChipColors(
-                            containerColor = Color(0xFF1F1F2E),
-                            selectedContainerColor = Color(0xFF00FF88)
                         )
-                    )
+                    }
                 }
-            }
 
-            // Lista de productos
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
-            ) {
-                items(productos) { producto ->
-                    ProductoCard(
-                        producto = producto,
-                        onAgregar = {
-                            carritoViewModel.agregarProducto(
-                                productoId = producto.id,
-                                cantidad = 1,
-                                email = usuarioEmail
-                            )
-                        }
-                    )
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Lista
+                LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    items(productos) { producto ->
+                        ProductoItem(
+                            producto = producto,
+                            onAgregar = {
+                                carritoViewModel.agregarProducto(
+                                    id = producto.id ?: 0,
+                                    nombre = producto.nombre,
+                                    precio = producto.precio.toInt(),
+                                    imagen = producto.imagen ?: R.drawable.game_1
+                                )
+                                Toast.makeText(context, "Agregado", Toast.LENGTH_SHORT).show()
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -166,140 +131,36 @@ fun CatalogoScreen(
 }
 
 @Composable
-fun ProductoCard(
-    producto: Producto,
-    onAgregar: () -> Unit
-) {
+fun ProductoItem(producto: Producto, onAgregar: () -> Unit) {
     var isAdded by remember { mutableStateOf(false) }
-    val scope = rememberCoroutineScope()
-
-    val scale by animateFloatAsState(
-        targetValue = if (isAdded) 1.1f else 1.0f,
-        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
-        label = "AddButtonScale"
-    )
+    val scale by animateFloatAsState(if (isAdded) 1.2f else 1f, label = "scale")
 
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp)),
-        colors = CardDefaults.cardColors(
-            containerColor = Color(0xFF1E1E2E)
-        ),
-        elevation = CardDefaults.cardElevation(6.dp)
+        modifier = Modifier.fillMaxWidth().height(120.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1E2E).copy(0.9f))
     ) {
-        Row(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-
-            // Imagen del producto
+        Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
             Image(
-                painter = painterResource(id = producto.imagen),
-                contentDescription = producto.nombre,
-                modifier = Modifier
-                    .size(90.dp)
-                    .clip(RoundedCornerShape(16.dp)),
+                painter = painterResource(id = producto.imagen ?: R.drawable.game_1),
+                contentDescription = null,
+                modifier = Modifier.size(80.dp).clip(RoundedCornerShape(8.dp)),
                 contentScale = ContentScale.Crop
             )
-
             Spacer(Modifier.width(16.dp))
-
             Column(Modifier.weight(1f)) {
-
-                Text(
-                    producto.nombre,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = Color.White
-                )
-
-                Spacer(Modifier.height(4.dp))
-
-                Text(
-                    "$${producto.precio.toInt()} CLP",
-                    color = Color(0xFF00FF88),
-                    style = MaterialTheme.typography.bodyLarge
-                )
-
-                // Mostrar categoría si existe
-                if (producto.categoria.isNotEmpty()) {
-                    Spacer(Modifier.height(2.dp))
-                    Text(
-                        producto.categoria,
-                        color = Color(0xFFA0A0A0),
-                        style = MaterialTheme.typography.labelSmall
-                    )
-                }
-
-                // Mostrar stock si existe
-                if (producto.stock > 0) {
-                    Spacer(Modifier.height(2.dp))
-                    Text(
-                        "Stock: ${producto.stock}",
-                        color = Color(0xFF00FF88),
-                        style = MaterialTheme.typography.labelSmall
-                    )
-                }
-
-                // Mostrar código si existe
-                if (producto.codigo.isNotEmpty()) {
-                    Spacer(Modifier.height(2.dp))
-                    Text(
-                        "Código: ${producto.codigo}",
-                        color = Color(0xFF777777),
-                        style = MaterialTheme.typography.labelSmall
-                    )
-                }
-
-                // Mostrar descripción si es corta
-                if (producto.descripcion.isNotEmpty() && producto.descripcion.length < 40) {
-                    Spacer(Modifier.height(2.dp))
-                    Text(
-                        producto.descripcion,
-                        color = Color(0xFFA0A0A0),
-                        style = MaterialTheme.typography.bodySmall,
-                        maxLines = 1
-                    )
-                }
+                Text(producto.nombre, color = Color.White, fontWeight = FontWeight.Bold)
+                Text("$ ${producto.precio.toInt()}", color = Color(0xFF00FF88), fontWeight = FontWeight.Bold)
             }
-
-            FilledTonalButton(
+            IconButton(
                 onClick = {
                     onAgregar()
-                    if (!isAdded) {
-                        isAdded = true
-                        scope.launch {
-                            delay(600)
-                            isAdded = false
-                        }
-                    }
+                    isAdded = true
                 },
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.filledTonalButtonColors(
-                    containerColor = if (isAdded) Color(0xFF39FF14) else Color(0xFF00FF88),
-                    contentColor = Color.Black
-                ),
-                modifier = Modifier.scale(if (isAdded) scale else 1f),
-                enabled = producto.stock > 0
+                modifier = Modifier.scale(scale)
             ) {
-                Row(
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    if (isAdded) {
-                        Icon(
-                            Icons.Default.Check,
-                            contentDescription = "Agregado",
-                        )
-                        Spacer(Modifier.width(4.dp))
-                        Text("¡Agregado!")
-                    } else {
-                        Text("Agregar")
-                    }
-                }
+                Icon(if (isAdded) Icons.Default.Check else Icons.Default.ShoppingCart, null, tint = Color(0xFF00FF88))
             }
+            LaunchedEffect(isAdded) { if(isAdded) { kotlinx.coroutines.delay(500); isAdded = false } }
         }
     }
 }

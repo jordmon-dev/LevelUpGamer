@@ -1,147 +1,124 @@
-package com.example.levelup_gamer.navigation
+package com.example.levelup_gamer.navegate
 
-import android.annotation.SuppressLint
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
-import androidx.navigation.NavHostController
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+
+// Importamos todas tus pantallas
+import com.example.levelup_gamer.ui.theme.Screen.LoginScreen
+import com.example.levelup_gamer.ui.theme.Screen.RegistroScreen
+import com.example.levelup_gamer.ui.theme.Screen.HomeScreen
+import com.example.levelup_gamer.ui.theme.Screen.CatalogoScreen
+import com.example.levelup_gamer.ui.theme.Screen.CarritoScreen
+import com.example.levelup_gamer.ui.theme.Screen.PerfilScreen
 import com.example.levelup_gamer.ui.theme.Screen.AboutScreen
 import com.example.levelup_gamer.ui.theme.Screen.AyudaScreen
-import com.example.levelup_gamer.ui.theme.Screen.CamaraReclamoScreen
-import com.example.levelup_gamer.ui.theme.Screen.CarritoScreen
-import com.example.levelup_gamer.ui.theme.Screen.ConfirmacionReclamoScreen
-import com.example.levelup_gamer.ui.theme.Screen.ConfirmacionScreen
-import com.example.levelup_gamer.ui.theme.Screen.HomeScreen
-import com.example.levelup_gamer.ui.theme.Screen.NotificacionScreen
 import com.example.levelup_gamer.ui.theme.Screen.OfertasScreen
 import com.example.levelup_gamer.ui.theme.Screen.PagoScreen
-import com.example.levelup_gamer.ui.theme.Screen.PantallaGpsScreen
-import com.example.levelup_gamer.ui.theme.Screen.PerfilScreen
-import com.example.levelup_gamer.ui.theme.Screen.ReporteReclamoScreen
-import com.example.levelup_gamer.ui.theme.screen.*
+import com.example.levelup_gamer.ui.theme.screen.CatalogoScreen
+// Asegúrate de tener estas pantallas creadas o comenta las líneas si no las usas
+// import com.example.levelup_gamer.ui.theme.Screen.NotificacionScreen
 
-import com.example.levelup_gamer.viewmodel.*
+// Importamos tus ViewModels
+import com.example.levelup_gamer.viewmodel.UsuarioViewModel
+import com.example.levelup_gamer.viewmodel.ProductoViewModel
+import com.example.levelup_gamer.viewmodel.CarritoViewModel
 
-@SuppressLint("ViewModelConstructorInComposable")
 @Composable
-fun AppNavigate(
-    navController: NavHostController,
-    usuarioViewModel: UsuarioViewModel,
-    productoViewModel: ProductoViewModel,
-    carritoViewModel: CarritoViewModel,
-    reclamoViewModel: ReclamoViewModel,
-    notificacionesViewModel: NotificacionesViewModel,
-    pagoViewModel: PagoViewModel,
-    innerPadding: PaddingValues // Nuevo parámetro para el padding del Scaffold
-) {
+fun AppNavigate() {
+    val navController = rememberNavController()
 
+    // ----------------------------------------------------------------------
+    // 1. INSTANCIAS GLOBALES DE VIEWMODELS
+    // Se crean aquí para sobrevivir a la navegación y compartirse entre pantallas.
+    // ----------------------------------------------------------------------
+
+    // ViewModel de Usuario (Login/Registro/Perfil)
+    val usuarioViewModel: UsuarioViewModel = viewModel()
+
+    // ViewModel de Productos (Catálogo)
+    val productoViewModel: ProductoViewModel = viewModel()
+
+    // ViewModel de Carrito (Compras)
+    val carritoViewModel: CarritoViewModel = viewModel()
+
+
+    // ----------------------------------------------------------------------
+    // 2. DEFINICIÓN DE RUTAS (NavHost)
+    // ----------------------------------------------------------------------
     NavHost(
         navController = navController,
-        startDestination = "login",
-        modifier = Modifier.padding(innerPadding) // Aplicar el padding del Scaffold
+        startDestination = "login" // La primera pantalla que se ve
     ) {
 
-        // LOGIN PRIMERO
+        // --- AUTENTICACIÓN ---
+
         composable("login") {
-            LoginScreen(navController, usuarioViewModel)
+            LoginScreen(
+                navController = navController,
+                viewModel = usuarioViewModel
+            )
         }
 
         composable("registro") {
-            RegistroScreen(navController, usuarioViewModel)
+            RegistroScreen(
+                navController = navController,
+                usuarioViewModel = usuarioViewModel // Asegúrate que en RegistroScreen el parámetro se llame así
+            )
         }
 
-        // HOME DESPUÉS DEL LOGIN
+        // --- NAVEGACIÓN PRINCIPAL ---
+
         composable("home") {
-            HomeScreen(navController, productoViewModel, carritoViewModel, usuarioViewModel)
-        }
-
-        // RUTAS CON BARRA DE NAVEGACIÓN
-        composable("perfil") {
-            PerfilScreen(navController, usuarioViewModel)
-        }
-
-        composable("carrito") {
-            // CORREGIDO: Pasamos el usuarioViewModel explícitamente
-            CarritoScreen(navController, carritoViewModel, usuarioViewModel)
+            HomeScreen(
+                navController = navController,
+                productoViewModel = productoViewModel,
+                carritoViewModel = carritoViewModel,
+                viewModel = usuarioViewModel
+            )
         }
 
         composable("catalogo") {
-            // CORREGIDO: Obtenemos el email y se lo pasamos a la pantalla
-            val usuarioState by usuarioViewModel.usuario.collectAsState()
             CatalogoScreen(
                 navController = navController,
-                viewModel = productoViewModel,
-                carritoViewModel = carritoViewModel,
-                usuarioEmail = usuarioState.email
+                productoViewModel = productoViewModel,
+                carritoViewModel = carritoViewModel
             )
         }
 
-        composable("notificaciones") {
-            NotificacionScreen(navController)
+        composable("carrito") {
+            CarritoScreen(
+                navController = navController,
+                carritoViewModel = carritoViewModel,
+                productoViewModel = productoViewModel // Por si necesitas ver productos desde el carrito
+            )
         }
 
-        // RUTAS DE INFORMACIÓN Y SOPORTE (Desde HomeScreen)
+        composable("perfil") {
+            PerfilScreen(
+                navController = navController,
+                viewModel = usuarioViewModel
+            )
+        }
+
+        // --- OTRAS PANTALLAS (Asegúrate de que existan o coméntalas) ---
+
         composable("about") {
-            AboutScreen(navController)
+            AboutScreen(navController = navController)
         }
 
         composable("ayuda") {
-            AyudaScreen(navController)
+            AyudaScreen(navController = navController)
         }
 
-        // RUTAS MISCELÁNEAS (Desde Perfil y otras)
         composable("ofertas") {
-            // Nota: Se crea una instancia simple de ViewModel si no se pasa desde MainActivity
-            OfertasScreen(navController, OfertasViewModel())
+            OfertasScreen(navController = navController)
         }
-
-        // ELIMINADO: Se borró la ruta "notificaciones" duplicada
 
         composable("pago") {
-            PagoScreen(navController, carritoViewModel)
-        }
-
-        composable("confirmacion") {
-            ConfirmacionScreen(navController)
-        }
-
-        composable("gps") {
-            PantallaGpsScreen(navController, reclamoViewModel)
-        }
-
-
-        // RUTAS DE RECLAMOS
-        composable("reporteReclamo") {
-            ReporteReclamoScreen(
-                navController = navController,
-                reclamoViewModel = reclamoViewModel
-            )
-        }
-
-        composable("camaraReclamo") {
-            CamaraReclamoScreen(
-                navController = navController,
-                reclamoViewModel = reclamoViewModel
-            )
-        }
-
-        composable("confirmacionReclamo") {
-            ConfirmacionReclamoScreen(navController, reclamoViewModel)
+            PagoScreen(navController = navController)
         }
     }
-}
-
-@Composable
-fun RegistroScreen(x0: NavHostController, x1: UsuarioViewModel) {
-    TODO("Not yet implemented")
-}
-
-@Composable
-fun LoginScreen(x0: NavHostController, x1: UsuarioViewModel) {
-    TODO("Not yet implemented")
 }
