@@ -12,10 +12,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+// IMPORTS CRÍTICOS QUE FALTABAN:
 import com.example.levelup_gamer.viewmodel.OfertasViewModel
+import com.example.levelup_gamer.viewmodel.Oferta
+import com.example.levelup_gamer.viewmodel.Juego
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -23,208 +27,142 @@ fun OfertasScreen(
     navController: NavController,
     viewModel: OfertasViewModel
 ) {
+    // Obtenemos los datos
     val ofertas = remember { viewModel.obtenerOfertasLocales() }
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        "🎮 Ofertas Especiales",
-                        fontWeight = FontWeight.Bold
-                    )
-                },
+            CenterAlignedTopAppBar(
+                title = { Text("Ofertas Especiales", fontWeight = FontWeight.Bold, color = Color.White) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Volver", tint = Color.White)
                     }
-                }
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = Color(0xFF0A0A0A)
+                )
             )
-        }
+        },
+        containerColor = Color(0xFF0A0A0A) // Fondo oscuro general
     ) { innerPadding ->
+
         if (ofertas.isEmpty()) {
-            // Pantalla cuando no hay ofertas
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding),
                 contentAlignment = Alignment.Center
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.LocalOffer,
-                        contentDescription = "Sin ofertas",
-                        modifier = Modifier.size(64.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = "No hay ofertas disponibles",
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = "Vuelve más tarde para ver nuevas promociones",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(Icons.Default.LocalOffer, null, modifier = Modifier.size(64.dp), tint = Color.Gray)
+                    Text("No hay ofertas por ahora", color = Color.Gray)
                 }
             }
         } else {
-            // Mostrar lista de ofertas
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                contentPadding = PaddingValues(16.dp)
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 items(ofertas) { oferta ->
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        onClick = { },
-                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(16.dp)
-                        ) {
-                            // Encabezado con título y descuento
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.Top
-                            ) {
-                                Column(
-                                    modifier = Modifier.weight(1f)
-                                ) {
-                                    Text(
-                                        text = oferta.juego.titulo,
-                                        style = MaterialTheme.typography.headlineSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.primary
-                                    )
+                    TarjetaOfertaItem(oferta)
+                }
+            }
+        }
+    }
+}
 
-                                    Spacer(modifier = Modifier.height(4.dp))
+// Componente extraído para mantener el código limpio
+@Composable
+fun TarjetaOfertaItem(oferta: Oferta) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1E2E)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            // Título y Badge
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = oferta.juego.titulo,
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                    Text(
+                        text = "${oferta.juego.genero} • ${oferta.juego.plataforma}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color.Gray
+                    )
+                }
 
-                                    Text(
-                                        text = "${oferta.juego.genero} • ${oferta.juego.plataforma}",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
+                // Etiqueta de Descuento
+                Surface(
+                    color = Color(0xFF00FF88),
+                    shape = MaterialTheme.shapes.small
+                ) {
+                    Text(
+                        text = "-${oferta.descuento}%",
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        color = Color.Black,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
 
-                                // Badge de descuento
-                                Surface(
-                                    color = MaterialTheme.colorScheme.primary,
-                                    shape = MaterialTheme.shapes.medium
-                                ) {
-                                    Text(
-                                        text = "-${oferta.descuento}%",
-                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                        color = MaterialTheme.colorScheme.onPrimary,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                }
-                            }
+            Spacer(modifier = Modifier.height(12.dp))
 
-                            Spacer(modifier = Modifier.height(12.dp))
+            // Precios
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                // Precio Original tachado (podrías agregar estilo tachado si quieres)
+                Text(
+                    text = "$ ${oferta.juego.precioOriginal.toInt()}",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = Color.Gray,
+                    // textDecoration = TextDecoration.LineThrough // Opcional
+                )
 
-                            // Calificación
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Star,
-                                    contentDescription = "Calificación",
-                                    tint = MaterialTheme.colorScheme.secondary,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Text(
-                                    text = oferta.juego.calificacion.toString(),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    fontWeight = FontWeight.Medium
-                                )
-                                Text(
-                                    text = "•",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                Text(
-                                    text = oferta.juego.edadRecomendada,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
+                Spacer(modifier = Modifier.width(12.dp))
 
-                            Spacer(modifier = Modifier.height(12.dp))
+                // Precio Final
+                Text(
+                    text = "$ ${oferta.precioConDescuento.toInt()}",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF00FF88)
+                )
+            }
 
-                            // Precios
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                Text(
-                                    text = "$${oferta.juego.precioOriginal}",
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
+            Spacer(modifier = Modifier.height(8.dp))
 
-                                Text(
-                                    text = "$${oferta.precioConDescuento}",
-                                    style = MaterialTheme.typography.headlineSmall,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
+            // Ahorro y Tiempo
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "Ahorras: $ ${oferta.ahorro.toInt()}",
+                    color = Color(0xFF00E5FF),
+                    style = MaterialTheme.typography.labelMedium
+                )
 
-                                Spacer(modifier = Modifier.weight(1f))
-
-                                Surface(
-                                    color = MaterialTheme.colorScheme.secondaryContainer,
-                                    shape = MaterialTheme.shapes.small
-                                ) {
-                                    Text(
-                                        text = "Ahorras $${oferta.ahorro}",
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = FontWeight.Medium
-                                    )
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.height(12.dp))
-
-                            // Tiempo restante
-                            if (oferta.tiempoRestante.isNotEmpty()) {
-                                Surface(
-                                    color = MaterialTheme.colorScheme.primaryContainer,
-                                    shape = MaterialTheme.shapes.small
-                                ) {
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(8.dp),
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.Center
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.LocalOffer,
-                                            contentDescription = "Tiempo limitado",
-                                            tint = MaterialTheme.colorScheme.primary,
-                                            modifier = Modifier.size(16.dp)
-                                        )
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text(
-                                            text = "⏰ Oferta termina en: ${oferta.tiempoRestante}",
-                                            style = MaterialTheme.typography.labelMedium,
-                                            fontWeight = FontWeight.Medium
-                                        )
-                                    }
-                                }
-                            }
-                        }
+                if (oferta.tiempoRestante.isNotEmpty()) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.LocalOffer, null, tint = Color(0xFFFF6B6B), modifier = Modifier.size(14.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "Quedan: ${oferta.tiempoRestante}",
+                            color = Color(0xFFFF6B6B),
+                            style = MaterialTheme.typography.labelMedium
+                        )
                     }
                 }
             }

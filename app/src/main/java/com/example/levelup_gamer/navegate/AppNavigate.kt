@@ -6,7 +6,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 
-// Importamos todas tus pantallas
+// --- PANTALLAS ---
 import com.example.levelup_gamer.ui.theme.Screen.LoginScreen
 import com.example.levelup_gamer.ui.theme.Screen.RegistroScreen
 import com.example.levelup_gamer.ui.theme.Screen.HomeScreen
@@ -17,60 +17,40 @@ import com.example.levelup_gamer.ui.theme.Screen.AboutScreen
 import com.example.levelup_gamer.ui.theme.Screen.AyudaScreen
 import com.example.levelup_gamer.ui.theme.Screen.OfertasScreen
 import com.example.levelup_gamer.ui.theme.Screen.PagoScreen
-import com.example.levelup_gamer.ui.theme.screen.CatalogoScreen
-// Asegúrate de tener estas pantallas creadas o comenta las líneas si no las usas
-// import com.example.levelup_gamer.ui.theme.Screen.NotificacionScreen
 
-// Importamos tus ViewModels
+// --- VIEWMODELS ---
 import com.example.levelup_gamer.viewmodel.UsuarioViewModel
 import com.example.levelup_gamer.viewmodel.ProductoViewModel
 import com.example.levelup_gamer.viewmodel.CarritoViewModel
+import com.example.levelup_gamer.viewmodel.OfertasViewModel // ⬅️ ¡IMPORTANTE!
 
 @Composable
 fun AppNavigate() {
     val navController = rememberNavController()
 
-    // ----------------------------------------------------------------------
-    // 1. INSTANCIAS GLOBALES DE VIEWMODELS
-    // Se crean aquí para sobrevivir a la navegación y compartirse entre pantallas.
-    // ----------------------------------------------------------------------
-
-    // ViewModel de Usuario (Login/Registro/Perfil)
+    // --- INSTANCIAS DE VIEWMODELS ---
     val usuarioViewModel: UsuarioViewModel = viewModel()
-
-    // ViewModel de Productos (Catálogo)
     val productoViewModel: ProductoViewModel = viewModel()
-
-    // ViewModel de Carrito (Compras)
     val carritoViewModel: CarritoViewModel = viewModel()
 
+    // ⬅️ AGREGAMOS ESTO:
+    val ofertasViewModel: OfertasViewModel = viewModel()
 
-    // ----------------------------------------------------------------------
-    // 2. DEFINICIÓN DE RUTAS (NavHost)
-    // ----------------------------------------------------------------------
     NavHost(
         navController = navController,
-        startDestination = "login" // La primera pantalla que se ve
+        startDestination = "login"
     ) {
 
-        // --- AUTENTICACIÓN ---
-
+        // --- AUTH ---
         composable("login") {
-            LoginScreen(
-                navController = navController,
-                viewModel = usuarioViewModel
-            )
+            LoginScreen(navController, usuarioViewModel)
         }
 
         composable("registro") {
-            RegistroScreen(
-                navController = navController,
-                usuarioViewModel = usuarioViewModel // Asegúrate que en RegistroScreen el parámetro se llame así
-            )
+            RegistroScreen(navController, usuarioViewModel)
         }
 
-        // --- NAVEGACIÓN PRINCIPAL ---
-
+        // --- HOME & CATÁLOGO ---
         composable("home") {
             HomeScreen(
                 navController = navController,
@@ -92,33 +72,35 @@ fun AppNavigate() {
             CarritoScreen(
                 navController = navController,
                 carritoViewModel = carritoViewModel,
-                productoViewModel = productoViewModel // Por si necesitas ver productos desde el carrito
+                productoViewModel = productoViewModel
             )
         }
 
         composable("perfil") {
-            PerfilScreen(
-                navController = navController,
-                viewModel = usuarioViewModel
-            )
+            PerfilScreen(navController, usuarioViewModel)
         }
 
-        // --- OTRAS PANTALLAS (Asegúrate de que existan o coméntalas) ---
+        // --- PANTALLAS SECUNDARIAS ---
 
         composable("about") {
-            AboutScreen(navController = navController)
+            AboutScreen(navController)
         }
 
         composable("ayuda") {
-            AyudaScreen(navController = navController)
+            AyudaScreen(navController)
         }
 
+        // 🔴 AQUÍ ESTABA EL ERROR: Ahora pasamos el viewModel
         composable("ofertas") {
-            OfertasScreen(navController = navController)
+            OfertasScreen(
+                navController = navController,
+                viewModel = ofertasViewModel // ⬅️ CORREGIDO
+            )
         }
 
         composable("pago") {
-            PagoScreen(navController = navController)
+            // Asegúrate que PagoScreen esté bien definido. Si pide viewModel, agrégalo aquí también.
+            PagoScreen(navController)
         }
     }
 }
