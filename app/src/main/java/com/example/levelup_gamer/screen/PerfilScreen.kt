@@ -1,6 +1,5 @@
-package com.example.levelup_gamer.screen
+package com.example.levelup_gamer.ui.screen
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -32,19 +31,15 @@ fun PerfilScreen(
     val usuarioState by usuarioViewModel.usuarioState.collectAsState()
     val isLoading by usuarioViewModel.isLoading.collectAsState()
 
-    // 1. Cargar perfil al iniciar la pantalla
+    // Cargar perfil al iniciar
     LaunchedEffect(Unit) {
         val email = usuarioState.email
         if (email.isNotEmpty()) {
-            // Esta función ya la agregamos al ViewModel en el paso anterior
             usuarioViewModel.cargarPerfil(email)
         }
     }
 
-    // 2. CORRECCIÓN AQUÍ: Usamos 'puntosLevelUp' que es como se llama en el State
     val nivelNombre = determinarNivel(usuarioState.puntosLevelUp)
-
-    // Calculamos progreso para el siguiente nivel (ejemplo simple)
     val progresoNivel = (usuarioState.puntosLevelUp % 500) / 500f
 
     val brush = Brush.verticalGradient(
@@ -84,7 +79,7 @@ fun PerfilScreen(
                         .verticalScroll(rememberScrollState()),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // --- AVATAR Y DATOS BÁSICOS ---
+                    // --- AVATAR ---
                     Box(
                         modifier = Modifier
                             .size(120.dp)
@@ -116,7 +111,7 @@ fun PerfilScreen(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // --- TARJETA DE NIVEL ---
+                    // --- TARJETA DE NIVEL (Recuperada) ---
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1E2E)),
@@ -132,7 +127,7 @@ fun PerfilScreen(
                                 Column {
                                     Text("Nivel Actual", color = Color.Gray, fontSize = 14.sp)
                                     Text(
-                                        text = nivelNombre, // "Oro", "Plata", etc.
+                                        text = nivelNombre,
                                         color = Color(0xFF00FF88),
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 24.sp
@@ -150,51 +145,89 @@ fun PerfilScreen(
                                     )
                                 }
                             }
-
                             Spacer(modifier = Modifier.height(16.dp))
-
-                            // Barra de Progreso
                             LinearProgressIndicator(
                                 progress = { progresoNivel },
-                                modifier = Modifier.fillMaxWidth().height(8.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(8.dp),
                                 color = Color(0xFF00FF88),
                                 trackColor = Color(0xFF2A2A3E),
                             )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text("Próximo nivel en ${500 - (usuarioState.puntosLevelUp % 500)} pts", color = Color.Gray, fontSize = 12.sp)
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(30.dp))
+
+                    // --- ⬇️ BOTONES RECUPERADOS (Cámara, GPS, Reclamos) ⬇️ ---
+                    Text(
+                        text = "Opciones",
+                        color = Color(0xFF00FF88),
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.align(Alignment.Start)
+                    )
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    Column(
+                        Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        OpcionPerfilNeon(
+                            texto = "Notificaciones",
+                            color = Color(0xFF00FF88)
+                        ) { navController.navigate("notificaciones") }
+
+                        OpcionPerfilNeon(
+                            texto = "Reportar Reclamo (Cámara)",
+                            color = Color(0xFF00E5FF)
+                        ) {
+                            // Asegúrate de que esta ruta exista en AppNavigate
+                            navController.navigate("reporteReclamo")
+                        }
+
+                        OpcionPerfilNeon(
+                            texto = "Configurar GPS",
+                            color = Color(0xFF00FF88)
+                        ) {
+                            // Asegúrate de que esta ruta exista en AppNavigate
+                            navController.navigate("gps")
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(32.dp))
 
                     // --- BOTÓN CERRAR SESIÓN ---
                     Button(
                         onClick = {
                             usuarioViewModel.cerrarSesion()
-                            // Navegar al login y borrar historial para no poder volver atrás
                             navController.navigate("login") {
                                 popUpTo(0) { inclusive = true }
                             }
                         },
-                        modifier = Modifier.fillMaxWidth().height(50.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFFFF4444).copy(alpha = 0.2f),
                             contentColor = Color(0xFFFF4444)
                         ),
                         shape = RoundedCornerShape(12.dp),
-                        border = BorderStroke(1.dp, Color(0xFFFF4444))
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFF4444))
                     ) {
                         Icon(Icons.Default.ExitToApp, null)
                         Spacer(modifier = Modifier.width(8.dp))
                         Text("Cerrar Sesión")
                     }
+
+                    Spacer(modifier = Modifier.height(30.dp))
                 }
             }
         }
     }
 }
 
-// Función auxiliar (asegúrate de que esté al final del archivo)
+// Función helper para determinar nivel
 private fun determinarNivel(puntos: Int): String {
     return when {
         puntos >= 2000 -> "Leyenda"
@@ -203,5 +236,30 @@ private fun determinarNivel(puntos: Int): String {
         puntos >= 200 -> "Plata"
         puntos >= 50 -> "Bronce"
         else -> "Principiante"
+    }
+}
+
+// Componente visual para los botones
+@Composable
+fun OpcionPerfilNeon(texto: String, color: Color, onClick: () -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        onClick = onClick,
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF161C2B)),
+        elevation = CardDefaults.cardElevation(4.dp),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(18.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = texto,
+                color = color,
+                fontWeight = FontWeight.Medium
+            )
+        }
     }
 }
