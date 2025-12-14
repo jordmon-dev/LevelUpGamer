@@ -22,18 +22,17 @@ import com.example.levelup_gamer.ui.theme.Screen.PagoScreen
 import com.example.levelup_gamer.viewmodel.UsuarioViewModel
 import com.example.levelup_gamer.viewmodel.ProductoViewModel
 import com.example.levelup_gamer.viewmodel.CarritoViewModel
-import com.example.levelup_gamer.viewmodel.OfertasViewModel // ⬅️ ¡IMPORTANTE!
+import com.example.levelup_gamer.viewmodel.OfertasViewModel
 
 @Composable
 fun AppNavigate() {
     val navController = rememberNavController()
 
-    // --- INSTANCIAS DE VIEWMODELS ---
+    // 1. INSTANCIAS COMPARTIDAS DE VIEWMODELS
+    // Se crean aquí para que sobrevivan al cambio de pantalla
     val usuarioViewModel: UsuarioViewModel = viewModel()
     val productoViewModel: ProductoViewModel = viewModel()
     val carritoViewModel: CarritoViewModel = viewModel()
-
-    // ⬅️ AGREGAMOS ESTO:
     val ofertasViewModel: OfertasViewModel = viewModel()
 
     NavHost(
@@ -41,7 +40,7 @@ fun AppNavigate() {
         startDestination = "login"
     ) {
 
-        // --- AUTH ---
+        // --- AUTENTICACIÓN ---
         composable("login") {
             LoginScreen(navController, usuarioViewModel)
         }
@@ -50,7 +49,7 @@ fun AppNavigate() {
             RegistroScreen(navController, usuarioViewModel)
         }
 
-        // --- HOME & CATÁLOGO ---
+        // --- PRINCIPAL ---
         composable("home") {
             HomeScreen(
                 navController = navController,
@@ -80,8 +79,7 @@ fun AppNavigate() {
             PerfilScreen(navController, usuarioViewModel)
         }
 
-        // --- PANTALLAS SECUNDARIAS ---
-
+        // --- SECUNDARIAS ---
         composable("about") {
             AboutScreen(navController)
         }
@@ -90,17 +88,20 @@ fun AppNavigate() {
             AyudaScreen(navController)
         }
 
-        // 🔴 AQUÍ ESTABA EL ERROR: Ahora pasamos el viewModel
         composable("ofertas") {
             OfertasScreen(
                 navController = navController,
-                viewModel = ofertasViewModel // ⬅️ CORREGIDO
+                viewModel = ofertasViewModel
             )
         }
 
+        // 🔴 AQUÍ ESTABA EL ERROR: Ahora pasamos los ViewModels necesarios
         composable("pago") {
-            // Asegúrate que PagoScreen esté bien definido. Si pide viewModel, agrégalo aquí también.
-            PagoScreen(navController)
+            PagoScreen(
+                navController = navController,
+                carritoViewModel = carritoViewModel,
+                usuarioViewModel = usuarioViewModel
+            )
         }
     }
 }

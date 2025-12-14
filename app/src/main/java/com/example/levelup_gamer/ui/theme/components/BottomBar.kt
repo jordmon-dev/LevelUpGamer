@@ -10,14 +10,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.levelup_gamer.viewmodel.CarritoViewModel
-import kotlinx.coroutines.delay
 
 data class BottomNavItem(
     val label: String,
@@ -26,9 +24,12 @@ data class BottomNavItem(
 )
 
 @Composable
-fun BottomBar( // ✅ Nombre de función corregido
+fun BottomBar(
     navController: NavController,
     currentRoute: String?,
+    // Quitamos = viewModel() para usar la instancia compartida si se pasa,
+    // pero como BottomBar se usa en MainActivity, aquí está bien dejarlo o
+    // mejor aún, obtenerlo dentro si no se pasa explícitamente.
     carritoViewModel: CarritoViewModel = viewModel()
 ) {
     val items = listOf(
@@ -38,68 +39,42 @@ fun BottomBar( // ✅ Nombre de función corregido
         BottomNavItem("Perfil", "perfil", Icons.Default.Person)
     )
 
-    // 🔥 Mismo gradiente neon del LoginScreen
-    val fondo = Brush.verticalGradient(
-        listOf(
-            Color(0xFF0A0A0A),
-            Color(0xFF1A1A2E),
-            Color(0xFF16213E)
-        )
-    )
-
-    // 🛒 Cantidad de productos en carrito
-    // CORREGIDO: Se observa uiState en lugar de una propiedad inexistente 'resumen'
-    val uiState by carritoViewModel.uiState.collectAsState()
-    val totalItems = uiState.resumen.items.sumOf { it.cantidad }
-
-    // ❤️ Animación para cuando cambia la cantidad del carrito
-    var animateBadge by remember { mutableStateOf(false) }
-
-    LaunchedEffect(totalItems) {
-        if (totalItems > 0) {
-            animateBadge = true
-            delay(150)
-            animateBadge = false
-        }
-    }
-
     NavigationBar(
-        modifier = Modifier
-            .height(70.dp)
-            .background(fondo),
-        containerColor = Color.Transparent,
-        contentColor = Color.White
+        containerColor = Color(0xFF0A0A0A), // Color oscuro para el fondo
+        tonalElevation = 8.dp
     ) {
-        items.forEach { item ->
+        // Observamos el estado del carrito
+        val uiState by carritoViewModel.uiState.collectAsState()
 
+        // CORRECCIÓN: Calculamos el total sumando las cantidades de la lista de items
+        val totalItems = uiState.items.sumOf { it.cantidad }
+
+        items.forEach { item ->
             val selected = currentRoute == item.route
+            val scale by animateFloatAsState(if (selected) 1.1f else 1.0f, label = "scale")
 
             NavigationBarItem(
                 selected = selected,
                 onClick = {
-                    navController.navigate(item.route) {
-                        launchSingleTop = true
-                        restoreState = true
+                    if (currentRoute != item.route) {
+                        navController.navigate(item.route) {
+                            popUpTo("home") { saveState = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
                     }
                 },
                 icon = {
                     Box(contentAlignment = Alignment.TopEnd) {
-
-                        // Ícono base
                         Icon(
                             imageVector = item.icon,
                             contentDescription = item.label,
+                            modifier = Modifier.scale(scale),
                             tint = if (selected) Color(0xFF00FF88) else Color(0xFFA0A0A0)
                         )
 
-                        // BADGE SOLO EN CARRITO
+                        // Badge de notificación para el Carrito
                         if (item.route == "carrito" && totalItems > 0) {
-
-                            val scale by animateFloatAsState(
-                                targetValue = if (animateBadge) 1.2f else 1f,
-                                label = "badgeAnim"
-                            )
-
                             Box(
                                 modifier = Modifier
                                     .scale(scale)
@@ -108,7 +83,7 @@ fun BottomBar( // ✅ Nombre de función corregido
                                         color = Color(0xFF00FF88),
                                         shape = MaterialTheme.shapes.small
                                     )
-                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                                    .padding(horizontal = 4.dp, vertical = 2.dp)
                             ) {
                                 Text(
                                     text = totalItems.toString(),

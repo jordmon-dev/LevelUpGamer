@@ -18,6 +18,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.levelup_gamer.viewmodel.UsuarioViewModel
 
@@ -30,249 +31,176 @@ fun PerfilScreen(
     val usuarioState by usuarioViewModel.usuarioState.collectAsState()
     val isLoading by usuarioViewModel.isLoading.collectAsState()
 
-    // Cargar perfil al iniciar la pantalla
+    // 1. Cargar perfil al iniciar la pantalla
     LaunchedEffect(Unit) {
         val email = usuarioState.email
         if (email.isNotEmpty()) {
+            // Esta función ya la agregamos al ViewModel en el paso anterior
             usuarioViewModel.cargarPerfil(email)
         }
     }
 
-    val fondo = Brush.verticalGradient(
-        listOf(
-            Color(0xFF050510),
-            Color(0xFF0B1020),
-            Color(0xFF11162B),
-            Color(0xFF050510)
-        )
+    // 2. CORRECCIÓN AQUÍ: Usamos 'puntosLevelUp' que es como se llama en el State
+    val nivelNombre = determinarNivel(usuarioState.puntosLevelUp)
+
+    // Calculamos progreso para el siguiente nivel (ejemplo simple)
+    val progresoNivel = (usuarioState.puntosLevelUp % 500) / 500f
+
+    val brush = Brush.verticalGradient(
+        colors = listOf(Color(0xFF0A0A0A), Color(0xFF1A1A2E), Color(0xFF16213E))
     )
 
-    val verdeNeon = Color(0xFF00FF88)
-    val cianNeon = Color(0xFF00E5FF)
-    val cardBg = Color(0xFF101526)
-
-    val scrollState = rememberScrollState()
-
     Scaffold(
-        containerColor = Color.Transparent,
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Mi Perfil", color = Color.White) },
+                title = { Text("Mi Perfil", color = Color.White, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Volver",
-                            tint = cianNeon
-                        )
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Volver", tint = Color.White)
                     }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = Color.Transparent
-                )
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent)
             )
-        }
-    ) { innerPadding ->
-
+        },
+        containerColor = Color.Transparent
+    ) { padding ->
         Box(
-            Modifier
+            modifier = Modifier
                 .fillMaxSize()
-                .background(fondo)
-                .padding(innerPadding)
+                .background(brush)
+                .padding(padding)
         ) {
             if (isLoading) {
-                // Mostrar indicador de carga
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    CircularProgressIndicator(color = verdeNeon)
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text("Cargando perfil...", color = Color.White)
-                }
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center),
+                    color = Color(0xFF00FF88)
+                )
             } else {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(horizontal = 20.dp)
-                        .verticalScroll(scrollState),
+                        .padding(16.dp)
+                        .verticalScroll(rememberScrollState()),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-
-                    Spacer(Modifier.height(16.dp))
-
-                    // AVATAR
+                    // --- AVATAR Y DATOS BÁSICOS ---
                     Box(
                         modifier = Modifier
                             .size(120.dp)
-                            .background(cardBg, CircleShape),
+                            .background(Color(0xFF2A2A3E), CircleShape)
+                            .padding(4.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             Icons.Default.Person,
                             contentDescription = null,
-                            tint = verdeNeon,
-                            modifier = Modifier.size(70.dp)
+                            modifier = Modifier.size(80.dp),
+                            tint = Color(0xFF00FF88)
                         )
                     }
 
-                    Spacer(Modifier.height(14.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
-                    // Usar if-else para manejar strings vacíos
                     Text(
-                        text = if (usuarioState.nombre.isNotEmpty()) usuarioState.nombre else "Invitado",
+                        text = usuarioState.nombre.ifEmpty { "Usuario Gamer" },
+                        style = MaterialTheme.typography.headlineMedium,
                         color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.headlineSmall
+                        fontWeight = FontWeight.Bold
                     )
-
                     Text(
-                        text = if (usuarioState.email.isNotEmpty()) usuarioState.email else "No registrado",
-                        color = cianNeon,
-                        style = MaterialTheme.typography.bodyMedium
+                        text = usuarioState.email,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.Gray
                     )
 
-                    Spacer(Modifier.height(30.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
 
-                    // TARJETA DE INFO
+                    // --- TARJETA DE NIVEL ---
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(18.dp),
-                        colors = CardDefaults.cardColors(cardBg),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1E2E)),
+                        shape = RoundedCornerShape(16.dp),
                         elevation = CardDefaults.cardElevation(8.dp)
                     ) {
-                        Column(Modifier.padding(20.dp)) {
+                        Column(modifier = Modifier.padding(20.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column {
+                                    Text("Nivel Actual", color = Color.Gray, fontSize = 14.sp)
+                                    Text(
+                                        text = nivelNombre, // "Oro", "Plata", etc.
+                                        color = Color(0xFF00FF88),
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 24.sp
+                                    )
+                                }
+                                Surface(
+                                    color = Color(0xFF00FF88).copy(alpha = 0.2f),
+                                    shape = RoundedCornerShape(8.dp)
+                                ) {
+                                    Text(
+                                        "${usuarioState.puntosLevelUp} pts",
+                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                        color = Color(0xFF00FF88),
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
 
-                            // Nivel basado en puntos
-                            val nivel = determinarNivel(usuarioState.puntosFidelidad)
-                            Text(
-                                "Nivel: $nivel",
-                                color = verdeNeon,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Spacer(modifier = Modifier.height(10.dp))
+                            Spacer(modifier = Modifier.height(16.dp))
 
-                            Text(
-                                "Puntos Fidelidad: ${usuarioState.puntosFidelidad}",
-                                color = Color.White
+                            // Barra de Progreso
+                            LinearProgressIndicator(
+                                progress = { progresoNivel },
+                                modifier = Modifier.fillMaxWidth().height(8.dp),
+                                color = Color(0xFF00FF88),
+                                trackColor = Color(0xFF2A2A3E),
                             )
-                            Spacer(modifier = Modifier.height(10.dp))
-
-                            Text(
-                                "Miembro desde: ${if (usuarioState.fechaRegistro.isNotEmpty()) usuarioState.fechaRegistro else "2024"}",
-                                color = cianNeon
-                            )
-                            Spacer(modifier = Modifier.height(10.dp))
-
-                            // Estado de Cuenta
-                            Text(
-                                "Estado de Cuenta:",
-                                color = Color.White,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                            val esEstudianteDuoc = usuarioState.email.endsWith("@duocuc.cl", ignoreCase = true)
-                            Text(
-                                text = if (esEstudianteDuoc) {
-                                    "✅ Estudiante DUOCUC (20% Descuento)"
-                                } else {
-                                    "👤 Usuario Regular (10% Descuento)"
-                                },
-                                color = if (esEstudianteDuoc) verdeNeon else cianNeon,
-                                style = MaterialTheme.typography.bodyMedium
-                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text("Próximo nivel en ${500 - (usuarioState.puntosLevelUp % 500)} pts", color = Color.Gray, fontSize = 12.sp)
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(34.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
 
-                    // SECCIÓN OPCIONES
-                    Text(
-                        text = "Opciones",
-                        color = verdeNeon,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    Spacer(modifier = Modifier.height(14.dp))
-
-                    Column(Modifier.fillMaxWidth(), Arrangement.spacedBy(10.dp)) {
-
-                        OpcionPerfilNeon(
-                            texto = "Notificaciones",
-                            color = verdeNeon
-                        ) { navController.navigate("notificaciones") }
-
-                        OpcionPerfilNeon(
-                            texto = "Reportar Reclamo",
-                            color = cianNeon
-                        ) { navController.navigate("reporteReclamo") }
-
-                        OpcionPerfilNeon(
-                            texto = "Configurar GPS",
-                            color = verdeNeon
-                        ) { navController.navigate("gps") }
-                    }
-
-                    Spacer(modifier = Modifier.height(32.dp))
-
-                    // CERRAR SESIÓN
+                    // --- BOTÓN CERRAR SESIÓN ---
                     Button(
                         onClick = {
                             usuarioViewModel.cerrarSesion()
+                            // Navegar al login y borrar historial para no poder volver atrás
                             navController.navigate("login") {
-                                popUpTo("home") { inclusive = true }
+                                popUpTo(0) { inclusive = true }
                             }
                         },
-                        modifier = Modifier.fillMaxWidth().height(52.dp),
+                        modifier = Modifier.fillMaxWidth().height(50.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFD00036),
-                            contentColor = Color.White
+                            containerColor = Color(0xFFFF4444).copy(alpha = 0.2f),
+                            contentColor = Color(0xFFFF4444)
                         ),
-                        shape = RoundedCornerShape(16.dp)
+                        shape = RoundedCornerShape(12.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFF4444))
                     ) {
-                        Icon(Icons.Default.ExitToApp, contentDescription = null)
+                        Icon(Icons.Default.ExitToApp, null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Cerrar sesión")
+                        Text("Cerrar Sesión")
                     }
-
-                    Spacer(modifier = Modifier.height(24.dp))
                 }
             }
         }
     }
 }
 
-// Función helper para determinar nivel basado en puntos
+// Función auxiliar (asegúrate de que esté al final del archivo)
 private fun determinarNivel(puntos: Int): String {
     return when {
+        puntos >= 2000 -> "Leyenda"
         puntos >= 1000 -> "Diamante"
         puntos >= 500 -> "Oro"
         puntos >= 200 -> "Plata"
         puntos >= 50 -> "Bronce"
         else -> "Principiante"
-    }
-}
-
-@Composable
-fun OpcionPerfilNeon(texto: String, color: Color, onClick: () -> Unit) {
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        onClick = onClick,
-        colors = CardDefaults.cardColors(Color(0xFF161C2B)),
-        elevation = CardDefaults.cardElevation(4.dp),
-        shape = RoundedCornerShape(16.dp)
-    ) {
-        Row(
-            Modifier.fillMaxWidth().padding(18.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = texto,
-                color = color,
-                fontWeight = FontWeight.Medium
-            )
-        }
     }
 }
