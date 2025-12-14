@@ -2,13 +2,14 @@ package com.example.levelup_gamer.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+// Importamos el objeto desde el archivo CheapSharkApi.kt
 import com.example.levelup_gamer.remote.ExternalRetrofit
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-// 1. Agregamos 'imagenUrl' a tu modelo existente
+// --- MODELOS DE LA UI (Tu estructura visual) ---
 data class Juego(
     val id: String,
     val titulo: String,
@@ -18,7 +19,7 @@ data class Juego(
     val plataforma: String,
     val calificacion: Double,
     val edadRecomendada: String,
-    val imagenUrl: String = "" // <--- NUEVO CAMPO PARA LA FOTO DE LA API
+    val imagenUrl: String = "" // <--- URL para la foto
 )
 
 data class Oferta(
@@ -31,7 +32,6 @@ data class Oferta(
 
 class OfertasViewModel : ViewModel() {
 
-    // Usamos StateFlow para que la pantalla se actualice sola cuando lleguen los datos
     private val _ofertasState = MutableStateFlow<List<Oferta>>(emptyList())
     val ofertasState: StateFlow<List<Oferta>> = _ofertasState.asStateFlow()
 
@@ -39,37 +39,39 @@ class OfertasViewModel : ViewModel() {
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     init {
-        obtenerOfertasDesdeApi()
+        cargarOfertas()
     }
 
-    fun obtenerOfertasDesdeApi() {
+    fun cargarOfertas() {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                // 1. Llamamos a la API real
+                // 1. Llamamos a la API (Usando el objeto de CheapSharkApi.kt)
                 val apiDeals = ExternalRetrofit.api.getDeals()
 
-                // 2. Convertimos los datos de la API a TU modelo 'Oferta'
+                // 2. Transformamos los datos
                 val ofertasMapeadas = apiDeals.map { deal ->
-                    val precioNormal = deal.normalPrice.toDoubleOrNull() ?: 0.0
-                    val precioOferta = deal.salePrice.toDoubleOrNull() ?: 0.0
-                    val ahorro = precioNormal - precioOferta
-                    val descuento = deal.savings.toDoubleOrNull()?.toInt() ?: 0
+                    // Conversión segura de String a números
+                    val normal = deal.normalPrice.toDoubleOrNull() ?: 0.0
+                    val oferta = deal.salePrice.toDoubleOrNull() ?: 0.0
+                    val ahorro = normal - oferta
+                    val ahorroInt = deal.savings.toDoubleOrNull()?.toInt() ?: 0 // <--- Ahora sí funciona 'savings'
+                    val rating = (deal.steamRatingPercent?.toDoubleOrNull() ?: 0.0) / 20.0 // <--- Y 'steamRatingPercent'
 
                     Oferta(
                         juego = Juego(
                             id = deal.title.hashCode().toString(),
                             titulo = deal.title,
-                            descripcion = "Oferta de Steam por tiempo limitado",
-                            precioOriginal = precioNormal,
-                            genero = "PC Digital",
+                            descripcion = "Oferta Steam",
+                            precioOriginal = normal,
+                            genero = "PC",
                             plataforma = "Steam",
-                            calificacion = (deal.steamRatingPercent?.toDoubleOrNull() ?: 0.0) / 20.0, // Escala 0-5
+                            calificacion = rating,
                             edadRecomendada = "TBA",
-                            imagenUrl = deal.thumb // <--- Guardamos la URL aquí
+                            imagenUrl = deal.thumb
                         ),
-                        descuento = descuento,
-                        precioConDescuento = precioOferta,
+                        descuento = ahorroInt,
+                        precioConDescuento = oferta,
                         ahorro = ahorro,
                         tiempoRestante = "24h"
                     )
@@ -77,34 +79,12 @@ class OfertasViewModel : ViewModel() {
                 _ofertasState.value = ofertasMapeadas
 
             } catch (e: Exception) {
-                // Si falla (sin internet), cargamos los datos locales de respaldo
-                _ofertasState.value = obtenerOfertasLocales()
+                // Si falla la red, mostramos lista vacía o local
+                _ofertasState.value = emptyList()
+                println("Error API: ${e.message}")
             } finally {
                 _isLoading.value = false
             }
         }
-    }
-
-    // Tu función antigua queda como respaldo (Fallback)
-    private fun obtenerOfertasLocales(): List<Oferta> {
-        return listOf(
-            Oferta(
-                juego = Juego(
-                    id = "1",
-                    titulo = "The Witcher 3: Wild Hunt",
-                    descripcion = "RPG épico",
-                    precioOriginal = 39.99,
-                    genero = "RPG",
-                    plataforma = "PC, PS4",
-                    calificacion = 4.9,
-                    edadRecomendada = "M",
-                    imagenUrl = ""
-                ),
-                descuento = 50,
-                precioConDescuento = 19.99,
-                ahorro = 20.00,
-                tiempoRestante = "2 días"
-            )
-        )
     }
 }

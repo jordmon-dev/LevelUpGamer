@@ -30,8 +30,8 @@ class CarritoViewModel : ViewModel() {
         viewModelScope.launch {
             val items = repository.obtenerCarrito()
 
-            // CORRECCIÓN: Accedemos a 'producto.precio'
-            // Asumimos que precio en Producto es Double o Int (convertimos a Double para asegurar)
+            // Calculamos el total
+            // Nota: Nos aseguramos de convertir el precio a Double por si viene como Int desde Producto
             val total = items.sumOf { it.producto.precio.toDouble() * it.cantidad }
 
             _uiState.value = _uiState.value.copy(
@@ -41,7 +41,8 @@ class CarritoViewModel : ViewModel() {
         }
     }
 
-    fun agregarProducto(id: Int, nombre: String, precio: Int, imagen: Int) {
+    // ✅ CORRECCIÓN: 'imagen' ahora es String para aceptar URLs
+    fun agregarProducto(id: Int, nombre: String, precio: Int, imagen: String) {
         viewModelScope.launch {
             repository.agregarAlCarrito(id, nombre, precio, imagen)
             cargarCarrito() // Recargamos para actualizar la UI

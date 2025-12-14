@@ -5,47 +5,47 @@ import com.example.levelup_gamer.model.Producto
 
 class CarritoRepository {
 
-    companion object {
-        // Lista en memoria (se borra al cerrar la app)
-        private val carritoEnMemoria = mutableListOf<CarritoItem>()
-    }
+    // Lista en memoria (Simulación de carrito local)
+    private val itemsEnCarrito = mutableListOf<CarritoItem>()
 
     fun obtenerCarrito(): List<CarritoItem> {
-        return carritoEnMemoria.toList()
+        return itemsEnCarrito.toList()
     }
 
-    fun agregarAlCarrito(id: Int, nombre: String, precio: Int, imagen: Int) {
-        // Buscamos si el producto ya existe en el carrito por ID
-        val itemExistente = carritoEnMemoria.find { it.producto.id == id }
+    // ✅ AHORA RECIBE STRING EN LA IMAGEN
+    fun agregarAlCarrito(id: Int, nombre: String, precio: Int, imagen: String) {
+        val existente = itemsEnCarrito.find { it.producto.id.toInt() == id }
 
-        if (itemExistente != null) {
-            // Si existe, solo aumentamos la cantidad
-            itemExistente.cantidad += 1
+        if (existente != null) {
+            existente.cantidad++
         } else {
-            // CORRECCIÓN: Si no existe, creamos el Producto primero
-            // (Usamos datos temporales para los campos que no tenemos aquí, como descripción)
+            // Creamos un Producto temporal para el carrito
             val nuevoProducto = Producto(
-                id = id,
+                id = id.toLong(),
                 nombre = nombre,
-                precio = precio.toDouble(), // Asegúrate que Producto use Double
-                imagen = imagen,
-                descripcion = "", // Valor por defecto
-                stock = 99,       // Valor por defecto
-                codigo = "",      // Valor por defecto
-                categoria = ""    // Valor por defecto
+                precio = precio,
+                imagen = imagen, // Guardamos la URL
+                stock = 99,
+                categoria = "Carrito",
+                descripcion = "",
+                codigo = ""
             )
-
-            // Ahora sí creamos el CarritoItem válido
-            carritoEnMemoria.add(CarritoItem(producto = nuevoProducto, cantidad = 1))
+            itemsEnCarrito.add(CarritoItem(nuevoProducto, 1))
         }
     }
 
     fun eliminarDelCarrito(id: Int) {
-        // Buscamos por el ID del producto interno
-        carritoEnMemoria.removeAll { it.producto.id == id }
+        val item = itemsEnCarrito.find { it.producto.id.toInt() == id }
+        if (item != null) {
+            if (item.cantidad > 1) {
+                item.cantidad--
+            } else {
+                itemsEnCarrito.remove(item)
+            }
+        }
     }
 
     fun vaciarCarrito() {
-        carritoEnMemoria.clear()
+        itemsEnCarrito.clear()
     }
 }

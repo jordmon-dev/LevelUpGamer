@@ -2,7 +2,7 @@ package com.example.levelup_gamer.screen
 
 import android.widget.Toast
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.Image
+// import androidx.compose.foundation.Image  <-- ESTO SE BORRA
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -28,6 +28,9 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+// IMPORTANTE: Asegúrate de tener Coil importado
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.levelup_gamer.R
 import com.example.levelup_gamer.model.Producto
 import com.example.levelup_gamer.viewmodel.CarritoViewModel
@@ -106,17 +109,20 @@ fun CatalogoScreen(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Lista
+                // Lista de Productos
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     items(productos) { producto ->
                         ProductoItem(
                             producto = producto,
                             onAgregar = {
+                                // CORRECCIÓN AQUÍ:
+                                // Asegúrate de que 'carritoViewModel' acepte String en 'imagen'
+                                // Si tu carrito sigue esperando Int, tendrás que cambiarlo también.
                                 carritoViewModel.agregarProducto(
-                                    id = producto.id ?: 0,
+                                    id = producto.id.toInt(), // Convertimos Long a Int si es necesario
                                     nombre = producto.nombre,
-                                    precio = producto.precio.toInt(),
-                                    imagen = producto.imagen ?: R.drawable.game_1
+                                    precio = producto.precio, // Ya es Int
+                                    imagen = producto.imagen ?: "" // Pasamos el String (URL)
                                 )
                                 Toast.makeText(context, "Agregado", Toast.LENGTH_SHORT).show()
                             }
@@ -138,16 +144,27 @@ fun ProductoItem(producto: Producto, onAgregar: () -> Unit) {
         colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1E2E).copy(0.9f))
     ) {
         Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Image(
-                painter = painterResource(id = producto.imagen ?: R.drawable.game_1),
+
+            // --- CORRECCIÓN: USAMOS AsyncImage EN VEZ DE Image ---
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(producto.imagen) // Carga la URL
+                    .crossfade(true)
+                    .build(),
                 contentDescription = null,
-                modifier = Modifier.size(80.dp).clip(RoundedCornerShape(8.dp)),
+                placeholder = painterResource(R.drawable.game_1), // Imagen temporal mientras carga
+                error = painterResource(R.drawable.game_1),       // Imagen si falla la URL
+                modifier = Modifier
+                    .size(80.dp)
+                    .clip(RoundedCornerShape(8.dp)),
                 contentScale = ContentScale.Crop
             )
+            // ---------------------------------------------------
+
             Spacer(Modifier.width(16.dp))
             Column(Modifier.weight(1f)) {
                 Text(producto.nombre, color = Color.White, fontWeight = FontWeight.Bold)
-                Text("$ ${producto.precio.toInt()}", color = Color(0xFF00FF88), fontWeight = FontWeight.Bold)
+                Text("$ ${producto.precio}", color = Color(0xFF00FF88), fontWeight = FontWeight.Bold)
             }
             IconButton(
                 onClick = {
