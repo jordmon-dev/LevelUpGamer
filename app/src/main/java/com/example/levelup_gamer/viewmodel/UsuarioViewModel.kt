@@ -17,12 +17,11 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
 
     private val prefs = UserPreferences(application)
 
-    // 🔴 CORRECCIÓN CLAVE:
-    // Antes: private val repository = UsuarioRepository(application) -> ERROR
-    // Ahora: Lo iniciamos vacío porque ya usa Retrofit por dentro.
+    // ✅ CORRECCIÓN FINAL: Inicializamos el repositorio vacío.
+    // Ya no pasamos 'application' porque ahora usamos Retrofit, no base de datos local.
     private val repository = UsuarioRepository()
 
-    // Estados de UI
+    // --- Estados de la UI ---
     private val _usuarioState = MutableStateFlow(UsuarioState())
     val usuarioState: StateFlow<UsuarioState> = _usuarioState.asStateFlow()
 
@@ -40,41 +39,41 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
     }
 
     // ------------------------------
-    // LOGIN (Conectado al Backend)
+    // LOGIN CONECTADO A SPRING BOOT
     // ------------------------------
     fun login(email: String, pass: String) {
         viewModelScope.launch {
             _isLoading.value = true
-            _errorMessage.value = null
+            _errorMessage.value = null // Limpiar errores previos
 
             try {
-                // Llamada a la API
+                // Llamada al repositorio (que llama a Retrofit)
                 val response = repository.login(email, pass)
 
                 if (response.isSuccessful && response.body() != null) {
                     val authResponse = response.body()!!
+                    val usuarioRecibido = authResponse.usuario
                     val token = authResponse.token
-                    val usuario = authResponse.usuario
 
                     _loginSuccess.value = true
 
-                    // Actualizamos la UI con los datos que llegaron
+                    // Actualizamos la UI con los datos reales del backend
                     _usuarioState.value = _usuarioState.value.copy(
-                        nombre = usuario?.nombre ?: email, // Si el backend no manda nombre, usamos email
-                        email = usuario?.email ?: email,
-                        password = pass // Guardamos la pass para autologin futuro
+                        nombre = usuarioRecibido?.nombre ?: email, // Si viene nulo, usamos el email
+                        email = usuarioRecibido?.email ?: email,
+                        password = pass
                     )
 
-                    // Guardamos la sesión en el celular
-                    guardarSesionLocal(usuario?.nombre ?: email, pass)
+                    // Guardamos sesión en el celular para que no tenga que loguear de nuevo
+                    guardarSesionLocal(usuarioRecibido?.nombre ?: email, pass)
 
                 } else {
-                    // Si el backend dice 401 (No autorizado)
-                    _errorMessage.value = "Login fallido: Revisa tu correo o contraseña."
+                    // Error 401 o similar
+                    _errorMessage.value = "Credenciales incorrectas o usuario no encontrado."
                     _loginSuccess.value = false
                 }
             } catch (e: Exception) {
-                // Si el servidor está apagado
+                // Error de conexión (Servidor apagado, sin internet, IP incorrecta)
                 _errorMessage.value = "Error de conexión: Verifica que el backend esté corriendo."
                 _loginSuccess.value = false
             } finally {
@@ -84,7 +83,7 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
     }
 
     // ------------------------------
-    // REGISTRO (Conectado al Backend)
+    // REGISTRO CONECTADO A SPRING BOOT
     // ------------------------------
     fun register(nombre: String, email: String, pass: String) {
         viewModelScope.launch {
@@ -92,19 +91,19 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
             _errorMessage.value = null
 
             try {
-                // Llamada a la API
                 val response = repository.registrar(nombre, email, pass)
 
                 if (response.isSuccessful) {
-                    // Registro OK -> Intentamos loguear automáticamente
-                    _errorMessage.value = "¡Cuenta creada! Iniciando sesión..."
+                    // Registro exitoso -> Intentamos hacer login automático
+                    _errorMessage.value = "¡Cuenta creada con éxito! Iniciando..."
                     login(email, pass)
                 } else {
-                    _errorMessage.value = "Error al registrar. El correo podría estar usado."
+                    // Error 400 (ej: email ya existe)
+                    _errorMessage.value = "No se pudo registrar. Revisa si el correo ya existe."
                     _loginSuccess.value = false
                 }
             } catch (e: Exception) {
-                _errorMessage.value = "No se pudo conectar con el servidor."
+                _errorMessage.value = "Error de conexión al intentar registrarse."
                 _loginSuccess.value = false
             } finally {
                 _isLoading.value = false
@@ -113,8 +112,9 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
     }
 
     // ------------------------------
-    // DATOS LOCALES (DataStore)
+    // FUNCIONES LOCALES (DataStore y Validaciones)
     // ------------------------------
+
     private fun guardarSesionLocal(nombre: String, pass: String) {
         viewModelScope.launch {
             prefs.saveCredentials(nombre, pass)
@@ -123,14 +123,14 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
 
     private fun cargarDatosGuardados() {
         viewModelScope.launch {
-            val logged = prefs.isLogged.first()
-            if (logged) {
+            // Verificamos si ya estaba logueado en el celular
+            if (prefs.isLogged.first()) {
                 val savedUser = prefs.usuario.first()
                 val savedPass = prefs.password.first()
 
                 _usuarioState.value = _usuarioState.value.copy(
                     nombre = savedUser,
-                    email = savedUser, // Asumimos que el usuario guardado es el email/nombre
+                    email = savedUser,
                     password = savedPass,
                     aceptarTerminos = true
                 )
@@ -141,49 +141,54 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
     fun cerrarSesion() {
         viewModelScope.launch {
             prefs.logout()
-            _usuarioState.value = UsuarioState() // Reseteamos UI
+            _usuarioState.value = UsuarioState()
             _loginSuccess.value = false
         }
     }
 
-    // ------------------------------
-    // VALIDACIONES Y HANDLERS (Igual que antes)
-    // ------------------------------
+    // --- Validaciones de campos (Se mantienen igual) ---
 
-    // Handlers para actualizar el estado mientras escribes
+    fun validar(): Boolean {
+        val estado = _usuarioState.value
+        var valido = true
+        val errores = UsuarioErrores()
+
+        if (estado.email.isBlank()) {
+            errores.email = "El email es requerido."
+            valido = false
+        }
+        if (estado.password.isBlank()) {
+            errores.password = "La contraseña es requerida."
+            valido = false
+        }
+        if (!estado.aceptarTerminos) {
+            errores.aceptaTerminos = "Debes aceptar los términos."
+            valido = false
+        }
+
+        _usuarioState.value = estado.copy(errores = errores)
+        return valido
+    }
+
+    fun validarRegistro(): Boolean {
+        val estado = _usuarioState.value
+        var valido = true
+        val errores = UsuarioErrores()
+
+        if (estado.nombre.isBlank()) { errores.nombre = "Nombre requerido"; valido = false }
+        if (estado.email.isBlank()) { errores.email = "Email requerido"; valido = false }
+        if (estado.password.length < 6) { errores.password = "Mínimo 6 caracteres"; valido = false }
+        if (estado.password != estado.confirmPassword) { errores.confirmPassword = "No coinciden"; valido = false }
+        if (!estado.aceptarTerminos) { errores.aceptaTerminos = "Requerido"; valido = false }
+
+        _usuarioState.value = estado.copy(errores = errores)
+        return valido
+    }
+
+    // --- Handlers para inputs (Se mantienen igual) ---
     fun onChangeNombre(v: String) { _usuarioState.value = _usuarioState.value.copy(nombre = v, errores = _usuarioState.value.errores.copy(nombre = "")) }
     fun onChangeEmail(v: String) { _usuarioState.value = _usuarioState.value.copy(email = v, errores = _usuarioState.value.errores.copy(email = "")) }
     fun onChangePassword(v: String) { _usuarioState.value = _usuarioState.value.copy(password = v, errores = _usuarioState.value.errores.copy(password = "")) }
     fun onChangeConfirmPassword(v: String) { _usuarioState.value = _usuarioState.value.copy(confirmPassword = v, errores = _usuarioState.value.errores.copy(confirmPassword = "")) }
     fun onChangeAceptarTerminos(v: Boolean) { _usuarioState.value = _usuarioState.value.copy(aceptarTerminos = v, errores = _usuarioState.value.errores.copy(aceptaTerminos = "")) }
-
-    // Validación Login
-    fun validar(): Boolean {
-        val s = _usuarioState.value
-        var valido = true
-        val err = UsuarioErrores()
-
-        if (s.email.isBlank()) { err.email = "Ingresa tu email"; valido = false }
-        if (s.password.isBlank()) { err.password = "Ingresa tu contraseña"; valido = false }
-        if (!s.aceptarTerminos) { err.aceptaTerminos = "Debes aceptar los términos"; valido = false }
-
-        _usuarioState.value = s.copy(errores = err)
-        return valido
-    }
-
-    // Validación Registro
-    fun validarRegistro(): Boolean {
-        val s = _usuarioState.value
-        var valido = true
-        val err = UsuarioErrores()
-
-        if (s.nombre.isBlank()) { err.nombre = "Nombre requerido"; valido = false }
-        if (s.email.isBlank()) { err.email = "Email requerido"; valido = false }
-        if (s.password.length < 6) { err.password = "Mínimo 6 caracteres"; valido = false }
-        if (s.password != s.confirmPassword) { err.confirmPassword = "No coinciden"; valido = false }
-        if (!s.aceptarTerminos) { err.aceptaTerminos = "Requerido"; valido = false }
-
-        _usuarioState.value = s.copy(errores = err)
-        return valido
-    }
 }
