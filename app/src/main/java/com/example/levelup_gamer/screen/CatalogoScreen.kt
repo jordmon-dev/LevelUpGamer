@@ -1,15 +1,12 @@
-package com.example.levelup_gamer.ui.theme.Screen // CORREGIDO: Screen con mayúscula
+package com.example.levelup_gamer.screen
 
 import android.widget.Toast
-import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -29,12 +26,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.levelup_gamer.R
 import com.example.levelup_gamer.model.Producto
 import com.example.levelup_gamer.viewmodel.CarritoViewModel
 import com.example.levelup_gamer.viewmodel.ProductoViewModel
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -160,7 +157,8 @@ fun ProductoItem(producto: Producto, onAgregar: () -> Unit) {
             ) {
                 Icon(if (isAdded) Icons.Default.Check else Icons.Default.ShoppingCart, null, tint = Color(0xFF00FF88))
             }
-            LaunchedEffect(isAdded) { if(isAdded) { kotlinx.coroutines.delay(500); isAdded = false } }
+            LaunchedEffect(isAdded) { if(isAdded) {
+                delay(500); isAdded = false } }
         }
     }
 }

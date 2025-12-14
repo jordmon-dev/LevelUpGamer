@@ -1,4 +1,4 @@
-package com.example.levelup_gamer.ui.theme.Screen
+package com.example.levelup_gamer.screen
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn

@@ -1,4 +1,4 @@
-package com.example.levelup_gamer.ui.theme.Screen
+package com.example.levelup_gamer.screen
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image

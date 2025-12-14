@@ -1,4 +1,4 @@
-package com.example.levelup_gamer.ui.theme.Screen
+package com.example.levelup_gamer.screen
 
 import android.widget.Toast
 import androidx.compose.foundation.background

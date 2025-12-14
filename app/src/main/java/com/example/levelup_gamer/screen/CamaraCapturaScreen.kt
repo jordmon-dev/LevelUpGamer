@@ -1,4 +1,4 @@
-package com.example.levelup_gamer.ui.theme.Screen
+package com.example.levelup_gamer.screen
 
 import android.content.Context
 import android.net.Uri

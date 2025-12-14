@@ -1,5 +1,6 @@
-package com.example.levelup_gamer.ui.theme.Screen
+package com.example.levelup_gamer.screen
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -181,7 +182,7 @@ fun PerfilScreen(
                             contentColor = Color(0xFFFF4444)
                         ),
                         shape = RoundedCornerShape(12.dp),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFF4444))
+                        border = BorderStroke(1.dp, Color(0xFFFF4444))
                     ) {
                         Icon(Icons.Default.ExitToApp, null)
                         Spacer(modifier = Modifier.width(8.dp))

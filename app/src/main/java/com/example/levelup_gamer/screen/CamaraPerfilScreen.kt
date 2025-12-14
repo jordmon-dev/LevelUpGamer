@@ -1,4 +1,4 @@
-package com.example.levelup_gamer.viewmodel
+/*package com.example.levelup_gamer.viewmodel
 
 import android.content.Context
 import android.net.Uri
@@ -40,4 +40,4 @@ class CamaraPerfilScreen(navController: NavHostController, usuarioViewModel: Usu
     fun actualizarPermisoCamara(isGranted: Boolean) {
         _permisoCamara.value = isGranted
     }
-}
+}*/

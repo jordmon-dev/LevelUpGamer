@@ -1,4 +1,4 @@
-package com.example.levelup_gamer.ui.theme.Screen
+package com.example.levelup_gamer.screen
 
 import android.content.Intent
 import android.net.Uri
@@ -50,7 +50,7 @@ fun AyudaScreen(navController: NavController) {
             Button(onClick = {
                 try {
                     val intent = Intent(Intent.ACTION_SENDTO).apply {
-                        data = Uri.parse("mailto:soporte@levelupgamer.cl")
+                        Intent.setData = Uri.parse("mailto:soporte@levelupgamer.cl")
                         putExtra(Intent.EXTRA_SUBJECT, "Consulta desde Level-Up Gamer")
                     }
                     contexto.startActivity(intent)

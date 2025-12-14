@@ -11,7 +11,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-// ⚠️ ESTA LÍNEA ES CLAVE: Debe coincidir con la carpeta 'navegate'
 import com.example.levelup_gamer.navegate.AppNavigate
 import com.example.levelup_gamer.ui.theme.components.BottomBar
 import com.example.levelup_gamer.ui.theme.theme.LevelUpGamerTheme
@@ -22,6 +21,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             LevelUpGamerTheme {
                 val navController = rememberNavController()
+
+                // Lógica para mostrar/ocultar el menú inferior
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentRoute = navBackStackEntry?.destination?.route
                 val showBottomBar = currentRoute in listOf("home", "catalogo", "carrito", "perfil")
@@ -34,10 +35,9 @@ class MainActivity : ComponentActivity() {
                         }
                     }
                 ) { paddingValues ->
-                    // Contenedor para respetar el espacio del menú
+                    // Caja para que el contenido no quede tapado por el menú
                     Box(modifier = Modifier.padding(paddingValues)) {
-                        // Llamada sin argumentos (porque los ViewModels se crean dentro)
-                        AppNavigate()
+                        AppNavigate() // ✅ Llamada limpia, sin errores
                     }
                 }
             }
