@@ -90,7 +90,7 @@ class ProductoViewModel : ViewModel() {
         viewModelScope.launch {
             _isLoading.value = true
             val nuevoProd = Producto(
-                id = 0L,
+                id = 0,
                 nombre = nombre,
                 precio = precio,
                 stock = stock,
