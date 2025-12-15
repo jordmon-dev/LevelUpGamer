@@ -70,8 +70,15 @@ fun HomeScreen(
         Game("Elden Ring", "PS5, Xbox, PC", 54990, R.drawable.eldenring),
         Game("GTA V", "PS4, Xbox, PC", 22990, R.drawable.gta5)
     )
-
-    val categorias = listOf("PlayStation", "Xbox", "Nintendo Switch", "PC", "VR", "Mobile")
+    //Categorías Destacadas
+    val categoriesList = listOf(
+        CategoryData("PlayStation", Icons.Default.Gamepad),
+        CategoryData("Xbox", Icons.Default.VideogameAsset), // Ojo: Si no te sale, usa Gamepad también
+        CategoryData("Nintendo", Icons.Default.SportsEsports),
+        CategoryData("PC Gamer", Icons.Default.Computer),
+        CategoryData("Mobile", Icons.Default.Smartphone),
+        CategoryData("VR", Icons.Default.Headset)
+    )
 
     Box(
         modifier = Modifier
@@ -195,13 +202,25 @@ fun HomeScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             // Categorías
+            // --- SECCIÓN CATEGORÍAS (ACTUALIZADA) ---
             Column(modifier = Modifier.padding(horizontal = 16.dp)) {
-                Text("Categorías Destacadas", style = MaterialTheme.typography.headlineSmall, color = Color.White, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 16.dp))
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    items(categorias) { category -> CategoryCard(category = category) }
+                Text(
+                    "Explorar por Plataforma",
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    contentPadding = PaddingValues(horizontal = 4.dp) // Un poco de aire a los lados
+                ) {
+                    items(categoriesList) { category ->
+                        CategoryCardPro(category) // Usamos el nuevo diseño "Pro"
+                    }
                 }
             }
-
             Spacer(modifier = Modifier.height(24.dp))
 
             // Más Vendidos
@@ -237,21 +256,58 @@ fun HomeScreen(
 // --- COMPONENTES AUXILIARES ---
 
 @Composable
-fun CategoryCard(category: String) {
+fun CategoryCardPro(category: CategoryData) {
     Card(
         modifier = Modifier
-            .width(120.dp)
-            .height(80.dp)
-            .shadow(8.dp, RoundedCornerShape(12.dp))
-            .clickable { /* Acción */ },
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF2A2A3E)),
-        shape = RoundedCornerShape(12.dp)
+            .width(100.dp) // Un poco más angosta y alta para estilizar
+            .height(110.dp)
+            .clickable { /* Navegar a filtro */ },
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFF1E1E2E)
+        ),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(6.dp),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF2A2A3E))
     ) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text(category, style = MaterialTheme.typography.bodyMedium, color = Color.White, fontWeight = FontWeight.Medium, textAlign = TextAlign.Center)
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            // Círculo con fondo suave para el icono
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFF00FF88).copy(alpha = 0.15f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = category.icon,
+                    contentDescription = null,
+                    tint = Color(0xFF00FF88), // Verde Neón
+                    modifier = Modifier.size(26.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Text(
+                text = category.name,
+                style = MaterialTheme.typography.bodyMedium,
+                color = Color.White,
+                fontWeight = FontWeight.SemiBold,
+                textAlign = TextAlign.Center
+            )
         }
     }
 }
+
+// ✅ NO OLVIDES AGREGAR ESTA CLASE AL FINAL DEL ARCHIVO
+data class CategoryData(
+    val name: String,
+    val icon: ImageVector
+)
 
 @Composable
 fun GameCard(game: Game, onClick: () -> Unit) {
