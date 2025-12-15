@@ -145,21 +145,21 @@ fun ProductoItem(producto: Producto, onAgregar: () -> Unit) {
     ) {
         Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
 
-            // --- CORRECCIÓN: USAMOS AsyncImage EN VEZ DE Image ---
+            // --- SIN FOTO FALSA (Solo recuadro gris mientras carga) ---
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
-                    .data(producto.imagen) // Carga la URL
+                    .data(producto.imagen)
                     .crossfade(true)
                     .build(),
                 contentDescription = null,
-                placeholder = painterResource(R.drawable.game_1), // Imagen temporal mientras carga
-                error = painterResource(R.drawable.game_1),       // Imagen si falla la URL
+                // Eliminamos placeholder y error
                 modifier = Modifier
                     .size(80.dp)
-                    .clip(RoundedCornerShape(8.dp)),
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color.DarkGray), // Fondo gris neutro
                 contentScale = ContentScale.Crop
             )
-            // ---------------------------------------------------
+            // --------------------------------------------------------
 
             Spacer(Modifier.width(16.dp))
             Column(Modifier.weight(1f)) {
