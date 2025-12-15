@@ -75,6 +75,21 @@ fun AppNavigate(
                 productoViewModel = productoViewModel
             )
         }
+
+        // --- NUEVA RUTA: Detalle de Producto ---
+        composable("detalle_producto/{productoId}") { backStackEntry ->
+            // Recuperamos el ID que pasamos en la ruta
+            val idString = backStackEntry.arguments?.getString("productoId")
+            val id = idString?.toIntOrNull() ?: 0
+
+            DetalleProductoScreen(
+                navController = navController,
+                productoId = id, // Pasamos el ID a la pantalla
+                productoViewModel = productoViewModel,
+                carritoViewModel = carritoViewModel
+            )
+        }
+
         composable("perfil") {
             PerfilScreen(navController, usuarioViewModel)
         }
