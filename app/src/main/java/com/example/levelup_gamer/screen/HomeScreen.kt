@@ -1,5 +1,6 @@
 package com.example.levelup_gamer.screen
 
+import androidx.compose.foundation.Image // Importante para cargar imágenes locales
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -7,7 +8,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.items // Import necesario para LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -20,17 +21,24 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource // Necesario para R.drawable
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import com.example.levelup_gamer.R // Verifica que este import sea correcto
 import com.example.levelup_gamer.viewmodel.UsuarioViewModel
 import com.example.levelup_gamer.viewmodel.CarritoViewModel
 import com.example.levelup_gamer.viewmodel.ProductoViewModel
@@ -43,11 +51,8 @@ fun HomeScreen(
     carritoViewModel: CarritoViewModel,
     viewModel: UsuarioViewModel = viewModel()
 ) {
-    // 1. OBTENER DATOS REALES DEL VIEWMODEL (LOGIN)
-    // Esto hace que si te logueaste, aparezca tu nombre real
     val usuarioState by viewModel.usuarioState.collectAsState()
 
-    // Gradiente para el fondo
     val gradient = Brush.verticalGradient(
         colors = listOf(
             Color(0xFF0A0A0A),
@@ -56,14 +61,14 @@ fun HomeScreen(
         )
     )
 
-    // Datos de ejemplo para los juegos (Visualización)
+    // ✅ LISTA CON RECURSOS LOCALES (R.drawable.xxx)
     val featuredGames = listOf(
-        Game("Cyberpunk 2077", "PS5, Xbox, PC", 49990),
-        Game("The Witcher 3", "PC, Switch", 29990),
-        Game("Red Dead 2", "PS4, Xbox", 39990),
-        Game("The Last of Us II", "PS4", 45990),
-        Game("Elden Ring", "PS5, Xbox, PC", 54990),
-        Game("GTA V", "PS4, Xbox, PC", 22990)
+        Game("Cyberpunk 2077", "PS5, Xbox, PC", 49990, R.drawable.cyberpunk),
+        Game("The Witcher 3", "PC, Switch", 29990, R.drawable.witcher3),
+        Game("Red Dead 2", "PS4, Xbox", 39990, R.drawable.reddead2),
+        Game("The Last of Us II", "PS4", 45990, R.drawable.tlou2),
+        Game("Elden Ring", "PS5, Xbox, PC", 54990, R.drawable.eldenring),
+        Game("GTA V", "PS4, Xbox, PC", 22990, R.drawable.gta5)
     )
 
     val categorias = listOf("PlayStation", "Xbox", "Nintendo Switch", "PC", "VR", "Mobile")
@@ -78,7 +83,7 @@ fun HomeScreen(
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
         ) {
-            // Header con bienvenida
+            // --- HEADER ---
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -96,7 +101,6 @@ fun HomeScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Column {
-                            // USAR DATOS DEL STATE
                             val nombreMostrar = if (usuarioState.nombre.isNotEmpty()) {
                                 usuarioState.nombre.split(" ").firstOrNull() ?: "Gamer"
                             } else {
@@ -126,8 +130,6 @@ fun HomeScreen(
                         }
                     }
 
-                    // Badge de descuento estudiante
-                    // Verificamos el email del estado
                     if (usuarioState.email.endsWith("@duocuc.cl")) {
                         Spacer(modifier = Modifier.height(12.dp))
                         Card(
@@ -152,7 +154,7 @@ fun HomeScreen(
                 }
             }
 
-            // Banner Nuevo Lanzamiento
+            // --- BANNER DESTACADO (Usa Cyberpunk local) ---
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -162,29 +164,29 @@ fun HomeScreen(
                 colors = CardDefaults.cardColors(containerColor = Color(0xFF2D1B69)),
                 shape = RoundedCornerShape(20.dp)
             ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Brush.verticalGradient(listOf(Color(0xFF4A1E8C), Color(0xFF2D1B69))))
-                ) {
+                Box(modifier = Modifier.fillMaxSize()) {
+                    // Imagen de fondo local
+                    Image(
+                        painter = painterResource(id = R.drawable.cyberpunk),
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize().alpha(0.6f)
+                    )
+
                     Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(20.dp),
+                        modifier = Modifier.fillMaxSize().padding(20.dp),
                         verticalArrangement = Arrangement.SpaceBetween
                     ) {
                         Column {
-                            Text("NUEVO LANZAMIENTO EXCLUSIVO", style = MaterialTheme.typography.labelSmall, color = Color(0xFF00FF88), fontWeight = FontWeight.Bold)
-                            Text("Descubre la nueva era\nde los juegos de acción", style = MaterialTheme.typography.headlineSmall, color = Color.White, fontWeight = FontWeight.Bold, lineHeight = 24.sp)
+                            Text("NUEVO LANZAMIENTO", style = MaterialTheme.typography.labelSmall, color = Color(0xFF00FF88), fontWeight = FontWeight.Bold)
+                            Text("Cyberpunk 2077\nUltimate Edition", style = MaterialTheme.typography.headlineSmall, color = Color.White, fontWeight = FontWeight.Bold, lineHeight = 24.sp)
                         }
                         Button(
                             onClick = { navController.navigate("catalogo") },
-                            modifier = Modifier
-                                .height(40.dp)
-                                .clip(RoundedCornerShape(12.dp)),
+                            modifier = Modifier.height(40.dp).clip(RoundedCornerShape(12.dp)),
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00FF88), contentColor = Color.Black)
                         ) {
-                            Text("EXPLORAR CATÁLOGO", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                            Text("VER CATÁLOGO", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -206,7 +208,6 @@ fun HomeScreen(
             Column(modifier = Modifier.padding(horizontal = 16.dp)) {
                 Text("Más Vendidos", style = MaterialTheme.typography.headlineSmall, color = Color.White, fontWeight = FontWeight.Bold, modifier = Modifier.padding(bottom = 16.dp))
 
-                // Nota: Usamos altura fija para evitar conflicto de scroll anidado
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(2),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -233,7 +234,7 @@ fun HomeScreen(
     }
 }
 
-// COMPONENTES AUXILIARES
+// --- COMPONENTES AUXILIARES ---
 
 @Composable
 fun CategoryCard(category: String) {
@@ -257,26 +258,45 @@ fun GameCard(game: Game, onClick: () -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(180.dp)
+            .height(220.dp) // Altura ajustada para la imagen
             .shadow(8.dp, RoundedCornerShape(12.dp))
             .clickable(onClick = onClick),
         colors = CardDefaults.cardColors(containerColor = Color(0xFF2A2A3E)),
         shape = RoundedCornerShape(12.dp)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
-            Box(
+
+            // ✅ AQUI CAMBIÓ: Usamos Image con painterResource
+            Image(
+                painter = painterResource(id = game.imagenRes), // Carga desde R.drawable
+                contentDescription = game.title,
+                contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(100.dp)
-                    .background(Brush.verticalGradient(listOf(Color(0xFF333366), Color(0xFF222244)))),
-                contentAlignment = Alignment.Center
-            ) {
-                Text("🎮", style = MaterialTheme.typography.headlineMedium, color = Color.White)
-            }
+                    .height(130.dp) // Imagen arriba
+            )
+
             Column(modifier = Modifier.padding(12.dp)) {
-                Text(game.title, style = MaterialTheme.typography.bodyLarge, color = Color.White, fontWeight = FontWeight.Bold)
-                Text(game.platforms, style = MaterialTheme.typography.bodySmall, color = Color(0xFFA0A0A0))
-                Text("$${game.price}", style = MaterialTheme.typography.bodyLarge, color = Color(0xFF00FF88), fontWeight = FontWeight.Bold)
+                Text(
+                    text = game.title,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    maxLines = 1
+                )
+                Text(
+                    text = game.platforms,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color(0xFFA0A0A0),
+                    maxLines = 1
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "$ ${game.price}",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = Color(0xFF00FF88),
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
     }
@@ -307,9 +327,10 @@ fun NavigationCard(icon: ImageVector, title: String, description: String, onClic
     }
 }
 
-// MODELO LOCAL PARA LA UI
+// ✅ MODELO LOCAL (Actualizado para usar Int)
 data class Game(
     val title: String,
     val platforms: String,
-    val price: Int
+    val price: Int,
+    val imagenRes: Int // Cambiado de String a Int
 )
