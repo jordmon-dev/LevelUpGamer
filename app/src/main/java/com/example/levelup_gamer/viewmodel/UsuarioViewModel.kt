@@ -37,6 +37,22 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
     init {
         cargarDatosGuardados()
     }
+    //Variables para el cambio de foto de perfil
+    private val _fotoPerfil = MutableStateFlow<String?>(null)
+    val fotoPerfil: StateFlow<String?> = _fotoPerfil.asStateFlow()
+
+    //Funcion para actualizar la foto de perfil!!
+    fun actualizarFotoPerfil(uri: String) {
+        _fotoPerfil.value = uri
+        // Aquí podrías guardar en DataStore si quieres persistencia
+        viewModelScope.launch {
+            prefs.saveProfilePhoto(uri)
+        }
+    }
+
+
+
+
 
     // --- CONEXIÓN BACKEND (LOGIN / REGISTRO) ---
 
