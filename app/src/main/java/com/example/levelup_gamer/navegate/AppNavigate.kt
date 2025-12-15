@@ -58,7 +58,8 @@ fun AppNavigate(
                 navController = navController,
                 productoViewModel = productoViewModel,
                 carritoViewModel = carritoViewModel,
-                viewModel = usuarioViewModel
+                viewModel = usuarioViewModel,
+
             )
         }
         composable("catalogo") {

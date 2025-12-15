@@ -6,7 +6,7 @@ import org.junit.Test
 class LoginDtoTest {
 
     @Test
-    fun `login dto serializa a JSON correctamente`() {
+    fun `login dto se crea correctamente`() {
         val loginDto = LoginDto(
             email = "test@test.com",
             password = "123456"
@@ -17,7 +17,7 @@ class LoginDtoTest {
     }
 
     @Test
-    fun `login dto con campos vacios`() {
+    fun `login dto permite campos vacios`() {
         val loginDto = LoginDto(
             email = "",
             password = ""

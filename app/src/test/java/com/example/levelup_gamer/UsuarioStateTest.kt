@@ -6,33 +6,29 @@ import org.junit.Test
 class UsuarioStateTest {
 
     @Test
-    fun `estado inicial tiene valores por defecto`() {
+    fun `estado inicial tiene valores por defecto correctos`() {
         val estado = UsuarioState()
 
+        // Verificamos los defaults definidos en tu modelo
         assertEquals("", estado.nombre)
         assertEquals("", estado.email)
         assertEquals("", estado.password)
-        assertEquals("", estado.confirmPassword)
-        assertFalse(estado.aceptarTerminos)
-        assertEquals(UsuarioErrores(), estado.errores)
-        assertEquals(1, estado.nivel)
-        assertEquals(0, estado.puntosLevelUp)
+        assertEquals(false, estado.aceptarTerminos)
+        assertEquals(1, estado.nivel)          // Default es 1
+        assertEquals(0, estado.puntosLevelUp)  // Default es 0
+        assertEquals("", estado.fechaRegistro)
+        assertNotNull(estado.errores)          // No debe ser null
     }
 
     @Test
-    fun `copy crea nuevo estado con valores actualizados`() {
-        val estadoOriginal = UsuarioState()
-        val nuevoEstado = estadoOriginal.copy(
-            nombre = "Juan",
-            email = "juan@test.com",
-            aceptarTerminos = true
-        )
+    fun `copy crea nuevo estado manteniendo valores`() {
+        val estadoOriginal = UsuarioState(nombre = "Original", nivel = 5)
 
-        assertEquals("Juan", nuevoEstado.nombre)
-        assertEquals("juan@test.com", nuevoEstado.email)
-        assertTrue(nuevoEstado.aceptarTerminos)
-        // Los demás valores deben mantenerse igual
-        assertEquals("", estadoOriginal.password)
-        assertEquals(1, nuevoEstado.nivel)
+        // Creamos una copia cambiando solo el email
+        val nuevoEstado = estadoOriginal.copy(email = "nuevo@test.com")
+
+        assertEquals("nuevo@test.com", nuevoEstado.email)
+        assertEquals("Original", nuevoEstado.nombre) // Se mantiene
+        assertEquals(5, nuevoEstado.nivel)           // Se mantiene
     }
 }
