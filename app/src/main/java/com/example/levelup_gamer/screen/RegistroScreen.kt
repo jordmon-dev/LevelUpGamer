@@ -13,6 +13,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+// 👇 IMPORTANTE: Esta librería es necesaria para los asteriscos
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.levelup_gamer.viewmodel.UsuarioViewModel
@@ -107,10 +109,12 @@ fun RegistroScreen(
                 )
 
                 // ------------------- PASSWORD -------------------
+                // ✅ CAMBIO 1: Agregamos visualTransformation para ocultar texto
                 OutlinedTextField(
                     value = usuarioState.password,
                     onValueChange = usuarioViewModel::onChangePassword,
                     label = { Text("Contraseña") },
+                    visualTransformation = PasswordVisualTransformation(), // <--- ESTO PONE LOS ASTERISCOS
                     isError = usuarioState.errores.password.isNotEmpty(),
                     supportingText = {
                         if (usuarioState.errores.password.isNotEmpty()) {
@@ -122,10 +126,12 @@ fun RegistroScreen(
                 )
 
                 // ------------------- CONFIRMAR PASSWORD -------------------
+                // ✅ CAMBIO 2: Lo mismo aquí para la confirmación
                 OutlinedTextField(
                     value = usuarioState.confirmPassword,
                     onValueChange = usuarioViewModel::onChangeConfirmPassword,
                     label = { Text("Confirmar Contraseña") },
+                    visualTransformation = PasswordVisualTransformation(), // <--- ESTO PONE LOS ASTERISCOS
                     isError = usuarioState.errores.confirmPassword.isNotEmpty(),
                     supportingText = {
                         if (usuarioState.errores.confirmPassword.isNotEmpty()) {

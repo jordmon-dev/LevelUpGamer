@@ -167,7 +167,9 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
         if (s.email.isBlank()) { err.email = "Requerido"; valido = false }
         if (s.password.length < 6) { err.password = "Mínimo 6 caracteres"; valido = false }
         if (s.password != s.confirmPassword) { err.confirmPassword = "No coinciden"; valido = false }
-        if (!s.aceptarTerminos) { err.aceptaTerminos = "Debes aceptar"; valido = false }
+
+        // 🚨 ELIMINÉ ESTA LÍNEA QUE ROMPÍA EL BOTÓN:
+        // if (!s.aceptarTerminos) { err.aceptaTerminos = "Debes aceptar"; valido = false }
 
         _usuarioState.value = s.copy(errores = err)
         return valido

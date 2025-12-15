@@ -5,26 +5,25 @@ import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Query
 
-// 1. Modelo de datos EXACTO de la API (Con los campos que te daban error)
+// Este modelo recibe el JSON de Internet
 data class ApiDeal(
     val title: String,
     val salePrice: String,
     val normalPrice: String,
-    val savings: String,            // <--- Campo clave 1
+    val savings: String,
     val thumb: String,
-    val steamRatingPercent: String? // <--- Campo clave 2
+    val steamRatingPercent: String?
 )
 
-// 2. Interfaz
 interface CheapSharkService {
     @GET("api/1.0/deals")
     suspend fun getDeals(
-        @Query("storeID") storeID: String = "1",
+        @Query("storeID") storeID: String = "1", // 1 = Steam
         @Query("pageSize") pageSize: Int = 15
-    ): List<ApiDeal> // <--- Debe devolver lista de ApiDeal
+    ): List<ApiDeal>
 }
 
-// 3. Singleton (Reemplaza al archivo que borraste)
+// Singleton para la API Externa
 object ExternalRetrofit {
     private const val BASE_URL = "https://www.cheapshark.com/"
 
