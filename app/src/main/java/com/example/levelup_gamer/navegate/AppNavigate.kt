@@ -9,8 +9,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 
 // --- IMPORTS DE TUS PANTALLAS ---
-import com.example.levelup_gamer.screen.* import com.example.levelup_gamer.ui.screen.PerfilScreen
-//import com.example.levelup_gamer.ui.screen.AdminAgregarProductoScreen // Si la creaste antes
+import com.example.levelup_gamer.screen.*
+//import com.example.levelup_gamer.ui.screen.AdminAgregarProductoScreen
 
 // --- IMPORTS DE VIEWMODELS ---
 import com.example.levelup_gamer.viewmodel.UsuarioViewModel
@@ -43,6 +43,11 @@ fun AppNavigate(
         composable("login") {
             LoginScreen(navController, usuarioViewModel)
         }
+
+        composable("recuperar_password") {
+            RecuperarPasswordScreen(navController)
+        }
+
         composable("registro") {
             RegistroScreen(navController, usuarioViewModel)
         }
@@ -119,13 +124,9 @@ fun AppNavigate(
 
         // Placeholder para Notificaciones (Para que no crashee si le das click en perfil)
         composable("notificaciones") {
-            // Puedes crear un archivo NotificacionesScreen.kt más tarde
-            androidx.compose.foundation.layout.Box(
-                modifier = androidx.compose.ui.Modifier.fillMaxSize(),
-                contentAlignment = androidx.compose.ui.Alignment.Center
-            ) {
-                Text("Buzón de notificaciones vacío")
-            }
+            // ✅ AHORA SÍ LLAMAMOS A LA PANTALLA REAL
+            NotificacionScreen(navController)
         }
+
     }
 }
