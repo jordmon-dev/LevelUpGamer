@@ -123,18 +123,17 @@ fun CarritoItemCard(item: CarritoItem, onEliminar: () -> Unit) {
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // --- IMAGEN (Ahora usa AsyncImage para URLs) ---
+            // --- SIN FOTO FALSA ---
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
-                    .data(item.producto.imagen) // URL
+                    .data(item.producto.imagen)
                     .crossfade(true)
                     .build(),
                 contentDescription = null,
-                placeholder = painterResource(R.drawable.game_1), // Imagen temporal
-                error = painterResource(R.drawable.game_1),       // Imagen si falla
                 modifier = Modifier
                     .size(80.dp)
-                    .clip(RoundedCornerShape(8.dp)),
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color.DarkGray), // Fondo gris neutro
                 contentScale = ContentScale.Crop
             )
 
