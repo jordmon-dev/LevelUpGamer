@@ -131,7 +131,14 @@ fun CarritoItemCard(item: CarritoItem, onEliminar: () -> Unit) {
         item.producto.nombre.contains("Red Dead", ignoreCase = true) -> R.drawable.reddead2
         item.producto.nombre.contains("Last of Us", ignoreCase = true) -> R.drawable.tlou2
         item.producto.nombre.contains("Elden Ring", ignoreCase = true) -> R.drawable.eldenring
-        item.producto.nombre.contains("GTA", ignoreCase = true) -> R.drawable.gta5
+        item.producto.nombre.contains("GTA", ignoreCase = true)
+                || item.producto.nombre.contains ("Grand Theft", ignoreCase= true ) -> R.drawable.gta5
+        item.producto.nombre.contains("PS5", ignoreCase = true) -> R.drawable.consola_ps5
+        item.producto.nombre.contains("Xbox", ignoreCase = true) -> R.drawable.consola_xbox
+        item.producto.nombre.contains("Switch", ignoreCase = true) -> R.drawable.consola_switch
+        item.producto.nombre.contains("PC Gamer", ignoreCase = true) -> R.drawable.pc_gamer
+        item.producto.nombre.contains("VR", ignoreCase = true) -> R.drawable.lentes_vr
+        item.producto.nombre.contains("Phone", ignoreCase = true) -> R.drawable.celular_gamer
         else -> null
     }
 

@@ -70,7 +70,8 @@ fun DetalleProductoScreen(
                     producto.nombre.contains("Red Dead", ignoreCase = true) -> R.drawable.reddead2
                     producto.nombre.contains("Last of Us", ignoreCase = true) -> R.drawable.tlou2
                     producto.nombre.contains("Elden Ring", ignoreCase = true) -> R.drawable.eldenring
-                    producto.nombre.contains("GTA", ignoreCase = true) -> R.drawable.gta5
+                    producto.nombre.contains("GTA", ignoreCase = true)
+                            || producto.nombre.contains("Gran Theft", ignoreCase =true) -> R.drawable.gta5
                     producto.nombre.contains("PS5", ignoreCase = true) -> R.drawable.consola_ps5
                     producto.nombre.contains("Xbox", ignoreCase = true) -> R.drawable.consola_xbox
                     producto.nombre.contains("Switch", ignoreCase = true) -> R.drawable.consola_switch
