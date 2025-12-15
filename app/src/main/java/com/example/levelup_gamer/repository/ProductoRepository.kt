@@ -1,36 +1,41 @@
 package com.example.levelup_gamer.repository
 
 import android.util.Log
+import com.example.levelup_gamer.model.DatosPrueba
 import com.example.levelup_gamer.model.Producto
 import com.example.levelup_gamer.remote.RetrofitInstance
-import retrofit2.Response
 
 class ProductoRepository {
 
     // Instancia de la API
     private val api = RetrofitInstance.api
 
-    // 1. Obtener todos los productos
+    // 1. Obtener todos los productos (Híbrido: Internet + Offline)
     suspend fun obtenerProductos(): List<Producto> {
         return try {
+            // ✅ CORRECCIÓN: Usamos 'obtenerProductos()' que es como se llama en tu API Service
             val response = api.obtenerProductos()
-            if (response.isSuccessful) {
-                response.body() ?: emptyList()
+
+            if (response.isSuccessful && response.body() != null) {
+                // Si hay internet y datos, usamos los del servidor
+                response.body()!!
             } else {
-                Log.e("REPO", "Error: ${response.code()}")
-                emptyList()
+                // Si el servidor falla, usamos el respaldo local
+                Log.e("REPO", "Error del servidor: ${response.code()}. Usando datos locales.")
+                DatosPrueba.listaProductos
             }
         } catch (e: Exception) {
-            Log.e("REPO", "Error de red: ${e.message}")
-            emptyList()
+            // Si no hay internet (Modo Avión), usamos el respaldo local
+            Log.e("REPO", "Sin conexión: ${e.message}. Usando datos locales.")
+            DatosPrueba.listaProductos
         }
     }
 
-    // 2. Crear un producto (Para el Admin)
+    // 2. Crear un producto
     suspend fun crearProducto(producto: Producto): Boolean {
         return try {
             val response = api.crearProducto(producto)
-            response.isSuccessful // Devuelve true si se creó (Código 201)
+            response.isSuccessful
         } catch (e: Exception) {
             Log.e("REPO", "Error al crear: ${e.message}")
             false
