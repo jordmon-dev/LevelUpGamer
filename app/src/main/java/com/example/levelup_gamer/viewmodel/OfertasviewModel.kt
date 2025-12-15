@@ -2,14 +2,15 @@ package com.example.levelup_gamer.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-// Importamos tus modelos desde la carpeta correcta
-import com.example.levelup_gamer.model.Juego
-import com.example.levelup_gamer.model.Oferta
 import com.example.levelup_gamer.remote.ExternalRetrofit
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+
+// Modelos simples para la vista
+data class Juego(val titulo: String, val imagenUrl: String, val precio: String)
+data class Oferta(val juego: Juego, val precioOferta: String, val descuento: String)
 
 class OfertasViewModel : ViewModel() {
 
@@ -19,54 +20,32 @@ class OfertasViewModel : ViewModel() {
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    // Variable para capturar errores
     private val _errorMessage = MutableStateFlow<String?>(null)
     val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
 
     init {
-        obtenerOfertasDesdeApi()
+        cargarOfertas()
     }
 
-    fun obtenerOfertasDesdeApi() {
+    fun cargarOfertas() {
         viewModelScope.launch {
             _isLoading.value = true
-            _errorMessage.value = null
             try {
-                // Llamada a la API
-                val apiDeals = ExternalRetrofit.api.getDeals()
+                // 1. Llamamos a CheapShark
+                val listaApi = ExternalRetrofit.api.getDeals()
 
-                if (apiDeals.isEmpty()) {
-                    _errorMessage.value = "La API respondió, pero no hay ofertas."
-                }
-
-                val ofertasMapeadas = apiDeals.map { deal ->
-                    val normal = deal.normalPrice.toDoubleOrNull() ?: 0.0
-                    val sale = deal.salePrice.toDoubleOrNull() ?: 0.0
-                    val savings = deal.savings.toDoubleOrNull()?.toInt() ?: 0
-
+                // 2. Traducimos ApiDeal -> Oferta
+                val listaLimpia = listaApi.map { apiDeal ->
                     Oferta(
-                        juego = Juego(
-                            id = deal.title.hashCode().toString(),
-                            titulo = deal.title,
-                            descripcion = "Oferta de Steam",
-                            precioOriginal = normal,
-                            genero = "Digital",
-                            plataforma = "PC / Steam",
-                            calificacion = 5.0,
-                            edadRecomendada = "T",
-                            imagenUrl = deal.thumb
-                        ),
-                        descuento = savings,
-                        precioConDescuento = sale,
-                        ahorro = normal - sale,
-                        tiempoRestante = "24h"
+                        juego = Juego(apiDeal.title, apiDeal.thumb, apiDeal.normalPrice),
+                        precioOferta = apiDeal.salePrice,
+                        descuento = apiDeal.savings.substringBefore(".") // Quitamos decimales extra
                     )
                 }
-                _ofertasState.value = ofertasMapeadas
+                _ofertasState.value = listaLimpia
 
             } catch (e: Exception) {
-                _errorMessage.value = "ERROR: ${e.localizedMessage}"
-                println("API FALLO: ${e.message}")
+                _errorMessage.value = "Error: ${e.message}"
             } finally {
                 _isLoading.value = false
             }
