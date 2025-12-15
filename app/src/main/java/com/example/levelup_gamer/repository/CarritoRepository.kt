@@ -21,7 +21,7 @@ class CarritoRepository {
         } else {
             // Creamos un Producto temporal para el carrito
             val nuevoProducto = Producto(
-                id = id.toLong(),
+                id = id.toInt(),
                 nombre = nombre,
                 precio = precio,
                 imagen = imagen, // Guardamos la URL

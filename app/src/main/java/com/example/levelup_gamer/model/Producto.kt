@@ -4,7 +4,7 @@ import com.google.gson.annotations.SerializedName
 
 data class Producto(
     // 1. ID debe ser Long porque en MySQL es autoincrementable grande
-    val id: Long = 0L,
+    val id: Int = 0,
 
     // 2. Código del producto
     val codigo: String = "",

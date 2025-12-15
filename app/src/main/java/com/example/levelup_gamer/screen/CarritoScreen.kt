@@ -1,5 +1,6 @@
 package com.example.levelup_gamer.screen
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -29,6 +30,15 @@ import com.example.levelup_gamer.R
 import com.example.levelup_gamer.model.CarritoItem
 import com.example.levelup_gamer.viewmodel.CarritoViewModel
 import com.example.levelup_gamer.viewmodel.ProductoViewModel
+
+/*Otros import de imagenes
+import com.example.levelup_gamer.R
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+* */
+
+
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -112,6 +122,19 @@ fun CarritoScreen(
 
 @Composable
 fun CarritoItemCard(item: CarritoItem, onEliminar: () -> Unit) {
+
+    // 1. LÓGICA INTELIGENTE (Misma que en Catálogo)
+    // Detectamos el nombre para asignar la foto local
+    val imagenLocal = when {
+        item.producto.nombre.contains("Cyberpunk", ignoreCase = true) -> R.drawable.cyberpunk
+        item.producto.nombre.contains("Witcher", ignoreCase = true) -> R.drawable.witcher3
+        item.producto.nombre.contains("Red Dead", ignoreCase = true) -> R.drawable.reddead2
+        item.producto.nombre.contains("Last of Us", ignoreCase = true) -> R.drawable.tlou2
+        item.producto.nombre.contains("Elden Ring", ignoreCase = true) -> R.drawable.eldenring
+        item.producto.nombre.contains("GTA", ignoreCase = true) -> R.drawable.gta5
+        else -> null
+    }
+
     Card(
         colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1E2E)),
         shape = RoundedCornerShape(12.dp),
@@ -123,19 +146,30 @@ fun CarritoItemCard(item: CarritoItem, onEliminar: () -> Unit) {
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // --- SIN FOTO FALSA ---
-            AsyncImage(
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(item.producto.imagen)
-                    .crossfade(true)
-                    .build(),
-                contentDescription = null,
-                modifier = Modifier
-                    .size(80.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(Color.DarkGray), // Fondo gris neutro
-                contentScale = ContentScale.Crop
-            )
+
+            // 2. VISUALIZACIÓN DE IMAGEN
+            if (imagenLocal != null) {
+                // Si encontramos la foto local, la mostramos
+                Image(
+                    painter = painterResource(id = imagenLocal),
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(80.dp)
+                        .clip(RoundedCornerShape(8.dp)),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                // Solo si no hay coincidencia mostramos el cuadro gris (o la URL si quisieras)
+                Box(
+                    modifier = Modifier
+                        .size(80.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color.DarkGray),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(Icons.Default.ShoppingCart, null, tint = Color.LightGray)
+                }
+            }
 
             Spacer(modifier = Modifier.width(16.dp))
 
@@ -144,7 +178,8 @@ fun CarritoItemCard(item: CarritoItem, onEliminar: () -> Unit) {
                     text = item.producto.nombre,
                     color = Color.White,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp
+                    fontSize = 16.sp,
+                    maxLines = 2
                 )
                 Text(
                     text = "$ ${item.producto.precio}",
