@@ -7,48 +7,40 @@ import com.example.levelup_gamer.remote.RetrofitInstance
 
 class ProductoRepository {
 
-    // Instancia de la API
     private val api = RetrofitInstance.api
 
-    // 1. Obtener todos los productos (Híbrido: Internet + Offline)
+    // Lógica Híbrida: Intenta Internet -> Si falla -> Usa Local
     suspend fun obtenerProductos(): List<Producto> {
         return try {
-            // ✅ CORRECCIÓN: Usamos 'obtenerProductos()' que es como se llama en tu API Service
+            // 1. Intentamos conectar a tu Backend Spring Boot
             val response = api.obtenerProductos()
 
-            if (response.isSuccessful && response.body() != null) {
-                // Si hay internet y datos, usamos los del servidor
+            if (response.isSuccessful && response.body() != null && response.body()!!.isNotEmpty()) {
+                Log.d("REPO", "✅ Productos cargados desde BACKEND")
                 response.body()!!
             } else {
-                // Si el servidor falla, usamos el respaldo local
-                Log.e("REPO", "Error del servidor: ${response.code()}. Usando datos locales.")
+                Log.w("REPO", "⚠️ Backend vacío o error. Usando Datos Locales.")
                 DatosPrueba.listaProductos
             }
         } catch (e: Exception) {
-            // Si no hay internet (Modo Avión), usamos el respaldo local
-            Log.e("REPO", "Sin conexión: ${e.message}. Usando datos locales.")
+            // 2. Si no hay conexión (Modo Avión o Server apagado), usamos local
+            Log.e("REPO", "❌ Sin conexión (${e.message}). Usando Datos Locales.")
             DatosPrueba.listaProductos
         }
     }
 
-    // 2. Crear un producto
+    // El resto de funciones se mantienen igual...
     suspend fun crearProducto(producto: Producto): Boolean {
         return try {
             val response = api.crearProducto(producto)
             response.isSuccessful
-        } catch (e: Exception) {
-            Log.e("REPO", "Error al crear: ${e.message}")
-            false
-        }
+        } catch (e: Exception) { false }
     }
 
-    // 3. Eliminar producto
     suspend fun eliminarProducto(id: Long): Boolean {
         return try {
             val response = api.eliminarProducto(id)
             response.isSuccessful
-        } catch (e: Exception) {
-            false
-        }
+        } catch (e: Exception) { false }
     }
 }
