@@ -363,8 +363,7 @@ fun LoginScreen(
                         textAlign = TextAlign.Center,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable {
-                                Toast.makeText(contexto, "Función en desarrollo", Toast.LENGTH_SHORT).show()
+                            .clickable { navController.navigate("recuperar_password")
                             }
                     )
                 }
