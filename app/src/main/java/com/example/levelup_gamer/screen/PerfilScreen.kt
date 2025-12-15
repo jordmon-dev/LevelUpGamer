@@ -1,6 +1,7 @@
-package com.example.levelup_gamer.ui.screen
+package com.example.levelup_gamer.screen
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -8,12 +9,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ExitToApp
-import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -21,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.levelup_gamer.viewmodel.UsuarioViewModel
+import androidx.compose.ui.graphics.graphicsLayer
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,11 +33,14 @@ fun PerfilScreen(
     val usuarioState by usuarioViewModel.usuarioState.collectAsState()
     val isLoading by usuarioViewModel.isLoading.collectAsState()
 
+    // Lógica para detectar si es ADMIN (Truco para la demo)
+    val esAdmin = usuarioState.email.contains("admin", ignoreCase = true) ||
+            usuarioState.email.contains("profesor", ignoreCase = true)
+
     // Cargar perfil al iniciar
     LaunchedEffect(Unit) {
-        val email = usuarioState.email
-        if (email.isNotEmpty()) {
-            usuarioViewModel.cargarPerfil(email)
+        if (usuarioState.email.isNotEmpty()) {
+            usuarioViewModel.cargarPerfil(usuarioState.email)
         }
     }
 
@@ -79,10 +84,10 @@ fun PerfilScreen(
                         .verticalScroll(rememberScrollState()),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // --- AVATAR ---
+                    // --- SECCIÓN 1: CABECERA ---
                     Box(
                         modifier = Modifier
-                            .size(120.dp)
+                            .size(110.dp)
                             .background(Color(0xFF2A2A3E), CircleShape)
                             .padding(4.dp),
                         contentAlignment = Alignment.Center
@@ -90,28 +95,38 @@ fun PerfilScreen(
                         Icon(
                             Icons.Default.Person,
                             contentDescription = null,
-                            modifier = Modifier.size(80.dp),
+                            modifier = Modifier.size(70.dp),
                             tint = Color(0xFF00FF88)
                         )
+                        // Badge Admin
+                        if (esAdmin) {
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.BottomEnd)
+                                    .background(Color(0xFFFFD700), CircleShape)
+                                    .padding(6.dp)
+                            ) {
+                                Icon(Icons.Default.Star, null, tint = Color.Black, modifier = Modifier.size(16.dp))
+                            }
+                        }
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
                     Text(
-                        text = usuarioState.nombre.ifEmpty { "Usuario Gamer" },
-                        style = MaterialTheme.typography.headlineMedium,
+                        text = usuarioState.nombre.ifEmpty { "Gamer Desconocido" },
+                        style = MaterialTheme.typography.headlineSmall,
                         color = Color.White,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
                         text = usuarioState.email,
-                        style = MaterialTheme.typography.bodyMedium,
                         color = Color.Gray
                     )
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // --- TARJETA DE NIVEL (Recuperada) ---
+                    // --- SECCIÓN 2: TARJETA DE NIVEL ---
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1E2E)),
@@ -125,141 +140,158 @@ fun PerfilScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Column {
-                                    Text("Nivel Actual", color = Color.Gray, fontSize = 14.sp)
+                                    Text("Rango Actual", color = Color.Gray, fontSize = 12.sp)
                                     Text(
                                         text = nivelNombre,
                                         color = Color(0xFF00FF88),
                                         fontWeight = FontWeight.Bold,
-                                        fontSize = 24.sp
+                                        fontSize = 22.sp
                                     )
                                 }
                                 Surface(
-                                    color = Color(0xFF00FF88).copy(alpha = 0.2f),
+                                    color = Color(0xFF00FF88).copy(alpha = 0.15f),
                                     shape = RoundedCornerShape(8.dp)
                                 ) {
                                     Text(
-                                        "${usuarioState.puntosLevelUp} pts",
+                                        "${usuarioState.puntosLevelUp} XP",
                                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                                         color = Color(0xFF00FF88),
                                         fontWeight = FontWeight.Bold
                                     )
                                 }
                             }
-                            Spacer(modifier = Modifier.height(16.dp))
+                            Spacer(modifier = Modifier.height(12.dp))
                             LinearProgressIndicator(
                                 progress = { progresoNivel },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .height(8.dp),
+                                modifier = Modifier.fillMaxWidth().height(6.dp),
                                 color = Color(0xFF00FF88),
                                 trackColor = Color(0xFF2A2A3E),
                             )
+                            Text("Próximo nivel en ${500 - (usuarioState.puntosLevelUp % 500)} XP", color = Color.Gray, fontSize = 10.sp, modifier = Modifier.padding(top=4.dp))
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(30.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
 
-                    // --- ⬇️ BOTONES RECUPERADOS (Cámara, GPS, Reclamos) ⬇️ ---
+                    // --- SECCIÓN 3: MIS PEDIDOS (NUEVO) ---
                     Text(
-                        text = "Opciones",
-                        color = Color(0xFF00FF88),
+                        text = "Mis Pedidos Recientes",
+                        color = Color.White,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier.align(Alignment.Start)
+                        modifier = Modifier.align(Alignment.Start).padding(bottom = 8.dp)
                     )
 
-                    Spacer(modifier = Modifier.height(14.dp))
+                    // Lista simulada de pedidos
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        PedidoItem("PED-001", "20/12/2025", "$ 45.990", "Entregado", Color(0xFF00FF88))
+                        PedidoItem("PED-002", "22/12/2025", "$ 12.990", "En Camino", Color(0xFFFFD700))
+                    }
 
-                    Column(
-                        Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        OpcionPerfilNeon(
-                            texto = "Notificaciones",
-                            color = Color(0xFF00FF88)
-                        ) { navController.navigate("notificaciones") }
+                    Spacer(modifier = Modifier.height(24.dp))
 
-                        OpcionPerfilNeon(
-                            texto = "Reportar Reclamo (Cámara)",
-                            color = Color(0xFF00E5FF)
-                        ) {
-                            // Asegúrate de que esta ruta exista en AppNavigate
-                            navController.navigate("reporteReclamo")
+                    // --- SECCIÓN 4: OPCIONES ---
+                    Text(
+                        text = "Configuración",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.align(Alignment.Start).padding(bottom = 8.dp)
+                    )
+
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        // BOTÓN ADMIN (SOLO VISIBLE SI ES ADMIN)
+                        if (esAdmin) {
+                            OpcionPerfilNeon(
+                                texto = "Panel de Administrador",
+                                icono = Icons.Default.AdminPanelSettings,
+                                color = Color(0xFFFFD700) // Dorado para resaltar
+                            ) { navController.navigate("admin_agregar_producto") }
                         }
 
-                        OpcionPerfilNeon(
-                            texto = "Configurar GPS",
-                            color = Color(0xFF00FF88)
-                        ) {
-                            // Asegúrate de que esta ruta exista en AppNavigate
-                            navController.navigate("gps")
-                        }
+                        OpcionPerfilNeon("Notificaciones", Icons.Default.Notifications) { navController.navigate("notificaciones") }
+                        OpcionPerfilNeon("Cámara / Reclamos", Icons.Default.CameraAlt) { navController.navigate("reporteReclamo") }
+                        OpcionPerfilNeon("Mi Ubicación (GPS)", Icons.Default.LocationOn) { navController.navigate("gps") }
                     }
 
                     Spacer(modifier = Modifier.height(32.dp))
 
-                    // --- BOTÓN CERRAR SESIÓN ---
-                    Button(
+                    // Botón Cerrar Sesión
+                    OutlinedButton(
                         onClick = {
                             usuarioViewModel.cerrarSesion()
-                            navController.navigate("login") {
-                                popUpTo(0) { inclusive = true }
-                            }
+                            navController.navigate("login") { popUpTo(0) { inclusive = true } }
                         },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(50.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFFF4444).copy(alpha = 0.2f),
-                            contentColor = Color(0xFFFF4444)
-                        ),
-                        shape = RoundedCornerShape(12.dp),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFF4444))
+                        modifier = Modifier.fillMaxWidth(),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFF4444)),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFFFF4444))
                     ) {
                         Icon(Icons.Default.ExitToApp, null)
                         Spacer(modifier = Modifier.width(8.dp))
                         Text("Cerrar Sesión")
                     }
 
-                    Spacer(modifier = Modifier.height(30.dp))
+                    Spacer(modifier = Modifier.height(40.dp))
                 }
             }
         }
     }
 }
 
-// Función helper para determinar nivel
+// Sub-componentes para limpiar el código principal
+@Composable
+fun PedidoItem(id: String, fecha: String, total: String, estado: String, colorEstado: Color) {
+    Card(
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF2A2A3E)),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column {
+                Text("Orden #$id", color = Color.White, fontWeight = FontWeight.Bold)
+                Text(fecha, color = Color.Gray, fontSize = 12.sp)
+            }
+            Column(horizontalAlignment = Alignment.End) {
+                Text(total, color = Color(0xFF00FF88), fontWeight = FontWeight.Bold)
+                Text(estado, color = colorEstado, fontSize = 12.sp, fontWeight = FontWeight.Medium)
+            }
+        }
+    }
+}
+
+@Composable
+fun OpcionPerfilNeon(
+    texto: String,
+    icono: androidx.compose.ui.graphics.vector.ImageVector,
+    color: Color = Color.White,
+    onClick: () -> Unit
+) {
+    Card(
+        onClick = onClick,
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1E2E)),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(icono, null, tint = Color(0xFF00FF88), modifier = Modifier.size(24.dp))
+            Spacer(modifier = Modifier.width(16.dp))
+            Text(texto, color = color, modifier = Modifier.weight(1f))
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, null, tint = Color.Gray, modifier = Modifier.size(16.dp).rotate(180f)) // Flechita
+        }
+    }
+}
+
+// Función helper
 private fun determinarNivel(puntos: Int): String {
     return when {
         puntos >= 2000 -> "Leyenda"
         puntos >= 1000 -> "Diamante"
         puntos >= 500 -> "Oro"
-        puntos >= 200 -> "Plata"
-        puntos >= 50 -> "Bronce"
         else -> "Principiante"
     }
 }
-
-// Componente visual para los botones
-@Composable
-fun OpcionPerfilNeon(texto: String, color: Color, onClick: () -> Unit) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        onClick = onClick,
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF161C2B)),
-        elevation = CardDefaults.cardElevation(4.dp),
-        shape = RoundedCornerShape(16.dp)
-    ) {
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .padding(18.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = texto,
-                color = color,
-                fontWeight = FontWeight.Medium
-            )
-        }
-    }
-}
+// Necesitas esta extensión para rotar la flecha
+fun Modifier.rotate(degrees: Float) = this.then(Modifier.graphicsLayer(rotationZ = degrees))
