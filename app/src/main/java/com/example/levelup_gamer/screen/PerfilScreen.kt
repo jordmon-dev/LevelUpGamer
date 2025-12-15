@@ -1,6 +1,11 @@
 package com.example.levelup_gamer.screen
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -17,12 +22,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+// ✅ Import movido arriba para evitar errores
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import coil.compose.rememberAsyncImagePainter
 import com.example.levelup_gamer.viewmodel.UsuarioViewModel
-import androidx.compose.ui.graphics.graphicsLayer
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,13 +39,19 @@ fun PerfilScreen(
     usuarioViewModel: UsuarioViewModel
 ) {
     val usuarioState by usuarioViewModel.usuarioState.collectAsState()
+    val fotoPerfil by usuarioViewModel.fotoPerfil.collectAsState() // Observamos la foto
     val isLoading by usuarioViewModel.isLoading.collectAsState()
 
-    // Lógica para detectar si es ADMIN (Truco para la demo)
+    // 📸 Launcher para abrir la galería
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let { usuarioViewModel.actualizarFotoPerfil(it.toString()) }
+    }
+
     val esAdmin = usuarioState.email.contains("admin", ignoreCase = true) ||
             usuarioState.email.contains("profesor", ignoreCase = true)
 
-    // Cargar perfil al iniciar
     LaunchedEffect(Unit) {
         if (usuarioState.email.isNotEmpty()) {
             usuarioViewModel.cargarPerfil(usuarioState.email)
@@ -84,30 +98,50 @@ fun PerfilScreen(
                         .verticalScroll(rememberScrollState()),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // --- SECCIÓN 1: CABECERA ---
+                    // --- SECCIÓN 1: CABECERA (CON FOTO EDITABLE) ---
                     Box(
-                        modifier = Modifier
-                            .size(110.dp)
-                            .background(Color(0xFF2A2A3E), CircleShape)
-                            .padding(4.dp),
+                        modifier = Modifier.size(120.dp), // Un poco más grande para el botón de editar
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            Icons.Default.Person,
-                            contentDescription = null,
-                            modifier = Modifier.size(70.dp),
-                            tint = Color(0xFF00FF88)
-                        )
-                        // Badge Admin
-                        if (esAdmin) {
-                            Box(
-                                modifier = Modifier
-                                    .align(Alignment.BottomEnd)
-                                    .background(Color(0xFFFFD700), CircleShape)
-                                    .padding(6.dp)
-                            ) {
-                                Icon(Icons.Default.Star, null, tint = Color.Black, modifier = Modifier.size(16.dp))
+                        // El Avatar
+                        Box(
+                            modifier = Modifier
+                                .size(110.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFF2A2A3E))
+                                .border(2.dp, Color(0xFF00FF88), CircleShape)
+                                .clickable { galleryLauncher.launch("image/*") }, // Al hacer click abre galería
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (fotoPerfil != null) {
+                                Image(
+                                    painter = rememberAsyncImagePainter(fotoPerfil),
+                                    contentDescription = "Foto de perfil",
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            } else {
+                                Icon(
+                                    Icons.Default.Person,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(70.dp),
+                                    tint = Color(0xFF00FF88)
+                                )
                             }
+                        }
+
+                        // Icono pequeño de "Cámara/Editar" superpuesto
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .offset(x = (-4).dp, y = (-4).dp)
+                                .size(32.dp)
+                                .background(Color(0xFF00FF88), CircleShape)
+                                .border(2.dp, Color.Black, CircleShape)
+                                .clickable { galleryLauncher.launch("image/*") },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.Edit, null, tint = Color.Black, modifier = Modifier.size(18.dp))
                         }
                     }
 
@@ -119,14 +153,27 @@ fun PerfilScreen(
                         color = Color.White,
                         fontWeight = FontWeight.Bold
                     )
+
+                    // Badge Admin (Movido aquí para que no estorbe la foto)
+                    if (esAdmin) {
+                        Surface(
+                            color = Color(0xFFFFD700),
+                            shape = RoundedCornerShape(4.dp),
+                            modifier = Modifier.padding(top = 4.dp)
+                        ) {
+                            Text("ADMINISTRADOR", color = Color.Black, fontSize = 10.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp))
+                        }
+                    }
+
                     Text(
                         text = usuarioState.email,
-                        color = Color.Gray
+                        color = Color.Gray,
+                        modifier = Modifier.padding(top = 4.dp)
                     )
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // --- SECCIÓN 2: TARJETA DE NIVEL ---
+                    // --- SECCIÓN 2: TARJETA DE NIVEL (Intacto) ---
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1E2E)),
@@ -173,7 +220,7 @@ fun PerfilScreen(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // --- SECCIÓN 3: MIS PEDIDOS (NUEVO) ---
+                    // --- SECCIÓN 3: MIS PEDIDOS (Intacto) ---
                     Text(
                         text = "Mis Pedidos Recientes",
                         color = Color.White,
@@ -181,7 +228,6 @@ fun PerfilScreen(
                         modifier = Modifier.align(Alignment.Start).padding(bottom = 8.dp)
                     )
 
-                    // Lista simulada de pedidos
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         PedidoItem("PED-001", "20/12/2025", "$ 45.990", "Entregado", Color(0xFF00FF88))
                         PedidoItem("PED-002", "22/12/2025", "$ 12.990", "En Camino", Color(0xFFFFD700))
@@ -189,7 +235,7 @@ fun PerfilScreen(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // --- SECCIÓN 4: OPCIONES ---
+                    // --- SECCIÓN 4: OPCIONES (Intacto) ---
                     Text(
                         text = "Configuración",
                         color = Color.White,
@@ -198,12 +244,11 @@ fun PerfilScreen(
                     )
 
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        // BOTÓN ADMIN (SOLO VISIBLE SI ES ADMIN)
                         if (esAdmin) {
                             OpcionPerfilNeon(
                                 texto = "Panel de Administrador",
                                 icono = Icons.Default.AdminPanelSettings,
-                                color = Color(0xFFFFD700) // Dorado para resaltar
+                                color = Color(0xFFFFD700)
                             ) { navController.navigate("admin_agregar_producto") }
                         }
 
@@ -236,7 +281,7 @@ fun PerfilScreen(
     }
 }
 
-// Sub-componentes para limpiar el código principal
+// Sub-componentes (Intactos)
 @Composable
 fun PedidoItem(id: String, fecha: String, total: String, estado: String, colorEstado: Color) {
     Card(
@@ -279,12 +324,11 @@ fun OpcionPerfilNeon(
             Icon(icono, null, tint = Color(0xFF00FF88), modifier = Modifier.size(24.dp))
             Spacer(modifier = Modifier.width(16.dp))
             Text(texto, color = color, modifier = Modifier.weight(1f))
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, null, tint = Color.Gray, modifier = Modifier.size(16.dp).rotate(180f)) // Flechita
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, null, tint = Color.Gray, modifier = Modifier.size(16.dp).rotate(180f))
         }
     }
 }
 
-// Función helper
 private fun determinarNivel(puntos: Int): String {
     return when {
         puntos >= 2000 -> "Leyenda"
@@ -293,5 +337,5 @@ private fun determinarNivel(puntos: Int): String {
         else -> "Principiante"
     }
 }
-// Necesitas esta extensión para rotar la flecha
+
 fun Modifier.rotate(degrees: Float) = this.then(Modifier.graphicsLayer(rotationZ = degrees))
