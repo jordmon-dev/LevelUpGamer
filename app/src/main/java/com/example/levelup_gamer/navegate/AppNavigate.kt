@@ -17,6 +17,7 @@ import com.example.levelup_gamer.viewmodel.UsuarioViewModel
 import com.example.levelup_gamer.viewmodel.ProductoViewModel
 import com.example.levelup_gamer.viewmodel.CarritoViewModel
 import com.example.levelup_gamer.viewmodel.OfertasViewModel
+import com.example.levelup_gamer.viewmodel.OrdenViewModel
 import com.example.levelup_gamer.viewmodel.ReclamoViewModel // ¡IMPORTANTE!
 
 @Composable
@@ -34,6 +35,10 @@ fun AppNavigate(
     val carritoViewModel: CarritoViewModel = viewModel()
     val ofertasViewModel: OfertasViewModel = viewModel()
     val reclamoViewModel: ReclamoViewModel = viewModel() // Nueva instancia para tus pantallas de reclamo
+    // Instancia del nuevo ViewModel
+    val ordenViewModel: OrdenViewModel = viewModel()
+
+
 
     NavHost(
         navController = navController,
@@ -73,7 +78,7 @@ fun AppNavigate(
             CarritoScreen(
                 navController = navController,
                 carritoViewModel = carritoViewModel,
-                productoViewModel = productoViewModel
+                usuarioViewModel = usuarioViewModel
             )
         }
 
@@ -136,6 +141,11 @@ fun AppNavigate(
         composable("admin_agregar_producto") {
             // Si no tienes este archivo, comenta estas 3 líneas para que no de error
             AdminAgregarProductoScreen(navController, productoViewModel)
+        }
+
+        // ✅ NUEVA RUTA ADMIN VENTAS
+        composable("admin_ordenes") {
+            AdminOrdenesScreen(navController, ordenViewModel)
         }
 
         // Placeholder para Notificaciones (Para que no crashee si le das click en perfil)
