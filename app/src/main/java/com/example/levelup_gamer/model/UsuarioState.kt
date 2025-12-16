@@ -12,5 +12,8 @@ data class UsuarioState(
     val puntosLevelUp: Int = 0,
     val fechaRegistro: String = "",
 
+
+    val rol: String = "CLIENTE",
+
     val errores: UsuarioErrores = UsuarioErrores()
 )
