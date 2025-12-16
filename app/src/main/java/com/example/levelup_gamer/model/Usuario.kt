@@ -26,5 +26,9 @@ data class Usuario(
     val fechaCreacion: String? = null,
 
     @SerializedName("activo")
-    val activo: Boolean? = null
+    val activo: Boolean? = null,
+
+    @SerializedName("rol")
+    val rol: String? = "CLIENTE"
+
 )
