@@ -22,7 +22,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-// ✅ Import movido arriba para evitar errores
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -39,7 +38,7 @@ fun PerfilScreen(
     usuarioViewModel: UsuarioViewModel
 ) {
     val usuarioState by usuarioViewModel.usuarioState.collectAsState()
-    val fotoPerfil by usuarioViewModel.fotoPerfil.collectAsState() // Observamos la foto
+    val fotoPerfil by usuarioViewModel.fotoPerfil.collectAsState()
     val isLoading by usuarioViewModel.isLoading.collectAsState()
 
     // 📸 Launcher para abrir la galería
@@ -49,8 +48,12 @@ fun PerfilScreen(
         uri?.let { usuarioViewModel.actualizarFotoPerfil(it.toString()) }
     }
 
-    val esAdmin = usuarioState.email.contains("admin", ignoreCase = true) ||
-            usuarioState.email.contains("profesor", ignoreCase = true)
+    // 🔥 Lógica de Roles (Seguro)
+    // Si tienes el campo 'rol' en UsuarioState úsalo, si no, usa el email como fallback temporal
+    val rolActual = if (usuarioState.email.contains("admin", ignoreCase = true)) "ADMIN"
+    else if (usuarioState.email.contains("soporte", ignoreCase = true)) "SOPORTE"
+    else if (usuarioState.email.contains("invitado", ignoreCase = true)) "INVITADO"
+    else "CLIENTE"
 
     LaunchedEffect(Unit) {
         if (usuarioState.email.isNotEmpty()) {
@@ -98,19 +101,18 @@ fun PerfilScreen(
                         .verticalScroll(rememberScrollState()),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    // --- SECCIÓN 1: CABECERA (CON FOTO EDITABLE) ---
+                    // --- SECCIÓN 1: CABECERA ---
                     Box(
-                        modifier = Modifier.size(120.dp), // Un poco más grande para el botón de editar
+                        modifier = Modifier.size(120.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        // El Avatar
                         Box(
                             modifier = Modifier
                                 .size(110.dp)
                                 .clip(CircleShape)
                                 .background(Color(0xFF2A2A3E))
                                 .border(2.dp, Color(0xFF00FF88), CircleShape)
-                                .clickable { galleryLauncher.launch("image/*") }, // Al hacer click abre galería
+                                .clickable { galleryLauncher.launch("image/*") },
                             contentAlignment = Alignment.Center
                         ) {
                             if (fotoPerfil != null) {
@@ -130,7 +132,6 @@ fun PerfilScreen(
                             }
                         }
 
-                        // Icono pequeño de "Cámara/Editar" superpuesto
                         Box(
                             modifier = Modifier
                                 .align(Alignment.BottomEnd)
@@ -154,15 +155,24 @@ fun PerfilScreen(
                         fontWeight = FontWeight.Bold
                     )
 
-                    // Badge Admin (Movido aquí para que no estorbe la foto)
-                    if (esAdmin) {
-                        Surface(
-                            color = Color(0xFFFFD700),
-                            shape = RoundedCornerShape(4.dp),
-                            modifier = Modifier.padding(top = 4.dp)
-                        ) {
-                            Text("ADMINISTRADOR", color = Color.Black, fontSize = 10.sp, fontWeight = FontWeight.Bold, modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp))
-                        }
+                    // 🏷️ Badge de Rol
+                    Surface(
+                        color = when (rolActual) {
+                            "ADMIN" -> Color(0xFFFFD700)
+                            "SOPORTE" -> Color(0xFF00BFFF)
+                            "INVITADO" -> Color.Gray
+                            else -> Color(0xFF00FF88)
+                        },
+                        shape = RoundedCornerShape(4.dp),
+                        modifier = Modifier.padding(top = 4.dp)
+                    ) {
+                        Text(
+                            text = rolActual,
+                            color = Color.Black,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                        )
                     }
 
                     Text(
@@ -173,7 +183,7 @@ fun PerfilScreen(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // --- SECCIÓN 2: TARJETA DE NIVEL (Intacto) ---
+                    // --- SECCIÓN 2: TARJETA DE NIVEL ---
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1E2E)),
@@ -220,22 +230,23 @@ fun PerfilScreen(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // --- SECCIÓN 3: MIS PEDIDOS (Intacto) ---
-                    Text(
-                        text = "Mis Pedidos Recientes",
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.align(Alignment.Start).padding(bottom = 8.dp)
-                    )
+                    // --- SECCIÓN 3: MIS PEDIDOS ---
+                    if (rolActual == "CLIENTE" || rolActual == "ADMIN") {
+                        Text(
+                            text = "Mis Pedidos Recientes",
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.align(Alignment.Start).padding(bottom = 8.dp)
+                        )
 
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        PedidoItem("PED-001", "20/12/2025", "$ 45.990", "Entregado", Color(0xFF00FF88))
-                        PedidoItem("PED-002", "22/12/2025", "$ 12.990", "En Camino", Color(0xFFFFD700))
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            PedidoItem("PED-001", "20/12/2025", "$ 45.990", "Entregado", Color(0xFF00FF88))
+                            PedidoItem("PED-002", "22/12/2025", "$ 12.990", "En Camino", Color(0xFFFFD700))
+                        }
+                        Spacer(modifier = Modifier.height(24.dp))
                     }
 
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    // --- SECCIÓN 4: OPCIONES (Intacto) ---
+                    // --- SECCIÓN 4: CONFIGURACIÓN POR ROLES ---
                     Text(
                         text = "Configuración",
                         color = Color.White,
@@ -244,17 +255,48 @@ fun PerfilScreen(
                     )
 
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        if (esAdmin) {
+
+                        // 1. ROL ADMIN
+                        if (rolActual == "ADMIN") {
                             OpcionPerfilNeon(
-                                texto = "Panel de Administrador",
+                                texto = "Panel de Administrador (CRUD)",
                                 icono = Icons.Default.AdminPanelSettings,
                                 color = Color(0xFFFFD700)
                             ) { navController.navigate("admin_agregar_producto") }
+
+                            OpcionPerfilNeon(
+                                texto = "Ver Ventas Globales",
+                                icono = Icons.Default.AttachMoney, // O Icons.Default.List
+                                color = Color(0xFF00FF88)
+                            ) { navController.navigate("admin_ordenes") }
                         }
 
-                        OpcionPerfilNeon("Notificaciones", Icons.Default.Notifications) { navController.navigate("notificaciones") }
-                        OpcionPerfilNeon("Cámara / Reclamos", Icons.Default.CameraAlt) { navController.navigate("reporteReclamo") }
-                        OpcionPerfilNeon("Mi Ubicación (GPS)", Icons.Default.LocationOn) { navController.navigate("gps") }
+                        // 2. TODOS (Menos invitado)
+                        if (rolActual != "INVITADO") {
+                            OpcionPerfilNeon("Notificaciones", Icons.Default.Notifications) { navController.navigate("notificaciones") }
+                        }
+
+                        // 3. SOPORTE, ADMIN y CLIENTE (Reclamos)
+                        if (rolActual != "INVITADO") {
+                            OpcionPerfilNeon(
+                                texto = if(rolActual == "SOPORTE") "Gestionar Reclamos (Cámara)" else "Ingresar Reclamo (Cámara)",
+                                icono = Icons.Default.CameraAlt
+                            ) { navController.navigate("reporteReclamo") }
+                        }
+
+                        // 4. CLIENTE y ADMIN (GPS)
+                        if (rolActual == "CLIENTE" || rolActual == "ADMIN") {
+                            OpcionPerfilNeon("Mi Ubicación (GPS)", Icons.Default.LocationOn) { navController.navigate("gps") }
+                        }
+
+                        // 5. ROL INVITADO
+                        if (rolActual == "INVITADO") {
+                            OpcionPerfilNeon(
+                                texto = "Regístrate para comprar",
+                                icono = Icons.Default.PersonAdd,
+                                color = Color(0xFF00BFFF)
+                            ) { navController.navigate("registro") }
+                        }
                     }
 
                     Spacer(modifier = Modifier.height(32.dp))
@@ -281,7 +323,10 @@ fun PerfilScreen(
     }
 }
 
-// Sub-componentes (Intactos)
+// -------------------------------------------------------------
+// 👇 AQUÍ ESTÁN LAS FUNCIONES QUE FALTABAN (COPIA ESTO TAMBIÉN)
+// -------------------------------------------------------------
+
 @Composable
 fun PedidoItem(id: String, fecha: String, total: String, estado: String, colorEstado: Color) {
     Card(
@@ -329,7 +374,8 @@ fun OpcionPerfilNeon(
     }
 }
 
-private fun determinarNivel(puntos: Int): String {
+// Función auxiliar para calcular el texto del nivel
+fun determinarNivel(puntos: Int): String {
     return when {
         puntos >= 2000 -> "Leyenda"
         puntos >= 1000 -> "Diamante"
@@ -338,4 +384,5 @@ private fun determinarNivel(puntos: Int): String {
     }
 }
 
+// Extensión para rotar iconos
 fun Modifier.rotate(degrees: Float) = this.then(Modifier.graphicsLayer(rotationZ = degrees))
