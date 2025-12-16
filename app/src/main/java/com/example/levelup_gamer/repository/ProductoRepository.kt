@@ -4,6 +4,7 @@ import android.util.Log
 import com.example.levelup_gamer.model.DatosPrueba
 import com.example.levelup_gamer.model.Producto
 import com.example.levelup_gamer.remote.RetrofitInstance
+import com.example.levelup_gamer.remote.UsuarioInstance // ✅ IMPORTANTE: Necesario para el token
 
 class ProductoRepository {
 
@@ -29,18 +30,38 @@ class ProductoRepository {
         }
     }
 
-    // El resto de funciones se mantienen igual...
+    // ✅ FUNCIÓN CORREGIDA: Ahora envía el Token
     suspend fun crearProducto(producto: Producto): Boolean {
         return try {
-            val response = api.crearProducto(producto)
+            // 1. Obtenemos el token guardado
+            val token = UsuarioInstance.getBearerToken()
+
+            // Si no hay token (no es admin o no se logueó), fallamos
+            if (token == null) return false
+
+            // 2. Llamamos a la API enviando (Token, Producto)
+            val response = api.crearProducto(token, producto)
             response.isSuccessful
-        } catch (e: Exception) { false }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
     }
 
+    // ✅ FUNCIÓN CORREGIDA: Ahora envía el Token
     suspend fun eliminarProducto(id: Long): Boolean {
         return try {
-            val response = api.eliminarProducto(id)
+            // 1. Obtenemos el token guardado
+            val token = UsuarioInstance.getBearerToken()
+
+            if (token == null) return false
+
+            // 2. Llamamos a la API enviando (Token, ID)
+            val response = api.eliminarProducto(token, id)
             response.isSuccessful
-        } catch (e: Exception) { false }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
     }
 }

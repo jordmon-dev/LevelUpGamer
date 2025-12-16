@@ -5,55 +5,47 @@ import com.example.levelup_gamer.model.LoginDto
 import com.example.levelup_gamer.model.Orden
 import com.example.levelup_gamer.model.Producto
 import com.example.levelup_gamer.model.RegistroDto
-import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.*
 
 interface LevelUpApiService {
 
-    // ==========================================
-    // 🔐 AUTENTICACIÓN (AuthController)
-    // ==========================================
-
-    @POST("/api/v1/ordenes")
-    suspend fun crearOrden(@Body orden: Orden): Response<Orden>
-
-    @GET("ordenes")
-    suspend fun obtenerOrdenes(@Header("Authorization") token: String): Response<List<Orden>>
-
+    // --- AUTENTICACIÓN ---
     @POST("auth/login")
     suspend fun login(@Body loginDto: LoginDto): Response<AuthResponse>
 
     @POST("auth/register")
     suspend fun registrar(@Body registroDto: RegistroDto): Response<Any>
 
+    // --- ÓRDENES ---
+    @POST("/api/v1/ordenes")
+    suspend fun crearOrden(@Body orden: Orden): Response<Orden>
 
-    // ==========================================
-    // 🎮 PRODUCTOS (ProductoController)
-    // ==========================================
+    // Si implementaste la pantalla de ventas globales:
+    @GET("/api/v1/ordenes")
+    suspend fun obtenerOrdenes(@Header("Authorization") token: String): Response<List<Orden>>
 
-    // 1. LISTAR TODOS (GET)
-    // Backend: @GetMapping (Lista completa)
+    // --- PRODUCTOS ---
+
+    // 1. Listar (Público, no requiere token)
     @GET("productos")
     suspend fun obtenerProductos(): Response<List<Producto>>
 
-    // 2. OBTENER UNO SOLO (GET con ID)
-    // Backend: @GetMapping("/{id}")
+    // 2. Obtener uno (Público)
     @GET("productos/{id}")
     suspend fun obtenerProductoPorId(@Path("id") id: Long): Response<Producto>
 
-    // 3. CREAR PRODUCTO (POST) - ¡Para tu panel Admin!
-    // Backend: @PostMapping
+    // 3. CREAR (Privado, REQUIERE TOKEN)
     @POST("productos")
-    suspend fun crearProducto(@Body producto: Producto): Response<Producto>
+    suspend fun crearProducto(
+        @Header("Authorization") token: String, // ✅ AGREGADO
+        @Body producto: Producto
+    ): Response<Producto>
 
-    // 4. ELIMINAR PRODUCTO (DELETE)
-    // Backend: @DeleteMapping("/{id}")
+    // 4. ELIMINAR (Privado, REQUIERE TOKEN)
     @DELETE("productos/{id}")
-    suspend fun eliminarProducto(@Path("id") id: Long): Response<Void>
-
-    // 5. ACTUALIZAR PRODUCTO (PUT) - Opcional, pero completa el CRUD
-    // Backend: @PutMapping("/{id}")
-    @PUT("productos/{id}")
-    suspend fun actualizarProducto(@Path("id") id: Long, @Body producto: Producto): Response<Producto>
+    suspend fun eliminarProducto(
+        @Header("Authorization") token: String, // ✅ AGREGADO
+        @Path("id") id: Long
+    ): Response<Void>
 }

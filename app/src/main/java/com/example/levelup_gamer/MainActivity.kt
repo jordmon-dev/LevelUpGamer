@@ -15,10 +15,12 @@ import androidx.navigation.compose.rememberNavController
 import com.example.levelup_gamer.navegate.AppNavigate
 import com.example.levelup_gamer.ui.theme.theme.LevelUpGamerTheme
 import com.example.levelup_gamer.ui.theme.components.BottomBar
+import com.example.levelup_gamer.remote.UsuarioInstance
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        UsuarioInstance.initialize(applicationContext)
         setContent {
             LevelUpGamerTheme {
                 // 1. Controlador de Navegación Principal
@@ -35,6 +37,8 @@ class MainActivity : ComponentActivity() {
                     "carrito",
                     "perfil"
                 )
+
+
 
                 Scaffold(
                     containerColor = Color(0xFF0A0A0A), // Fondo base oscuro

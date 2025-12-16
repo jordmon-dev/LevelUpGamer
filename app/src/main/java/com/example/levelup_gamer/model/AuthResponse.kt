@@ -1,8 +1,11 @@
 package com.example.levelup_gamer.model
 
-import com.example.levelup_gamer.model.Usuario // Asegúrate de importar tu clase Usuario
+import com.google.gson.annotations.SerializedName
 
 data class AuthResponse(
-    val token: String,
-    val usuario: Usuario? = null // Puede ser nulo si el backend falla o cambia
+    @SerializedName("token")
+    val token: String?,
+
+    @SerializedName("usuario")
+    val usuario: Usuario?
 )
