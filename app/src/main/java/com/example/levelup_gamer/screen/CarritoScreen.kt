@@ -1,5 +1,6 @@
 package com.example.levelup_gamer.screen
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -24,31 +25,25 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
 import com.example.levelup_gamer.R
 import com.example.levelup_gamer.model.CarritoItem
 import com.example.levelup_gamer.viewmodel.CarritoViewModel
-import com.example.levelup_gamer.viewmodel.ProductoViewModel
-
-/*Otros import de imagenes
-import com.example.levelup_gamer.R
-import androidx.compose.foundation.Image
-import androidx.compose.ui.res.painterResource
-* */
-
-
-
+// ✅ Importamos UsuarioViewModel para saber quién compra
+import com.example.levelup_gamer.viewmodel.UsuarioViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CarritoScreen(
     navController: NavController,
     carritoViewModel: CarritoViewModel,
-    productoViewModel: ProductoViewModel // Opcional si lo usas para algo más
+    // ✅ Agregamos esto para obtener datos del usuario real
+    usuarioViewModel: UsuarioViewModel
 ) {
-    // 1. Observamos el estado CORRECTO del ViewModel (File 1)
     val uiState by carritoViewModel.uiState.collectAsState()
+
+    // Obtenemos el estado del usuario para enviar su email en la compra
+    val usuarioState by usuarioViewModel.usuarioState.collectAsState()
+    val context = LocalContext.current
 
     val brush = Brush.verticalGradient(
         colors = listOf(Color(0xFF0A0A0A), Color(0xFF1A1A2E), Color(0xFF16213E))
@@ -76,7 +71,23 @@ fun CarritoScreen(
             if (uiState.items.isNotEmpty()) {
                 ResumenCompra(
                     total = uiState.total,
-                    onPagar = { navController.navigate("pago") }
+                    // ✅ LÓGICA DE PAGO REAL CONECTADA AL BACKEND
+                    onPagar = {
+                        val nombre = if (usuarioState.nombre.isNotEmpty()) usuarioState.nombre else "Cliente App"
+                        val email = if (usuarioState.email.isNotEmpty()) usuarioState.email else "invitado@app.com"
+
+                        carritoViewModel.realizarCompra(
+                            nombreUsuario = nombre,
+                            emailUsuario = email,
+                            onSuccess = {
+                                Toast.makeText(context, "✅ ¡Orden enviada a Spring Boot!", Toast.LENGTH_LONG).show()
+                                navController.navigate("home") // Volver al inicio tras comprar
+                            },
+                            onError = {
+                                Toast.makeText(context, "❌ Error al conectar con el servidor", Toast.LENGTH_SHORT).show()
+                            }
+                        )
+                    }
                 )
             }
         }
@@ -109,7 +120,6 @@ fun CarritoScreen(
                         CarritoItemCard(
                             item = item,
                             onEliminar = {
-                                // Convertimos a Int porque tu función eliminar pide Int
                                 carritoViewModel.eliminarProducto(item.producto.id.toInt())
                             }
                         )
@@ -120,11 +130,14 @@ fun CarritoScreen(
     }
 }
 
+// ---------------------------------------------------------------------------------
+// 👇 MANTENEMOS TU LÓGICA DE IMÁGENES EXACTAMENTE IGUAL (NO TOCAR)
+// ---------------------------------------------------------------------------------
+
 @Composable
 fun CarritoItemCard(item: CarritoItem, onEliminar: () -> Unit) {
 
-    // 1. LÓGICA INTELIGENTE (Misma que en Catálogo)
-    // Detectamos el nombre para asignar la foto local
+    // Lógica inteligente de imágenes (INTACTA)
     val imagenLocal = when {
         item.producto.nombre.contains("Cyberpunk", ignoreCase = true) -> R.drawable.cyberpunk
         item.producto.nombre.contains("Witcher", ignoreCase = true) -> R.drawable.witcher3
@@ -148,30 +161,19 @@ fun CarritoItemCard(item: CarritoItem, onEliminar: () -> Unit) {
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
+            modifier = Modifier.fillMaxWidth().padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-
-            // 2. VISUALIZACIÓN DE IMAGEN
             if (imagenLocal != null) {
-                // Si encontramos la foto local, la mostramos
                 Image(
                     painter = painterResource(id = imagenLocal),
                     contentDescription = null,
-                    modifier = Modifier
-                        .size(80.dp)
-                        .clip(RoundedCornerShape(8.dp)),
+                    modifier = Modifier.size(80.dp).clip(RoundedCornerShape(8.dp)),
                     contentScale = ContentScale.Crop
                 )
             } else {
-                // Solo si no hay coincidencia mostramos el cuadro gris (o la URL si quisieras)
                 Box(
-                    modifier = Modifier
-                        .size(80.dp)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(Color.DarkGray),
+                    modifier = Modifier.size(80.dp).clip(RoundedCornerShape(8.dp)).background(Color.DarkGray),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(Icons.Default.ShoppingCart, null, tint = Color.LightGray)
@@ -181,23 +183,9 @@ fun CarritoItemCard(item: CarritoItem, onEliminar: () -> Unit) {
             Spacer(modifier = Modifier.width(16.dp))
 
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = item.producto.nombre,
-                    color = Color.White,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    maxLines = 2
-                )
-                Text(
-                    text = "$ ${item.producto.precio}",
-                    color = Color(0xFF00FF88),
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = "Cantidad: ${item.cantidad}",
-                    color = Color.Gray,
-                    fontSize = 14.sp
-                )
+                Text(item.producto.nombre, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp, maxLines = 2)
+                Text("$ ${item.producto.precio}", color = Color(0xFF00FF88), fontWeight = FontWeight.Bold)
+                Text("Cantidad: ${item.cantidad}", color = Color.Gray, fontSize = 14.sp)
             }
 
             IconButton(onClick = onEliminar) {
@@ -210,9 +198,7 @@ fun CarritoItemCard(item: CarritoItem, onEliminar: () -> Unit) {
 @Composable
 fun ResumenCompra(total: Double, onPagar: () -> Unit) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
+        modifier = Modifier.fillMaxWidth().padding(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color(0xFF1E1E2E)),
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(8.dp)
@@ -223,26 +209,16 @@ fun ResumenCompra(total: Double, onPagar: () -> Unit) {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text("Total a pagar:", color = Color.White, fontSize = 18.sp)
-                Text(
-                    "$ ${total.toInt()}", // Mostramos como entero para que se vea limpio
-                    color = Color(0xFF00FF88),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp
-                )
+                Text("$ ${total.toInt()}", color = Color(0xFF00FF88), fontWeight = FontWeight.Bold, fontSize = 20.sp)
             }
             Spacer(modifier = Modifier.height(16.dp))
             Button(
                 onClick = onPagar,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF00FF88),
-                    contentColor = Color.Black
-                ),
+                modifier = Modifier.fillMaxWidth().height(50.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00FF88), contentColor = Color.Black),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text("Ir a Pagar", fontWeight = FontWeight.Bold)
+                Text("Pagar Ahora (Spring Boot)", fontWeight = FontWeight.Bold)
             }
         }
     }

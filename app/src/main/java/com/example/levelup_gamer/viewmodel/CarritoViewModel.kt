@@ -3,7 +3,10 @@ package com.example.levelup_gamer.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.levelup_gamer.model.CarritoItem
+import com.example.levelup_gamer.model.Orden
 import com.example.levelup_gamer.repository.CarritoRepository
+// ✅ CORREGIDO: Importamos tu objeto real "RetrofitInstance"
+import com.example.levelup_gamer.remote.RetrofitInstance
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -31,7 +34,6 @@ class CarritoViewModel : ViewModel() {
             val items = repository.obtenerCarrito()
 
             // Calculamos el total
-            // Nota: Nos aseguramos de convertir el precio a Double por si viene como Int desde Producto
             val total = items.sumOf { it.producto.precio.toDouble() * it.cantidad }
 
             _uiState.value = _uiState.value.copy(
@@ -41,7 +43,6 @@ class CarritoViewModel : ViewModel() {
         }
     }
 
-    // ✅ CORRECCIÓN: 'imagen' ahora es String para aceptar URLs
     fun agregarProducto(id: Int, nombre: String, precio: Int, imagen: String) {
         viewModelScope.launch {
             repository.agregarAlCarrito(id, nombre, precio, imagen)
@@ -60,6 +61,39 @@ class CarritoViewModel : ViewModel() {
         viewModelScope.launch {
             repository.vaciarCarrito()
             cargarCarrito()
+        }
+    }
+
+    // ✅ FUNCIÓN CORREGIDA: Usa RetrofitInstance.api
+    fun realizarCompra(nombreUsuario: String, emailUsuario: String, onSuccess: () -> Unit, onError: () -> Unit) {
+        viewModelScope.launch {
+            try {
+                val totalActual = _uiState.value.total.toInt()
+                if (totalActual == 0) return@launch
+
+                // 1. Preparamos el objeto Orden
+                val nuevaOrden = Orden(
+                    numeroOrden = System.currentTimeMillis(),
+                    total = totalActual,
+                    nombreCliente = nombreUsuario,
+                    emailCliente = emailUsuario
+                )
+
+                // 2. Llamamos al Backend usando TU instancia correcta
+                // Antes: RetrofitClient.apiService.crearOrden(...) -> ERROR
+                // Ahora: RetrofitInstance.api.crearOrden(...) -> CORRECTO
+                val response = RetrofitInstance.api.crearOrden(nuevaOrden)
+
+                if (response.isSuccessful) {
+                    vaciarCarrito()
+                    onSuccess()
+                } else {
+                    onError()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                onError()
+            }
         }
     }
 }
