@@ -2,6 +2,7 @@ package com.example.levelup_gamer.remote
 
 import com.example.levelup_gamer.model.AuthResponse
 import com.example.levelup_gamer.model.LoginDto
+import com.example.levelup_gamer.model.Orden
 import com.example.levelup_gamer.model.Producto
 import com.example.levelup_gamer.model.RegistroDto
 import okhttp3.ResponseBody
@@ -13,6 +14,12 @@ interface LevelUpApiService {
     // ==========================================
     // 🔐 AUTENTICACIÓN (AuthController)
     // ==========================================
+
+    @POST("/api/v1/ordenes")
+    suspend fun crearOrden(@Body orden: Orden): Response<Orden>
+
+    @GET("ordenes")
+    suspend fun obtenerOrdenes(@Header("Authorization") token: String): Response<List<Orden>>
 
     @POST("auth/login")
     suspend fun login(@Body loginDto: LoginDto): Response<AuthResponse>
