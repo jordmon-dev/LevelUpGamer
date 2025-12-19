@@ -9,11 +9,18 @@ data class Usuario(
     @SerializedName("nombre")
     val nombre: String? = null,
 
+    @SerializedName("apellidos")
+    val apellidos: String?= null,
+
     @SerializedName("email")
     val email: String? = null,
 
-    @SerializedName("telefono")
-    val telefono: String? = null,
+    /*@SerializedName("telefono")
+    val telefono: String? = null,*/
+
+    /*
+   @SerializedName("fechaCreacion")
+   val fechaCreacion: String? = null,*/
 
     @SerializedName("password")
     val password: String? = null,
@@ -22,8 +29,6 @@ data class Usuario(
     @SerializedName("username")
     val username: String? = null,
 
-    @SerializedName("fechaCreacion")
-    val fechaCreacion: String? = null,
 
     @SerializedName("activo")
     val activo: Boolean? = null,
