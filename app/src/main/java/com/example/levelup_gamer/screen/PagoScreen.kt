@@ -35,10 +35,17 @@ fun PagoScreen(
     val usuarioState by usuarioViewModel.usuarioState.collectAsState()
     val context = LocalContext.current
 
-    var direccion by remember { mutableStateOf(usuarioState.nombre + " - Dirección Demo") }
+    var direccion by remember {
+        mutableStateOf(
+            if(usuarioState.direccion.isNotEmpty())
+                    "${usuarioState.direccion}, ${usuarioState.comuna}"
+                    else "") }
     var numeroTarjeta by remember { mutableStateOf("") }
     var fechaVencimiento by remember { mutableStateOf("") }
     var cvv by remember { mutableStateOf("") }
+
+
+
 
     val brush = Brush.verticalGradient(
         colors = listOf(Color(0xFF0A0A0A), Color(0xFF1A1A2E), Color(0xFF16213E))
