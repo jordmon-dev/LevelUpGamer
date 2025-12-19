@@ -11,7 +11,7 @@ data class UsuarioState(
     val aceptarTerminos: Boolean = false,
 
     // Datos de envío o CHECKOUT
-    val direcion: String = "",
+    val direccion: String = "",
     val region: String = "",
     val comuna: String = "",
 

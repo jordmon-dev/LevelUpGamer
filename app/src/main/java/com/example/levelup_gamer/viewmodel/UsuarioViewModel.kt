@@ -81,9 +81,14 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
                         // Actualizamos estado visual
                         _usuarioState.value = _usuarioState.value.copy(
                             nombre = usuarioObj.nombre ?: email,
+                            apellidos =usuarioObj.apellidos ?: "",
                             email = usuarioObj.email ?: email,
                             password = pass,
+                            direccion = usuarioObj.direccion ?: "",
+                            region = usuarioObj.region ?:"",
+                            comuna = usuarioObj.region ?: "",
                             rol = usuarioObj.rol ?: "CLIENTE"
+
                         )
 
                         onSuccess()

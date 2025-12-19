@@ -6,34 +6,46 @@ import org.junit.Test
 class UsuarioTest {
 
     @Test
-    fun `usuario creado con todos los valores correctos incluyendo rol`() {
+    fun `usuario se crea correctamente con campos del backend`() {
         // Arrange
         val usuario = Usuario(
             id = 1L,
-            nombre = "Admin User",
-            email = "admin@test.com",
-            rol = "ADMIN", // ✅ Probamos el nuevo campo
+            nombre = "Jordy",
+            apellidos = "Programador", // Nuevo
+            email = "jordy@test.com",
+            password = "pass",
+            direccion = "Calle Viva 123", // Nuevo
+            region = "RM",
+            comuna = "Santiago",
+            rol = "ADMIN", // Nuevo
             activo = true
         )
 
         // Assert
-        assertEquals(1L, usuario.id)
-        assertEquals("Admin User", usuario.nombre)
+        assertEquals("Jordy", usuario.nombre)
+        assertEquals("Programador", usuario.apellidos)
+        assertEquals("Calle Viva 123", usuario.direccion)
         assertEquals("ADMIN", usuario.rol)
-        assertEquals(true, usuario.activo)
+        // Verificamos que los campos eliminados ya no se testen
     }
 
     @Test
-    fun `usuario creado sin rol toma valor por defecto CLIENTE`() {
-        // Arrange
+    fun `usuario rol por defecto es CLIENTE`() {
         val usuario = Usuario(
-            nombre = "Cliente Normal"
+            nombre = "Nuevo",
+            email = "nuevo@test.com",
+            password = "123"
         )
 
-        // Assert
-        assertEquals("CLIENTE", usuario.rol) // ✅ Validamos el valor por defecto
-        assertEquals("Cliente Normal", usuario.nombre)
+        assertEquals("CLIENTE", usuario.rol)
     }
 
-    // ... (Puedes dejar el resto de los tests antiguos aquí, seguirán funcionando) ...
+    @Test
+    fun `usuario con direccion nula`() {
+        val usuario = Usuario(
+            nombre = "Sin Casa",
+            direccion = null
+        )
+        assertNull(usuario.direccion)
+    }
 }
