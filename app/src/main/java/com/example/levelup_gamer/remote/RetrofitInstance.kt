@@ -7,7 +7,7 @@ object RetrofitInstance {
     //  Agregamos "http://" y quitamos "localhost"
     //10.0.2.2
     //10.135.139.141
-    private const val BASE_URL = "http://10.135.139.141:8080/api/v1/"
+    private const val BASE_URL = "http://192.168.1.84:8080/api/v1/"
 
     val api: LevelUpApiService by lazy { // Usamos la nueva interfaz
         Retrofit.Builder()

@@ -48,12 +48,10 @@ fun PerfilScreen(
         uri?.let { usuarioViewModel.actualizarFotoPerfil(it.toString()) }
     }
 
-    // 🔥 Lógica de Roles (Seguro)
-    // Si tienes el campo 'rol' en UsuarioState úsalo, si no, usa el email como fallback temporal
-    val rolActual = if (usuarioState.email.contains("admin", ignoreCase = true)) "ADMIN"
-    else if (usuarioState.email.contains("soporte", ignoreCase = true)) "SOPORTE"
-    else if (usuarioState.email.contains("invitado", ignoreCase = true)) "INVITADO"
-    else "CLIENTE"
+    // 🔥 Lógica de Roles (CORREGIDA)
+    // Ahora tomamos el dato real que viene de la Base de Datos
+    // Si es nulo, asumimos "CLIENTE" por defecto.
+    val rolActual = usuarioState.rol ?: "CLIENTE"
 
     LaunchedEffect(Unit) {
         if (usuarioState.email.isNotEmpty()) {
@@ -324,7 +322,7 @@ fun PerfilScreen(
 }
 
 // -------------------------------------------------------------
-// 👇 AQUÍ ESTÁN LAS FUNCIONES QUE FALTABAN (COPIA ESTO TAMBIÉN)
+// Componentes Auxiliares
 // -------------------------------------------------------------
 
 @Composable
@@ -374,7 +372,6 @@ fun OpcionPerfilNeon(
     }
 }
 
-// Función auxiliar para calcular el texto del nivel
 fun determinarNivel(puntos: Int): String {
     return when {
         puntos >= 2000 -> "Leyenda"
@@ -384,5 +381,4 @@ fun determinarNivel(puntos: Int): String {
     }
 }
 
-// Extensión para rotar iconos
 fun Modifier.rotate(degrees: Float) = this.then(Modifier.graphicsLayer(rotationZ = degrees))

@@ -28,7 +28,6 @@ import androidx.navigation.NavController
 import com.example.levelup_gamer.R
 import com.example.levelup_gamer.model.CarritoItem
 import com.example.levelup_gamer.viewmodel.CarritoViewModel
-// ✅ Importamos UsuarioViewModel para saber quién compra
 import com.example.levelup_gamer.viewmodel.UsuarioViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -36,15 +35,9 @@ import com.example.levelup_gamer.viewmodel.UsuarioViewModel
 fun CarritoScreen(
     navController: NavController,
     carritoViewModel: CarritoViewModel,
-    // ✅ Agregamos esto para obtener datos del usuario real
     usuarioViewModel: UsuarioViewModel
 ) {
     val uiState by carritoViewModel.uiState.collectAsState()
-
-    // Obtenemos el estado del usuario para enviar su email en la compra
-    val usuarioState by usuarioViewModel.usuarioState.collectAsState()
-    val context = LocalContext.current
-
     val brush = Brush.verticalGradient(
         colors = listOf(Color(0xFF0A0A0A), Color(0xFF1A1A2E), Color(0xFF16213E))
     )
@@ -71,22 +64,9 @@ fun CarritoScreen(
             if (uiState.items.isNotEmpty()) {
                 ResumenCompra(
                     total = uiState.total,
-                    // ✅ LÓGICA DE PAGO REAL CONECTADA AL BACKEND
+                    // ✅ CORRECCIÓN: Ahora navegamos a la pantalla de pago
                     onPagar = {
-                        val nombre = if (usuarioState.nombre.isNotEmpty()) usuarioState.nombre else "Cliente App"
-                        val email = if (usuarioState.email.isNotEmpty()) usuarioState.email else "invitado@app.com"
-
-                        carritoViewModel.realizarCompra(
-                            nombreUsuario = nombre,
-                            emailUsuario = email,
-                            onSuccess = {
-                                Toast.makeText(context, "✅ ¡Orden enviada a Spring Boot!", Toast.LENGTH_LONG).show()
-                                navController.navigate("home") // Volver al inicio tras comprar
-                            },
-                            onError = {
-                                Toast.makeText(context, "❌ Error al conectar con el servidor", Toast.LENGTH_SHORT).show()
-                            }
-                        )
+                        navController.navigate("pago")
                     }
                 )
             }
@@ -120,7 +100,7 @@ fun CarritoScreen(
                         CarritoItemCard(
                             item = item,
                             onEliminar = {
-                                carritoViewModel.eliminarProducto(item.producto.id.toInt())
+                                carritoViewModel.eliminarProducto(item.producto.id)
                             }
                         )
                     }
@@ -130,14 +110,14 @@ fun CarritoScreen(
     }
 }
 
-// ---------------------------------------------------------------------------------
-// 👇 MANTENEMOS TU LÓGICA DE IMÁGENES EXACTAMENTE IGUAL (NO TOCAR)
-// ---------------------------------------------------------------------------------
+// ----------------------------------------------------------------------
+// 👇 AQUÍ ESTÁ LA FUNCIÓN QUE FALTABA (CarritoItemCard)
+// ----------------------------------------------------------------------
 
 @Composable
 fun CarritoItemCard(item: CarritoItem, onEliminar: () -> Unit) {
 
-    // Lógica inteligente de imágenes (INTACTA)
+    // Lógica para asignar imágenes locales según el nombre
     val imagenLocal = when {
         item.producto.nombre.contains("Cyberpunk", ignoreCase = true) -> R.drawable.cyberpunk
         item.producto.nombre.contains("Witcher", ignoreCase = true) -> R.drawable.witcher3
@@ -164,6 +144,7 @@ fun CarritoItemCard(item: CarritoItem, onEliminar: () -> Unit) {
             modifier = Modifier.fillMaxWidth().padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // Imagen del producto
             if (imagenLocal != null) {
                 Image(
                     painter = painterResource(id = imagenLocal),
@@ -182,18 +163,24 @@ fun CarritoItemCard(item: CarritoItem, onEliminar: () -> Unit) {
 
             Spacer(modifier = Modifier.width(16.dp))
 
+            // Textos (Nombre, Precio, Cantidad)
             Column(modifier = Modifier.weight(1f)) {
                 Text(item.producto.nombre, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp, maxLines = 2)
                 Text("$ ${item.producto.precio}", color = Color(0xFF00FF88), fontWeight = FontWeight.Bold)
                 Text("Cantidad: ${item.cantidad}", color = Color.Gray, fontSize = 14.sp)
             }
 
+            // Botón Eliminar
             IconButton(onClick = onEliminar) {
                 Icon(Icons.Default.Delete, "Eliminar", tint = Color(0xFFFF4444))
             }
         }
     }
 }
+
+// ----------------------------------------------------------------------
+// 👇 AQUÍ ESTÁ EL RESUMEN DE COMPRA CON EL BOTÓN ARREGLADO
+// ----------------------------------------------------------------------
 
 @Composable
 fun ResumenCompra(total: Double, onPagar: () -> Unit) {
@@ -218,7 +205,7 @@ fun ResumenCompra(total: Double, onPagar: () -> Unit) {
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00FF88), contentColor = Color.Black),
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Text("Pagar Ahora (Spring Boot)", fontWeight = FontWeight.Bold)
+                Text("IR A PAGAR", fontWeight = FontWeight.Bold)
             }
         }
     }

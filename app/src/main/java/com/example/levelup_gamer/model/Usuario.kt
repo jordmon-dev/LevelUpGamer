@@ -29,6 +29,15 @@ data class Usuario(
     val activo: Boolean? = null,
 
     @SerializedName("rol")
-    val rol: String? = "CLIENTE"
+    val rol: String? = "CLIENTE",
+
+    @SerializedName("direccion")
+    val direccion: String? = null,
+
+    @SerializedName("region")
+    val region: String? = null,
+
+    @SerializedName("comuna")
+    val comuna: String? = null,
 
 )

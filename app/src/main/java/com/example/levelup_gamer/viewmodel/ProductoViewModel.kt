@@ -2,45 +2,70 @@ package com.example.levelup_gamer.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.levelup_gamer.model.DatosPrueba // Asegúrate de importar esto
 import com.example.levelup_gamer.model.Producto
 import com.example.levelup_gamer.remote.RetrofitInstance
 import com.example.levelup_gamer.remote.UsuarioInstance
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+
+// Estado de UI para filtros
+data class CatalogoUiState(
+    val busqueda: String = "",
+    val categoriaSeleccionada: String = "Todas"
+)
 
 class ProductoViewModel : ViewModel() {
 
-    // Estado para la lista de productos (Catálogo)
+    // Lista cruda de productos (Backend o Local)
     private val _productos = MutableStateFlow<List<Producto>>(emptyList())
     val productos: StateFlow<List<Producto>> = _productos.asStateFlow()
 
+    // Estado de filtros
+    private val _uiState = MutableStateFlow(CatalogoUiState())
+    val uiState: StateFlow<CatalogoUiState> = _uiState.asStateFlow()
+
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    // Categorías para los chips
+    val categorias = listOf("Todas", "Consolas", "Accesorios", "Juegos de Mesa", "Computadores", "Sillas", "Mouse", "Poleras")
 
     init {
         cargarProductos()
     }
 
-    // Cargar catálogo (Público)
+    // --- CARGAR PRODUCTOS (HÍBRIDO: ONLINE + OFFLINE) ---
     fun cargarProductos() {
         viewModelScope.launch {
             _isLoading.value = true
             try {
+                // 1. Intentamos conectar al Backend
                 val response = RetrofitInstance.api.obtenerProductos()
-                if (response.isSuccessful) {
-                    _productos.value = response.body() ?: emptyList()
+
+                if (response.isSuccessful && !response.body().isNullOrEmpty()) {
+                    // Éxito: Usamos datos de la nube
+                    _productos.value = response.body()!!
+                } else {
+                    // Fallo del servidor: Usamos datos locales
+                    _productos.value = DatosPrueba.listaProductos
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                // Sin internet: Usamos datos locales (Modo Offline)
+                _productos.value = DatosPrueba.listaProductos
             } finally {
                 _isLoading.value = false
             }
         }
     }
 
-    // ✅ FUNCIÓN CORREGIDA: AGREGAR PRODUCTO (CON TOKEN)
+    // --- AGREGAR PRODUCTO (ADMIN) ---
     fun agregarProducto(
         nombre: String,
         precio: Int,
@@ -51,16 +76,12 @@ class ProductoViewModel : ViewModel() {
     ) {
         viewModelScope.launch {
             try {
-                // 1. Obtenemos el Token del Admin
                 val token = UsuarioInstance.getBearerToken()
-
                 if (token == null) {
-                    // Si no hay token, fallamos inmediatamente
                     onResult(false)
                     return@launch
                 }
 
-                // 2. Creamos el objeto
                 val nuevoProducto = Producto(
                     nombre = nombre,
                     precio = precio,
@@ -70,19 +91,39 @@ class ProductoViewModel : ViewModel() {
                     descripcion = "Producto agregado desde App Admin"
                 )
 
-                // 3. Enviamos la petición CON EL TOKEN
                 val response = RetrofitInstance.api.crearProducto(token, nuevoProducto)
 
                 if (response.isSuccessful) {
-                    cargarProductos() // Recargamos la lista para ver el cambio
+                    cargarProductos() // Recargar lista
                     onResult(true)
                 } else {
                     onResult(false)
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
                 onResult(false)
             }
         }
+    }
+
+    // --- FILTROS DE UI ---
+
+    val productosFiltrados: StateFlow<List<Producto>> = combine(_productos, _uiState) { lista, state ->
+        lista.filter { producto ->
+            val coincideNombre = producto.nombre.contains(state.busqueda, ignoreCase = true)
+            val coincideCategoria = if (state.categoriaSeleccionada == "Todas") true else producto.categoria.equals(state.categoriaSeleccionada, ignoreCase = true)
+            coincideNombre && coincideCategoria
+        }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
+
+    fun onBusquedaChange(texto: String) {
+        _uiState.update { it.copy(busqueda = texto) }
+    }
+
+    fun onCategoriaSeleccionada(categoria: String) {
+        _uiState.update { it.copy(categoriaSeleccionada = categoria) }
     }
 }

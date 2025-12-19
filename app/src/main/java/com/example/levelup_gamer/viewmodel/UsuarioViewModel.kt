@@ -82,8 +82,8 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
                         _usuarioState.value = _usuarioState.value.copy(
                             nombre = usuarioObj.nombre ?: email,
                             email = usuarioObj.email ?: email,
-                            password = pass
-                            // rol = usuarioObj.rol (Si lo tienes agregado)
+                            password = pass,
+                            rol = usuarioObj.rol ?: "CLIENTE"
                         )
 
                         onSuccess()
