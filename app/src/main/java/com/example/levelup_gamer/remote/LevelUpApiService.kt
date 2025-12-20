@@ -1,6 +1,8 @@
 package com.example.levelup_gamer.remote
 
 import com.example.levelup_gamer.model.AuthResponse
+import com.example.levelup_gamer.model.Favorito
+import com.example.levelup_gamer.model.FavoritoDto
 import com.example.levelup_gamer.model.LoginDto
 import com.example.levelup_gamer.model.Orden
 import com.example.levelup_gamer.model.Producto
@@ -48,4 +50,15 @@ interface LevelUpApiService {
         @Header("Authorization") token: String, // ✅ AGREGADO
         @Path("id") id: Long
     ): Response<Void>
+
+    // --- SECCIÓN DE FAVORITOS ---
+
+    //Ver favoritos
+    @GET("api/v1/favoritos/{email")
+    suspend fun obtenerFavoritos(@Path("email") email: String): Response<List<Favorito>>
+
+    //Para dar o quitar like
+    @POST("api/v1/favoritos/toggle")
+    suspend fun toggleFavorito(@Body dto: FavoritoDto): Response<Void>
+
 }
