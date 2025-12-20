@@ -87,7 +87,13 @@ class UsuarioViewModel(application: Application) : AndroidViewModel(application)
                             direccion = usuarioObj.direccion ?: "",
                             region = usuarioObj.region ?:"",
                             comuna = usuarioObj.region ?: "",
-                            rol = usuarioObj.rol ?: "CLIENTE"
+                            rol = usuarioObj.rol ?: "CLIENTE",
+
+                            puntosLevelUp = usuarioObj.puntos ?: 0,
+
+                            // El nivel lo puedes calcular visualmente según los puntos (opcional)
+                            // Ejemplo: 1000 puntos = Nivel 2
+                            nivel = (usuarioObj.puntos ?: 0) / 1000 + 1
 
                         )
 
