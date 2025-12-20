@@ -45,4 +45,6 @@ data class Usuario(
     @SerializedName("comuna")
     val comuna: String? = null,
 
+    @SerializedName("puntos")
+    val puntos: Int?=0
 )
