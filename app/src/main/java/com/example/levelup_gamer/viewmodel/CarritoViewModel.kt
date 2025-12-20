@@ -69,14 +69,20 @@ class CarritoViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val totalActual = _uiState.value.total.toInt()
+                val items = _uiState.value.items //Acá se obtiene la lista actual
                 if (totalActual == 0) return@launch
 
-                // 1. Preparamos el objeto Orden
+                //Generaremos el resumén automático
+                val resumen = items.joinToString(" | "){ item ->
+                    "${item.cantidad}x ${item.producto.nombre}"}
+
+                // Ahora se crea la orden con el resumen
                 val nuevaOrden = Orden(
                     numeroOrden = System.currentTimeMillis(),
                     total = totalActual,
                     nombreCliente = nombreUsuario,
-                    emailCliente = emailUsuario
+                    emailCliente = emailUsuario,
+                    resumenCompra = resumen
                 )
 
                 // 2. Llamamos al Backend usando TU instancia correcta
