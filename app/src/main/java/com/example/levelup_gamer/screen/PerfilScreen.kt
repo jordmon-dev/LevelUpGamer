@@ -274,6 +274,20 @@ fun PerfilScreen(
                             OpcionPerfilNeon("Notificaciones", Icons.Default.Notifications) { navController.navigate("notificaciones") }
                         }
 
+                        if (rolActual != "INVITADO") {
+                            OpcionPerfilNeon("Notificaciones", Icons.Default.Notifications) { navController.navigate("notificaciones") }
+
+                            // 👇 PEGA ESTO AQUÍ JUSTO DEBAJO DE NOTIFICACIONES 👇
+
+                            // ✅ NUEVO BOTÓN WISHLIST
+                            OpcionPerfilNeon(
+                                texto = "Mi Wishlist (Favoritos)",
+                                icono = Icons.Default.Favorite,
+                                color = Color(0xFFFF4444) // Rojo corazón
+                            ) { navController.navigate("favoritos") }
+                        }
+
+
                         // 3. SOPORTE, ADMIN y CLIENTE (Reclamos)
                         if (rolActual != "INVITADO") {
                             OpcionPerfilNeon(
