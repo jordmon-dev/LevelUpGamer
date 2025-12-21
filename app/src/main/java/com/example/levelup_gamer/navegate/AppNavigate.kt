@@ -16,6 +16,7 @@ import com.example.levelup_gamer.screen.*
 import com.example.levelup_gamer.viewmodel.UsuarioViewModel
 import com.example.levelup_gamer.viewmodel.ProductoViewModel
 import com.example.levelup_gamer.viewmodel.CarritoViewModel
+import com.example.levelup_gamer.viewmodel.FavoritoViewModel
 import com.example.levelup_gamer.viewmodel.OfertasViewModel
 import com.example.levelup_gamer.viewmodel.OrdenViewModel
 import com.example.levelup_gamer.viewmodel.ReclamoViewModel // ¡IMPORTANTE!
@@ -37,7 +38,7 @@ fun AppNavigate(
     val reclamoViewModel: ReclamoViewModel = viewModel() // Nueva instancia para tus pantallas de reclamo
     // Instancia del nuevo ViewModel
     val ordenViewModel: OrdenViewModel = viewModel()
-
+    val favoritoViewModel: FavoritoViewModel = viewModel()
 
 
     NavHost(
@@ -152,6 +153,12 @@ fun AppNavigate(
         composable("notificaciones") {
             // ✅ AHORA SÍ LLAMAMOS A LA PANTALLA REAL
             NotificacionScreen(navController)
+        }
+
+        //Para Favoritos
+
+        composable("favoritos"){
+            FavoritosScreen(navController, favoritoViewModel)
         }
 
     }
